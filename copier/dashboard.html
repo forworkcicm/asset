@@ -221,6 +221,23 @@ tbody tr:hover{background:var(--surface-2)}
 </div>
 
 <script>
+/* ==================== ตั้งค่าแหล่งข้อมูล ====================
+   หน้านี้เป็น HTML ล้วน ใช้ได้กับ GitHub Pages หรือเว็บโฮสต์ใดก็ได้ ไม่ต้องมี PHP
+   ระบบจะไล่ลองทีละแหล่งตามลำดับด้านล่าง แหล่งไหนอ่านได้ก่อนก็ใช้แหล่งนั้น
+   ============================================================ */
+const CFG = {
+  sheetId : '1epiIfBG3FE29f7RwsOZF8rozIpXWTMMqczl5Xvc57Y4',
+  gid     : '2041319209',        // รหัสแท็บ บันทึกมิเตอร์ (เลขท้าย URL หลัง #gid=)
+  pubCsv  : '',                  // ถ้าใช้วิธี ไฟล์ > แชร์ > เผยแพร่ไปยังเว็บ > CSV ให้วางลิงก์เต็มตรงนี้
+  localCsv: 'data.csv'           // ไฟล์สำรองที่วางไว้โฟลเดอร์เดียวกัน ใช้เมื่อต่อ Google ไม่ได้
+};
+const SOURCES = [
+  CFG.sheetId ? {name:'gviz', label:'Google Sheet (สด)',
+    url:`https://docs.google.com/spreadsheets/d/${CFG.sheetId}/gviz/tq?tqx=out:csv&gid=${encodeURIComponent(CFG.gid)}`} : null,
+  CFG.pubCsv ? {name:'pub', label:'Google Sheet (เผยแพร่ไปยังเว็บ)', url:CFG.pubCsv} : null,
+  CFG.localCsv ? {name:'local', label:'ไฟล์สำรอง '+CFG.localCsv, url:CFG.localCsv} : null
+].filter(Boolean);
+
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const NS='http://www.w3.org/2000/svg';
 const f0=n=>Math.round(n).toLocaleString('en-US');
@@ -265,7 +282,8 @@ function ingest(rows){
     calc:pick(['ยอดเบิก (คำนวณ)','ยอดเบิก']), inv:pick(['ยอดตามใบแจ้งหนี้']),
     diff:pick(['ผลต่าง']), chk:pick(['ตรวจสอบ'])
   };
-  if(C.month<0||C.serial<0||C.calc<0) throw new Error('ไม่พบคอลัมน์ที่จำเป็น (เดือน / รหัสเครื่อง / ยอดเบิก) ในชีต');
+  if(C.month<0||C.serial<0||C.calc<0)
+    throw new Error('ไฟล์ที่อ่านได้ไม่ใช่ตารางข้อมูล ไม่พบคอลัมน์ เดือน / รหัสเครื่อง / ยอดเบิก (คำนวณ)');
   const out=[];
   for(let i=1;i<rows.length;i++){
     const r=rows[i]; const g=j=>j>=0?(r[j]??''):'';
@@ -593,37 +611,49 @@ $('#reload').onclick=()=>load(true);
 
 /* ---------- load ---------- */
 function setSrc(state,txtS){ $('#dot').className='dot'+(state?' '+state:''); $('#src').textContent=txtS; }
+function looksLikeCsv(t){
+  const h=t.replace(/^\uFEFF/,'').trimStart();
+  if(h.startsWith('<')||h.startsWith('<?')) return false;      // ได้หน้า HTML หรือซอร์ส PHP
+  return h.indexOf(',')>=0 || h.indexOf('\t')>=0;
+}
+async function tryOne(src,bust){
+  const u=src.url+(src.url.indexOf('?')>=0?'&':'?')+'t='+bust;
+  const res=await fetch(u,{cache:'no-store'});
+  if(!res.ok) throw new Error('HTTP '+res.status);
+  const text=await res.text();
+  if(!looksLikeCsv(text)) throw new Error('ไฟล์ที่ได้ไม่ใช่ CSV');
+  const rows=ingest(parseCSV(text));
+  if(!rows.length) throw new Error('อ่านได้แต่ไม่พบแถวข้อมูลที่ใช้ได้');
+  return rows;
+}
 async function load(force){
   setSrc('','กำลังโหลดข้อมูล…'); $('#errbox').innerHTML='';
-  try{
-    const res=await fetch('data.php'+(force?'?refresh=1':'')+(force?'&':'?')+'t='+Date.now(),{cache:'no-store'});
-    const ct=res.headers.get('Content-Type')||'';
-    if(!res.ok||ct.indexOf('json')>=0){
-      const j=await res.json().catch(()=>({error:'HTTP '+res.status}));
-      throw Object.assign(new Error(j.error||'โหลดข้อมูลไม่สำเร็จ'),{hint:j.hint||''});
-    }
-    const text=await res.text();
-    RAW=ingest(parseCSV(text));
-    if(!RAW.length) throw new Error('อ่านข้อมูลได้ แต่ไม่พบแถวที่ใช้ได้ ตรวจว่าคอลัมน์ เดือน อยู่ในรูปแบบ 2569-08');
-    const src=res.headers.get('X-Data-Source')||'', age=+(res.headers.get('X-Data-Age')||0);
-    const mins=Math.round(age/60);
-    setSrc(src==='live'?'on':src==='cache'?'on':'stale',
-      src==='live'?`ดึงจาก Google Sheet สดเมื่อครู่ · ${f0(RAW.length)} แถว`
-      :src==='cache-stale'?`ใช้ข้อมูลสำรองในเครื่อง (ดึงล่าสุด ${mins} นาทีที่แล้ว) เพราะติดต่อ Google ไม่ได้`
-      :`ข้อมูลจาก Google Sheet · ดึงล่าสุด ${mins} นาทีที่แล้ว · ${f0(RAW.length)} แถว`);
-    fillFilters(); applyFilters();
-    $('#formulanote').innerHTML='<b>สูตรที่ใช้ในหน้านี้</b> จำนวนแผ่น = มิเตอร์ครั้งหลัง − มิเตอร์ครั้งก่อน · '
-      +'กระดาษเสีย 3% = ปัดเศษ(จำนวนแผ่น × 3%) · <b>ยอดใช้สุทธิ = ปัดเศษ(จำนวนแผ่น × 97%) คือหักกระดาษเสียออก ไม่ใช่บวกเพิ่ม</b> · '
-      +'ยอดเบิกคำนวณ = ปัดเศษ(ยอดใช้สุทธิ × ราคาต่อแผ่น, 2) · ผลต่าง = ใบแจ้งหนี้ − ยอดเบิกคำนวณ · '
-      +'ตัวเลขทุกช่องอ่านจากชีตโดยตรง หน้านี้ไม่คำนวณทับ';
-  }catch(e){
-    setSrc('err','โหลดข้อมูลไม่สำเร็จ');
-    $('#errbox').innerHTML=`<div class="err"><b>โหลดข้อมูลจาก Google Sheet ไม่สำเร็จ</b>${esc(e.message||'')}`
-      +(e.hint?`<br>${esc(e.hint)}`:'')
-      +`<br><br>ตรวจตามลำดับนี้ · 1) เปิดชีตแล้วกด แชร์ ตั้งเป็น <code>ทุกคนที่มีลิงก์ · ผู้อ่าน</code> · `
-      +`2) เปิด <code>data.php</code> ตรวจว่า SHEET_ID และ SHEET_NAME ตรงกับไฟล์จริง · `
-      +`3) เปิด php_curl ใน XAMPP แล้วรีสตาร์ต Apache</div>`;
+  const bust=force?Date.now():Math.floor(Date.now()/60000);
+  const tried=[];
+  for(const src of SOURCES){
+    try{
+      RAW=await tryOne(src,bust);
+      setSrc(src.name==='local'?'stale':'on',
+        `${src.label} · ${f0(RAW.length)} แถว · โหลดเมื่อ ${new Date().toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'})} น.`
+        + (src.name==='local'?' (ต่อ Google ไม่ได้ จึงใช้ไฟล์สำรอง)':''));
+      fillFilters(); applyFilters(); setNote();
+      return;
+    }catch(e){ tried.push(`${src.label} — ${e.message||e}`); }
   }
+  setSrc('err','โหลดข้อมูลไม่สำเร็จ');
+  $('#errbox').innerHTML=`<div class="err"><b>โหลดข้อมูลไม่สำเร็จ</b>
+    ลองมาแล้วทุกแหล่งดังนี้<br>· ${tried.map(esc).join('<br>· ')}
+    <br><br><b style="display:inline">วิธีแก้</b>
+    <br>1) เปิดชีตแล้วกด แชร์ ตั้ง การเข้าถึงทั่วไป เป็น <code>ทุกคนที่มีลิงก์ · ผู้อ่าน</code>
+    <br>2) ถ้ายังไม่ได้ ให้ใช้วิธีเผยแพร่แทน · ในชีตกด ไฟล์ · แชร์ · เผยแพร่ไปยังเว็บ · เลือกแท็บ บันทึกมิเตอร์ · เลือก CSV · คัดลอกลิงก์มาวางที่ <code>pubCsv</code> ในไฟล์ dashboard.html
+    <br>3) วิธีที่ได้ผลแน่นอน · ในชีตกด ไฟล์ · ดาวน์โหลด · CSV แล้วเปลี่ยนชื่อเป็น <code>data.csv</code> วางไว้โฟลเดอร์เดียวกับ dashboard.html ใน GitHub
+    </div>`;
+}
+function setNote(){
+  $('#formulanote').innerHTML='<b>สูตรที่ใช้ในหน้านี้</b> จำนวนแผ่น = มิเตอร์ครั้งหลัง − มิเตอร์ครั้งก่อน · '
+    +'กระดาษเสีย 3% = ปัดเศษ(จำนวนแผ่น × 3%) · <b>ยอดใช้สุทธิ = ปัดเศษ(จำนวนแผ่น × 97%) คือหักกระดาษเสียออก ไม่ใช่บวกเพิ่ม</b> · '
+    +'ยอดเบิกคำนวณ = ปัดเศษ(ยอดใช้สุทธิ × ราคาต่อแผ่น, 2) · ผลต่าง = ใบแจ้งหนี้ − ยอดเบิกคำนวณ · '
+    +'ตัวเลขทุกช่องอ่านจากชีตโดยตรง หน้านี้ไม่คำนวณทับ';
 }
 load(false);
 </script>
