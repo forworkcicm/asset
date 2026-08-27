@@ -1,0 +1,1114 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>แบบฟอร์มบันทึกขออนุมัติจัดซื้อจัดจ้าง</title>
+
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Google+Sans:ital,opsz,wght@0,17..18,400..700;1,17..18,400..700&display=swap');
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Google Sans', sans-serif;
+    background: #eef1f6;
+    min-height: 100vh;
+    color: #1a1a2e;
+    font-size: 15px;
+  }
+
+  .app-header {
+    background: linear-gradient(135deg, #ffffff 0%, #FFF8DE 60%, #EFE4D2 100%);
+    color: rgb(0, 0, 0);
+    padding: 16px 32px;
+    font-size: 1rem;
+    font-weight: 700;
+    letter-spacing: 0.4px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.3);
+  }
+
+  .main-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+    height: calc(100vh - 52px);
+  }
+
+  .left-panel {
+    background: white;
+    overflow-y: auto;
+    padding: 24px 28px;
+    border-right: 1px solid #dde3ed;
+  }
+
+  .panel-title {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: #8896aa;
+    margin-bottom: 16px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #eef1f6;
+  }
+
+  .form-group { margin-bottom: 13px; }
+
+  label {
+    display: block;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: #4a5568;
+    margin-bottom: 5px;
+  }
+
+  input[type="text"],
+  input[type="number"],
+  input[type="date"],
+  select {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 7px;
+    font-family: 'Google Sans', sans-serif;
+    font-size: 0.9rem;
+    color: #1a1a2e;
+    background: #fafbfc;
+    transition: border-color 0.2s, background 0.2s;
+    outline: none;
+  }
+
+  input:focus, select:focus {
+    border-color: #4D55CC;
+    background: #fff;
+    box-shadow: 0 0 0 3px rgba(15,52,96,0.07);
+  }
+
+  select {
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23718096' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-color: #fafbfc;
+    padding-right: 32px;
+  }
+
+  .section-label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #4D55CC;
+    margin: 20px 0 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .section-label::after { content:''; flex:1; height:1.5px; background:#e2e8f0; }
+
+  .item-card {
+    background: #f7fafc;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 9px;
+    padding: 14px;
+    margin-bottom: 10px;
+  }
+
+  .item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+
+  .item-badge {
+    background: #4D55CC;
+    color: white;
+    font-size: 0.68rem;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 20px;
+    letter-spacing: 0.5px;
+  }
+
+  .btn-remove {
+    width: 26px; height: 26px;
+    border: none;
+    background: #fed7d7;
+    color: #c53030;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 0.85rem;
+    display: flex; align-items: center; justify-content: center;
+    transition: background 0.2s;
+  }
+  .btn-remove:hover { background: #fc8181; }
+
+  .item-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .item-grid .full { grid-column: 1/-1; }
+
+  .btn-add-item {
+    width: 100%;
+    padding: 9px;
+    border: 2px dashed #4D55CC;
+    background: transparent;
+    color: #4D55CC;
+    border-radius: 7px;
+    cursor: pointer;
+    font-family: 'Google Sans', sans-serif;
+    font-size: 0.85rem; font-weight: 700;
+    transition: all 0.2s;
+    margin-top: 2px;
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+  }
+  .btn-add-item:hover { background: #4D55CC; color: white; border-style: solid; }
+
+  .total-box {
+    background: linear-gradient(135deg, #FAF3E1, #ECECEC);
+    color: rgb(15, 14, 14);
+    border-radius: 9px;
+    padding: 13px 18px;
+    margin: 14px 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .total-label { font-size: 0.85rem; font-weight: 500; opacity: 0.85; }
+  .total-value { font-size: 1.2rem; font-weight: 700; }
+
+  .committee-num {
+    width: 24px; height: 24px;
+    background: #4D55CC;
+    color: white;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.68rem; font-weight: 700;
+    flex-shrink: 0;
+  }
+
+  .btn-remove-sm {
+    width: 24px; height: 24px;
+    border: none;
+    background: #fed7d7;
+    color: #c53030;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 0.8rem;
+    display: flex; align-items: center; justify-content: center;
+    transition: background 0.2s;
+    flex-shrink: 0;
+  }
+  .btn-remove-sm:hover { background: #fc8181; }
+
+  .btn-add-sm {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 6px 14px;
+    border: none;
+    background: #c6f6d5;
+    color: #276749;
+    border-radius: 7px;
+    cursor: pointer;
+    font-family: 'Google Sans', sans-serif;
+    font-size: 0.8rem; font-weight: 700;
+    transition: background 0.2s;
+    margin-top: 2px;
+  }
+  .btn-add-sm:hover { background: #68d391; }
+
+  .right-panel {
+    background: #f5f7fb;
+    overflow-y: auto;
+    padding: 24px 28px;
+  }
+
+  .preview-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+  }
+
+  .btn-copy {
+    background: linear-gradient(135deg, #4D55CC, #4D55CC);
+    color: white;
+    border: none;
+    padding: 9px 20px;
+    border-radius: 7px;
+    cursor: pointer;
+    font-family: 'Google Sans', sans-serif;
+    font-size: 0.85rem; font-weight: 700;
+    display: flex; align-items: center; gap: 7px;
+    transition: all 0.2s;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.22);
+  }
+  .btn-copy:hover { transform: translateY(-1px); box-shadow: 0 4px 14px rgba(0, 0, 0, 0.32); }
+  .btn-copy.copied { background: linear-gradient(135deg, #276749, #2f855a); }
+
+  .preview-box {
+    background: white;
+    border: 1.5px solid #dde3ed;
+    border-radius: 9px;
+    padding: 28px 32px;
+    font-size: 0.95rem;
+    line-height: 2;
+    white-space: pre-wrap;
+    color: #000000;
+    min-height: 500px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+    font-family: 'Google Sans', sans-serif;
+  }
+
+  .copy-toast {
+    position: fixed;
+    bottom: 28px; right: 28px;
+    background: #276749;
+    color: white;
+    padding: 11px 20px;
+    border-radius: 8px;
+    font-size: 0.85rem; font-weight: 700;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: all 0.3s;
+    pointer-events: none;
+    z-index: 999;
+  }
+  .copy-toast.show { opacity: 1; transform: translateY(0); }
+
+  /* Unit autocomplete dropdown */
+  .unit-drop {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: white;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 7px;
+    z-index: 300;
+    max-height: 200px;
+    overflow-y: auto;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+    margin-top: 2px;
+  }
+  .unit-drop-item {
+    padding: 8px 14px;
+    cursor: pointer;
+    font-size: 0.88rem;
+    border-bottom: 1px solid #f0f0f0;
+    color: #000000;
+  }
+  .unit-drop-item:last-child { border-bottom: none; }
+  .unit-drop-item:hover { background: #eef4ff; }
+
+  @media (max-width: 860px) {
+    .main-layout { grid-template-columns: 1fr; height: auto; }
+  }
+</style>
+</head>
+<body>
+
+<div class="app-header">👩🏻‍💻ᝰ.ᐟบันทึกข้อความ — ขออนุมัติจัดซื้อจัดจ้าง</div>
+
+<div class="main-layout">
+
+  <!-- LEFT -->
+  <div class="left-panel">
+    <div class="panel-title">🗃️กรอกข้อมูล</div>
+
+    <div class="form-group">
+      <label>1. หน่วยงานที่เสนอ</label>
+      <select id="dept" onchange="render()">
+        <option>งานกิจการนักศึกษา</option>
+        <option>งานประชาสัมพันธ์</option>
+        <option>งานวิเทศสัมพันธ์</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label>2. ประเภทพัสดุ</label>
+      <select id="matType" onchange="render()">
+        <option value="ซื้อ">ซื้อ</option>
+        <option value="ซื้อวัสดุการศึกษา">ซื้อวัสดุการศึกษา</option>
+        <option value="ซื้อวัสดุสำนักงานเข้าคลัง ประจำเดือน">ซื้อวัสดุสำนักงานเข้าคลัง ประจำเดือน</option>
+        <option value="ซื้อครุภัณฑ์">ซื้อครุภัณฑ์</option>
+        <option value="จ้าง">จ้าง</option>
+        <option value="จ้างซ่อม">จ้างซ่อม</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label>3. วิธีการจัดซื้อจัดจ้าง</label>
+      <select id="law" onchange="render()">
+        <option value="56(2)(ข)">มาตรา 56(2)(ข) — วิธีเฉพาะเจาะจง</option>
+        <option value="56(2)(ก)">มาตรา 56(2)(ก) — วิธีเฉพาะเจาะจง (เหตุอื่น)</option>
+        <option value="55(1)">มาตรา 55(1) — ประกวดราคาอิเล็กทรอนิกส์</option>
+      </select>
+    </div>
+
+<div class="form-group">
+      <label>4. ชื่อโครงการ</label>
+      <input type="text" id="projectName" 
+        placeholder="ระบุชื่อโครงการ..." 
+        oninput="updatePreview()"
+        autocomplete="off">
+    </div>
+
+<div class="form-group" style="position:relative;">
+      <label>5. หน่วย</label>
+      <input type="text" id="unito"
+        placeholder="พิมพ์เพื่อค้นหา เช่น ชุด, งาน..."
+        value="รายการ"
+        autocomplete="off"
+        oninput="updatePreview()"
+        style="width:100%;padding:8px 12px;border:1.5px solid #e2e8f0;border-radius:7px;font-family:'Google Sans',sans-serif;font-size:0.9rem;color:#1a1a2e;background:#fafbfc;outline:none;">
+      
+      <div id="unito-drop" class="unit-drop"></div>
+    </div>
+
+    <div class="section-label">🏷️รายการสินค้า / บริการ</div>
+    <div id="itemsContainer"></div>
+    <button class="btn-add-item" onclick="addItem()">＋ เพิ่มรายการ</button>
+
+    <div class="total-box">
+      <span class="total-label">💰จำนวนเงินรวมทั้งสิ้น</span>
+      <span class="total-value" id="totalDisplay">0.00 บาท</span>
+    </div>
+
+    <div class="section-label">🙋🏻‍♂️คณะกรรมการตรวจรับพัสดุ</div>
+    <div id="committeeContainer"></div>
+    <button class="btn-add-sm" onclick="addCommittee()">＋ เพิ่มกรรมการ</button>
+
+    <div class="section-label">🙋🏻‍♀️ผู้เสนอบันทึก</div>
+    <div class="form-group" style="background:#ffffff;border:1.5px solid #c3d4f7;border-radius:8px;padding:12px 14px;display:flex;align-items:center;gap:10px;">
+      <span style="font-size:1.1rem">👤</span>
+      <div>
+        <div style="font-weight:700;font-size:0.92rem;color:#1a1a2e;">นางสาวบุษกร ล้วนลอย</div>
+        <div style="font-size:0.78rem;color:#718096;margin-top:2px;">นักวิชาการพัสดุ</div>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>📆วันที่บันทึก</label>
+      <input type="date" id="docDate" oninput="render()">
+    </div>
+
+  </div>
+
+  <!-- RIGHT -->
+  <div class="right-panel">
+    <div class="preview-header">
+      <div class="panel-title" style="margin:0;border:none;padding:0">📑ตัวอย่างเอกสาร</div>
+      <button class="btn-copy" id="copyBtn" onclick="copyText()">📋 คัดลอกข้อความ</button>
+    </div>
+    <div class="preview-box" id="previewBox">กรุณากรอกข้อมูลทางด้านซ้าย...</div>
+  </div>
+
+</div>
+
+<div class="copy-toast" id="toast">✅ คัดลอกข้อความแล้ว!</div>
+
+<script>
+  let items = [{ name:'', qty:'', unit:'', price:'', quoteNo:'', quoteDate:'' }];
+  let committee = [{ name:'', fullName:'', role:'ประธานกรรมการ' }];
+
+  const ROLES = ['ประธานกรรมการ','กรรมการ','กรรมการและเลขานุการ','เลขานุการ'];
+  const ROLE_DEFAULTS = ['ประธานกรรมการ','กรรมการ','กรรมการและเลขานุการ'];
+
+  // ===== UNITS DATABASE =====
+  const UNITS = [
+'งาน','รายการ','รายการงาน','ชิ้น','ตัว','ชุด','ชุดงาน','เครื่องชุด','ชุดอุปกรณ์','ชุดติดตั้ง','ชุดซ่อม',
+'เส้น','อัน','แผ่น','ใบ','ฉบับ','กล่อง','ขวด','ขวดใหญ่','ขวดเล็ก','กระป๋อง','ถุง','ซอง',
+'เล่ม','แฟ้ม','ม้วน','ผืน','ท่อน','แท่ง','ดอก','ดวง','แผง','แผงยา','ลูก','หลอด',
+'เครื่อง','คัน','คันรถ','คันเครื่อง','เรือน','หลัง','บาน','ตลับ','ขด','วง','มัด','กลุ่ม','คู่',
+'โหล','รีม','แพค/ห่อ','แพ็กเกจ','ถัง','ปี๊บ','ปี๊บ(18ลิตร)','แกลลอน','กระสอบ','ลัง','คาร์ตัน','กระบอก','ก้อน',
+'หน่วย','ระบบ','ท่อ','โคม','แท่น','ล้อ','เสา','ต้น','ป้าย','บล็อก',
+'เที่ยว','เที่ยวรถ','เที่ยวบิน','เที่ยวเรือ','เที่ยวบรรทุก','เที่ยวตรวจ',
+'นัด','ภาพ/รูป','รอบ','งวด','ระยะ','เฟส',
+'กิโลกรัม','กรัม','มิลลิกรัม','ตัน','ลิตร','มิลลิลิตร','เซนติลิตร',
+'เมตร','ม.','เซนติเมตร','ซม.','มิลลิเมตร','มม.','กิโลเมตร','กม.',
+'ตารางเมตร','ตร.ม.','ตารางเซนติเมตร','ตร.ซม.','ตารางวา','ตร.ว.',
+'ลูกบาศก์เมตร','ลบ.ม.','ลูกบาศก์เซนติเมตร','ลบ.ซม.','คิว','คิวบิกเมตร',
+'ฟุต','นิ้ว','หลา','ไร่','งาน(พื้นที่)',
+'ครั้ง','วัน','เดือน','ปี','ชั่วโมง','สัปดาห์',
+'คน','กรง','กรอบ','กระถาง','ตู้','หีบ',
+'โครงการ','กิจกรรม','ภารกิจ','สัญญา','บริการ','คอร์ส','หลักสูตร',
+'BTU','วัตต์','กิโลวัตต์','แอมป์','โวลต์','แรงม้า',
+'เมกะไบต์','กิกะไบต์','เทราไบต์','ไลเซนส์','สิทธิ์ใช้งาน','User','Account',
+'โดส','เข็ม','เม็ด','แคปซูล','บัตร','ใบอนุญาต'
+  ];
+
+  // ===== PEOPLE DATABASE =====
+  const PEOPLE = [
+    {common:'นาง',academic:'',rank:'',name:'สุดารักษ์ สิริอังควรา'},
+    {common:'นางสาว',academic:'',rank:'',name:'สุภาพร คนคล่อง'},
+    {common:'นางสาว',academic:'',rank:'',name:'สิริพร ไพจิตโรจนา'},
+    {common:'นางสาว',academic:'ศาสตราจารย์',rank:'ดร.',name:'เกศรา ณ บางช้าง'},
+    {common:'นาย',academic:'รองศาสตราจารย์',rank:'ดร.',name:'วีระชัย ทิตภากร'},
+    {common:'นางสาว',academic:'รองศาสตราจารย์',rank:'ดร.',name:'วรรณา ชัยเจริญกุล'},
+    {common:'นาง',academic:'ผู้ช่วยศาสตราจารย์',rank:'ดร.',name:'จันธิดา กมลาสน์หิรัญ'},
+    {common:'นาย',academic:'ผู้ช่วยศาสตราจารย์',rank:'ดร.',name:'ปรัชญา เพชรเกตุ'},
+    {common:'นางสาว',academic:'รองศาสตราจารย์',rank:'ดร.พญ.',name:'จิตรลดา มีพันแสน'},
+    {common:'นาย',academic:'ผู้ช่วยศาสตราจารย์',rank:'ดร.',name:'ตุลยากร เปล่งสุริยการ'},
+    {common:'นาย',academic:'ผู้ช่วยศาสตราจารย์',rank:'ดร.',name:'ศรัณยู พลนิกร'},
+    {common:'นางสาว',academic:'ผู้ช่วยศาสตราจารย์',rank:'ดร.',name:'อังคณา กระจ่าง'},
+    {common:'นางสาว',academic:'ผู้ช่วยศาสตราจารย์',rank:'ดร.',name:'ธารารัฏฐ์ นวลสนิท'},
+    {common:'นางสาว',academic:'ผู้ช่วยศาสตราจารย์',rank:'ดร.',name:'มยุรี ธาราสุข'},
+    {common:'นางสาว',academic:'ผู้ช่วยศาสตราจารย์',rank:'ดร.',name:'กัลยรัตน์ บุญประเสริฐ'},
+    {common:'นางสาว',academic:'รองศาสตราจารย์',rank:'ดร.',name:'โสภิดา สุขประเสริฐ'},
+    {common:'นางสาว',academic:'',rank:'',name:'เขมจุฑา หอมหวล'},
+    {common:'นางสาว',academic:'ผู้ช่วยศาสตราจารย์',rank:'ดร.',name:'พิรชา จำปาเงิน'},
+    {common:'นางสาว',academic:'รองศาสตราจารย์',rank:'ดร.',name:'นภมณี คอนทอง'},
+    {common:'นาย',academic:'รองศาสตราจารย์',rank:'นายแพทย์',name:'กัมมาล กุมาร ปาวา'},
+    {common:'นาย',academic:'ผู้ช่วยศาสตราจารย์',rank:'นายแพทย์',name:'พีระพงค์ กิติภาวงค์'},
+    {common:'นาย',academic:'ผู้ช่วยศาสตราจารย์',rank:'พันตำรวจตรี นายแพทย์',name:'ธงชัย สุนทราภา'},
+    {common:'นาย',academic:'ผู้ช่วยศาสตราจารย์',rank:'ดร.นพ.',name:'ไพรัตน์ ฐาปนาเดโชพล'},
+    {common:'นาย',academic:'ศาสตราจารย์',rank:'ดร.นพ.',name:'อดิศว์ ทัศณรงค์'},
+    {common:'นางสาว',academic:'ผู้ช่วยศาสตราจารย์',rank:'ดร.',name:'มยุรฉัตร แก้วมณี'},
+    {common:'นางสาว',academic:'ผู้ช่วยศาสตราจารย์',rank:'ดร.',name:'สุภาวดี ภาบับภา'},
+    {common:'นางสาว',academic:'ผู้ช่วยศาสตราจารย์',rank:'ดร.',name:'อรอนงค์ ทัศคร'},
+    {common:'นางสาว',academic:'',rank:'',name:'สุภาพร ของสันเทียะ'},
+    {common:'นางสาว',academic:'',rank:'',name:'ภัคนันท์ กระจ่างพันธุ์'},
+    {common:'นาง',academic:'',rank:'',name:'อมลวรรณ ขำสกุล'},
+    {common:'นาง',academic:'',rank:'',name:'นันทา ฉัตรปัญญาเจริญ'},
+    {common:'นาย',academic:'รองศาสตราจารย์',rank:'ดร.',name:'ศาสตราชัย ประสพดี'},
+    {common:'นางสาว',academic:'',rank:'',name:'ผกามาศ วันทา'},
+    {common:'นาย',academic:'รองศาสตราจารย์',rank:'ดร.',name:'สุวิทย์ ชัยศรี'},
+    {common:'นางสาว',academic:'ผู้ช่วยศาสตราจารย์',rank:'ดร.',name:'ศีตกานต์ นัดพบสุข'},
+    {common:'นางสาว',academic:'',rank:'',name:'จริกานต์ เจริญมิน'},
+    {common:'นางสาว',academic:'',rank:'',name:'ชมพูเนกข์ บุญนารอด'},
+    {common:'นาย',academic:'',rank:'',name:'คงกต เนียมนาภา'},
+    {common:'นาง',academic:'',rank:'',name:'จิรฐา ผดุงสุขสิร'},
+    {common:'นาย',academic:'ผู้ช่วยศาสตราจารย์',rank:'ดร.',name:'อติภัทร ยาศิริ'},
+    {common:'นางสาว',academic:'รองศาสตราจารย์',rank:'ดร.',name:'นิภาพร เงินยวง'},
+    {common:'นางสาว',academic:'',rank:'',name:'สุภาวดี เขียวแก่'},
+    {common:'นาย',academic:'',rank:'',name:'จีรยุทธ ศรประจักร์ชัย'},
+    {common:'นาย',academic:'ผู้ช่วยศาสตราจารย์',rank:'ดร.',name:'สมพงษ์ ทะบันหาร'},
+    {common:'นางสาว',academic:'',rank:'',name:'วิชานาถ หงษาชุม'},
+    {common:'นางสาว',academic:'',rank:'',name:'ศุภนิดา ถานันต๊ะ'},
+    {common:'นางสาว',academic:'',rank:'',name:'เดือนเพ็ญ นามวงษ์'},
+    {common:'นางสาว',academic:'',rank:'',name:'จุฑาภรณ์ พลวัฒน์'},
+    {common:'นางสาว',academic:'',rank:'',name:'ชมพูนุท ปานเนียม'},
+    {common:'นางสาว',academic:'',rank:'',name:'วิไลลักษณ์ มงคลฉัตร'},
+    {common:'นางสาว',academic:'อาจารย์',rank:'ดร.',name:'สุภาวดี ด้วงพรม'},
+    {common:'นางสาว',academic:'รองศาสตราจารย์',rank:'ดร.',name:'อารีจรรย์ โสตถิพันธุ์'},
+    {common:'นางสาว',academic:'ผู้ช่วยศาสตราจารย์',rank:'ดร.',name:'หยาดนภา ผาเจริญ'},
+    {common:'นางสาว',academic:'ผู้ช่วยศาสตราจารย์',rank:'ดร.',name:'นิภาภรณ์ แสนคุณท้าว'},
+    {common:'นางสาว',academic:'ผู้ช่วยศาสตราจารย์',rank:'ดร.',name:'กนกทิพย์ ปานสุขสาร'},
+    {common:'นางสาว',academic:'รองศาสตราจารย์',rank:'แพทย์หญิง',name:'นันตรา สุวันทารัตน์'},
+    {common:'นาย',academic:'ผู้ช่วยศาสตราจารย์',rank:'ดร.',name:'บุรพล สิงห์นา'},
+    {common:'นางสาว',academic:'ผู้ช่วยศาสตราจารย์',rank:'ดร.',name:'อันธิฌา คุณจันทรโชติ'},
+    {common:'นาย',academic:'รองศาสตราจารย์',rank:'ดร.',name:'กัณฑ์วีร์ วิวัฒน์พาณิชย์'},
+    {common:'นางสาว',academic:'',rank:'',name:'สุภจิรา คงครบ'},
+    {common:'นางสาว',academic:'',rank:'',name:'ณราวดี สุขเสริม'},
+    {common:'นาง',academic:'',rank:'',name:'ธัญญธร ประดิษฐ์ทรัพย์'},
+    {common:'นางสาว',academic:'',rank:'',name:'ชดาษา ชีพเมืองแมน'},
+    {common:'นาย',academic:'อาจารย์',rank:'ดร.',name:'อานนท์ จันทะนุกูล'},
+    {common:'นาย',academic:'ผู้ช่วยศาสตราจารย์',rank:'ดร.',name:'เทวา พนักศรี'},
+    {common:'นางสาว',academic:'ผู้ช่วยศาสตราจารย์',rank:'ดร.',name:'ภัณฑิลา ธาราเบ็ญจศีล'},
+    {common:'นาง',academic:'รองศาสตราจารย์',rank:'แพทย์หญิง',name:'เปรมจิต จันทองจีน'},
+    {common:'นาย',academic:'อาจารย์',rank:'',name:'จักรี ตั้งเทียนชัยชนะ'},
+    {common:'นางสาว',academic:'อาจารย์',rank:'',name:'ณงชนา กลางสุข'},
+    {common:'นาย',academic:'อาจารย์',rank:'',name:'ภัคพล ยุทธนากรกุล'},
+    {common:'นาย',academic:'ผู้ช่วยศาสตราจารย์',rank:'ดร.',name:'กิตติคุณ เกิดสมบูรณ์'},
+    {common:'นางสาว',academic:'ผู้ช่วยศาสตราจารย์',rank:'ดร.',name:'รุ่งรวี มงคลรบ'},
+    {common:'นางสาว',academic:'ผู้ช่วยศาสตราจารย์',rank:'ดร.',name:'อาภรณ์ บัวหลวง'},
+    {common:'นางสาว',academic:'',rank:'',name:'จิราพร ส้มแหงม'},
+    {common:'นาย',academic:'ผู้ช่วยศาสตราจารย์',rank:'ดร.',name:'นันธิยะ ศรีแก้ว'},
+    {common:'นาง',academic:'ผู้ช่วยศาสตราจารย์',rank:'ดร.',name:'กาญจนา ไรย์ฮอร์ชัค'},
+    {common:'นางสาว',academic:'',rank:'',name:'นิตยา ราตรีวิจิตร์'},
+    {common:'นางสาว',academic:'',rank:'',name:'สุธินี จินดาเสถียร'},
+    {common:'นางสาว',academic:'ผู้ช่วยศาสตราจารย์',rank:'ดร.',name:'พรรทิพย์ ฉวีบริสุทธิ์'},
+    {common:'นางสาว',academic:'',rank:'',name:'จารุวรรณ สลางสิงห์'},
+    {common:'นางสาว',academic:'',rank:'',name:'วรางค์สิริ สุดประเสริฐ'},
+    {common:'นาย',academic:'รองศาสตราจารย์',rank:'นายแพทย์',name:'กู้พงษ์ ศิริบำรุงวงศ์'},
+    {common:'นางสาว',academic:'',rank:'',name:'วิไลลักษณ์ อำพันศรี'},
+    {common:'นาย',academic:'อาจารย์',rank:'ดร.',name:'Noel Pabalan'},
+    {common:'นาง',academic:'',rank:'',name:'นวลรักษ์ ชอบชื่น'},
+    {common:'นางสาว',academic:'ผู้ช่วยศาสตราจารย์',rank:'ดร.',name:'ปิยะพร สุรินทร์เลิศ'},
+    {common:'นางสาว',academic:'อาจารย์',rank:'',name:'อนันตา เอี่ยมธนาอนันต์'},
+    {common:'นางสาว',academic:'ผู้ช่วยศาสตราจารย์',rank:'ดร.',name:'อัญชนา รอดรังนก'},
+    {common:'นางสาว',academic:'',rank:'',name:'จิตติญา พฤทธิ์ธโนปจัย'},
+    {common:'นาย',academic:'ผู้ช่วยศาสตราจารย์',rank:'นายแพทย์',name:'เทพ เศรษฐบุตร'},
+    {common:'นางสาว',academic:'รองศาสตราจารย์',rank:'แพทย์หญิง',name:'ปุณยพัศฐิช์ ศิริธนบดีกุล'},
+    {common:'นาย',academic:'รองศาสตราจารย์',rank:'นายแพทย์',name:'ศิษฏ์ ศิรมลพิวัฒน์'},
+    {common:'นาย',academic:'',rank:'',name:'กฤษพล จิตรโชติ'},
+    {common:'นางสาว',academic:'',rank:'',name:'ดวงรัตน์ เอกตระกูลชล'},
+    {common:'นางสาว',academic:'อาจารย์',rank:'',name:'สินีนาฎ ทรงคุ้มครอง'},
+    {common:'นาย',academic:'ศาสตราจารย์',rank:'ดร.นพ.',name:'รัฐกร วิไลชนม์'},
+    {common:'นางสาว',academic:'อาจารย์',rank:'ดร.',name:'ภาวศุทธิ์ ลีดาสวัสดิ์'},
+    {common:'นางสาว',academic:'',rank:'',name:'วิสสุตา ประเสริฐพรศักดิ์'},
+    {common:'นาง',academic:'',rank:'',name:'ชัญญานุช ปาชะโน'},
+    {common:'นางสาว',academic:'',rank:'',name:'อัญธิกา วงค์สกุล'},
+    {common:'นางสาว',academic:'',rank:'',name:'จิดาภา บัณฑรภิญโญ'},
+    {common:'นาย',academic:'ผู้ช่วยศาสตราจารย์',rank:'นายแพทย์',name:'ธานี เอี่ยมศรีตระกูล'},
+    {common:'นางสาว',academic:'ผู้ช่วยศาสตราจารย์',rank:'ดร.',name:'ภารดี แสงวัฒนกุล'},
+    {common:'นาย',academic:'รองศาสตราจารย์',rank:'นายแพทย์',name:'กฤต บุญธนาพิบูลย์'},
+    {common:'นาย',academic:'ผู้ช่วยศาสตราจารย์',rank:'ดร.',name:'Dawid Michal Krenc'},
+    {common:'นาย',academic:'ผู้ช่วยศาสตราจารย์',rank:'นายแพทย์',name:'กำพล จินตนาวิลาศ'},
+    {common:'นาย',academic:'ผู้ช่วยศาสตราจารย์',rank:'นายแพทย์',name:'กานต์ วิฑูรชาติ'},
+    {common:'นาย',academic:'รองศาสตราจารย์',rank:'นายแพทย์',name:'ฑิยภัทร เลาหเวชวานิช'},
+    {common:'นางสาว',academic:'',rank:'',name:'บุษดี มั่งมีดี'},
+    {common:'นางสาว',academic:'ผู้ช่วยศาสตราจารย์',rank:'แพทย์หญิง',name:'สุเนตรา นิตยวรรธนะ'},
+    {common:'นาง',academic:'',rank:'',name:'รุ่งนภา ไฮเอ็ท'},
+    {common:'นางสาว',academic:'อาจารย์',rank:'แพทย์หญิง',name:'พรมพร ภัทรเจียรพันธุ์'},
+    {common:'นาย',academic:'ผู้ช่วยศาสตราจารย์',rank:'นายแพทย์',name:'เทียนชัย ภาสุรกุล'},
+    {common:'นาย',academic:'ผู้ช่วยศาสตราจารย์',rank:'นายแพทย์',name:'สมพล อาภรณ์วิรัตน์'},
+    {common:'นาย',academic:'ผู้ช่วยศาสตราจารย์',rank:'นายแพทย์',name:'วรุตม์ พลสวัสดิ์ชัย'},
+    {common:'นางสาว',academic:'ผู้ช่วยศาสตราจารย์',rank:'แพทย์หญิง',name:'สุทธิยา อนุมาศ'},
+    {common:'นางสาว',academic:'ผู้ช่วยศาสตราจารย์',rank:'ดร.',name:'เฉลิมพร อรรถศิลป์'},
+    {common:'นางสาว',academic:'ผู้ช่วยศาสตราจารย์',rank:'ดร.',name:'ปพิชญา พรหมประดิษฐ์'},
+    {common:'นางสาว',academic:'อาจารย์',rank:'',name:'เรณู เพ็ญธนานันต์'},
+    {common:'นางสาว',academic:'อาจารย์',rank:'แพทย์หญิง',name:'นวมณฑ์ พลเสน เพทิทปิแอร์'},
+    {common:'นางสาว',academic:'ผู้ช่วยศาสตราจารย์',rank:'ดร.',name:'นวรัตน์ โพธิ์สุวรรณ'},
+    {common:'นางสาว',academic:'อาจารย์',rank:'ดร.',name:'กุลดาวรรณ จันอ่อน'},
+    {common:'นางสาว',academic:'ผู้ช่วยศาสตราจารย์',rank:'ดร.',name:'กันตา ปรานวีระไพบูลย์'},
+    {common:'นางสาว',academic:'อาจารย์',rank:'แพทย์หญิง',name:'รุ่งนภา ศิลปดีเลิศกุล'},
+    {common:'นางสาว',academic:'',rank:'',name:'ศศิฉาย ใจเบิกบาน'},
+    {common:'นาย',academic:'',rank:'',name:'วายุ ศักดิ์ดี'},
+    {common:'นาย',academic:'',rank:'',name:'พลังธรณ์ วันผ่อง'},
+    {common:'นางสาว',academic:'',rank:'',name:'นพรัตน์ อำพันศรี'},
+    {common:'นาย',academic:'',rank:'',name:'นัทธ์ฐภัค อัศวชุติพนธ์'},
+    {common:'นาย',academic:'อาจารย์',rank:'ดร.นพ.',name:'ภวิษณุ์ ผดุงศักดิ์สวัสดิ์'},
+    {common:'นาย',academic:'ผู้ช่วยศาสตราจารย์',rank:'ดร.',name:'ประทีป อมรรัตนพันธ์'},
+    {common:'นางสาว',academic:'',rank:'',name:'กรรณิการ์ สมจิตร์'},
+    {common:'นาย',academic:'',rank:'',name:'คีรีเมฆ เกตุสุธรรม'},
+    {common:'นาย',academic:'',rank:'',name:'รวิสุต วรเวช'},
+    {common:'นางสาว',academic:'อาจารย์',rank:'แพทย์หญิง',name:'ณฤชนก เลิศกุศล'},
+    {common:'นางสาว',academic:'',rank:'',name:'มณธิญา พิพิธธินันท์'},
+    {common:'นางสาว',academic:'ผู้ช่วยศาสตราจารย์',rank:'แพทย์หญิง',name:'ณัฐสุดา อ่วมแป้น'},
+    {common:'นาย',academic:'ผู้ช่วยศาสตราจารย์',rank:'ดร.',name:'อดิเทพ หาญสกล'},
+    {common:'นางสาว',academic:'',rank:'',name:'ศิริพร อินโนนเชือก'},
+    {common:'นางสาว',academic:'',rank:'',name:'วิลีรัตน์ พุ่มพวง'},
+    {common:'นางสาว',academic:'',rank:'',name:'สุวรรณา พบชัยภูมิ'},
+    {common:'นาย',academic:'',rank:'',name:'รัฐวุฒิ ฐาปนะกุล'},
+    {common:'นาย',academic:'ผู้ช่วยศาสตราจารย์',rank:'ดร.',name:'พศวีร์ มงคลปทุมรัตน์'},
+    {common:'นางสาว',academic:'อาจารย์',rank:'แพทย์หญิง',name:'สร้อยศรี เธียรธัญทิพ'},
+    {common:'นาย',academic:'อาจารย์',rank:'นายแพทย์',name:'อาทิ วงศ์ชะอุ่ม'},
+    {common:'นาย',academic:'',rank:'',name:'จุฬานิวัฒน์ ตั้งมั่น'},
+    {common:'นางสาว',academic:'',rank:'',name:'พิมพลอย จันทร์เขียว'},
+    {common:'นาย',academic:'',rank:'',name:'ชาญชัย พิมแพง'},
+    {common:'นางสาว',academic:'',rank:'',name:'พรสุดา ศรีมาบุตร'},
+    {common:'นางสาว',academic:'อาจารย์',rank:'ดร.',name:'กนกพร แผลงฤทธิ์'},
+    {common:'นางสาว',academic:'อาจารย์',rank:'แพทย์หญิง',name:'ชาริณี กันตะสิริพิทักษ์'},
+    {common:'นางสาว',academic:'',rank:'',name:'จุฑาภรณ์ วรรณภูมิ'},
+    {common:'นาย',academic:'อาจารย์',rank:'ดร.',name:'ธีรฉัตร แซ่เฮ่ง'},
+    {common:'นางสาว',academic:'อาจารย์',rank:'แพทย์หญิง',name:'ธมลพรรณ จุลละพราหมณ์'},
+    {common:'นางสาว',academic:'อาจารย์',rank:'แพทย์หญิง',name:'ธีรยา ปิยจารวงษ์'},
+    {common:'นางสาว',academic:'',rank:'',name:'อรัญญา ยุวดี'},
+    {common:'นาย',academic:'อาจารย์',rank:'ดร.',name:'ปวีณ คันศร'},
+    {common:'นางสาว',academic:'ผู้ช่วยศาสตราจารย์',rank:'ดร.',name:'ธนา จักษ์เมธา'},
+    {common:'นางสาว',academic:'รองศาสตราจารย์',rank:'แพทย์หญิง',name:'ทิพวรรณ หรรษคุณาชัย'},
+    {common:'นางสาว',academic:'',rank:'',name:'บุษกร ล้วนลอย'},
+    {common:'นางสาว',academic:'อาจารย์',rank:'ดร.',name:'นิภาวรรณ น่วมเกตุ'},
+    {common:'นาย',academic:'ผู้ช่วยศาสตราจารย์',rank:'ดร.',name:'ศราวุธ ลาภมณีย์'},
+    {common:'นาย',academic:'',rank:'',name:'เชาว์วรรธน์ จันทนา'},
+    {common:'นางสาว',academic:'',rank:'',name:'ชมพูนุช ชมบุญ'},
+    {common:'นาง',academic:'รองศาสตราจารย์',rank:'ดร.',name:'ชะนวนทอง ธนสุกาญจน์'},
+    {common:'นาย',academic:'',rank:'',name:'โยนาธาน ไมเออร์'},
+    {common:'นางสาว',academic:'อาจารย์',rank:'แพทย์หญิง',name:'จิตรา ปาวา'},
+    {common:'นาย',academic:'อาจารย์',rank:'นายแพทย์',name:'นนทพันธ์ ณรงค์'},
+    {common:'นางสาว',academic:'',rank:'',name:'พัชราภรณ์ จันจั่นเพ็ชร'},
+    {common:'นาย',academic:'',rank:'พันจ่าอากาศเอก',name:'ธีรวัตร พวงพันธ์'},
+    {common:'นางสาว',academic:'อาจารย์',rank:'แพทย์หญิง',name:'ณภัทร กัมมาระบุตร'},
+    {common:'นาย',academic:'อาจารย์',rank:'นายแพทย์',name:'สิทธา ศรีปรัชญาอนันต์'},
+    {common:'นางสาว',academic:'',rank:'',name:'ศิริลักษณ์ รอดแจ่ม'},
+    {common:'นางสาว',academic:'อาจารย์',rank:'แพทย์หญิง',name:'ภัทรวรรณ วรรณสาธพ'},
+    {common:'นาย',academic:'อาจารย์',rank:'ดร.',name:'ศุภวิชญ์ บุญเกื้อ'},
+    {common:'นางสาว',academic:'อาจารย์',rank:'ดร.',name:'กฤษณา ทิพย์คำ'},
+    {common:'นางสาว',academic:'',rank:'',name:'ภัทรวลัย จำปานันท์'},
+    {common:'นาย',academic:'',rank:'',name:'ศุภมิตร นันทวัฒนานุกูล'},
+    {common:'นางสาว',academic:'',rank:'',name:'นฤกัญ สังข์ฉิม'},
+    {common:'นาย',academic:'',rank:'',name:'ธีรภัทร เพ็ชรจร'},
+  ];
+
+  function buildFullName(p) {
+    const hasAcademic = p.academic && p.academic.trim();
+    const hasRank = p.rank && p.rank.trim();
+    let parts = [];
+    if (hasAcademic) parts.push(p.academic);
+    if (hasRank) parts.push(p.rank);
+    if (!hasAcademic && !hasRank) parts.push(p.common);
+    parts.push(p.name);
+    return parts.join(' ');
+  }
+
+  function searchPeople(q) {
+    if (!q || q.length < 1) return [];
+    const lower = q.toLowerCase();
+    return PEOPLE.filter(p =>
+      p.name.includes(q) ||
+      buildFullName(p).includes(q) ||
+      p.name.toLowerCase().includes(lower)
+    ).slice(0, 8);
+  }
+
+  // ===== UNIT SEARCH =====
+  function searchUnits(q) {
+    if (!q || q.trim().length < 1) return [];
+    return UNITS.filter(u => u.includes(q)).slice(0, 10);
+  }
+
+  function fmt(n) {
+    return parseFloat(n||0).toLocaleString('th-TH',{minimumFractionDigits:2,maximumFractionDigits:2});
+  }
+
+  const MONTHS_FULL  = ['','มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+  const MONTHS_SHORT = ['','ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+
+  function fmtFull(d) {
+    if (!d) return '...';
+    const [y,m,day] = d.split('-');
+    return `${parseInt(day)} ${MONTHS_FULL[parseInt(m)]} ${parseInt(y)+543}`;
+  }
+
+  function fmtShort(d) {
+    if (!d) return '...';
+    const [y,m,day] = d.split('-');
+    return `${parseInt(day)} ${MONTHS_SHORT[parseInt(m)]} ${(parseInt(y)+543).toString().slice(-2)}`;
+  }
+
+  function toBahtText(amount) {
+    const n = Math.round(parseFloat(amount||0) * 100);
+    if (n === 0) return 'ศูนย์บาทถ้วน';
+    const D = ['','หนึ่ง','สอง','สาม','สี่','ห้า','หก','เจ็ด','แปด','เก้า'];
+    const P = ['','สิบ','ร้อย','พัน','หมื่น','แสน'];
+    function spellGroup(num) {
+      let s = '';
+      const str = num.toString().padStart(6,'0');
+      for (let i=0;i<6;i++) {
+        const d = parseInt(str[i]);
+        if (d===0) continue;
+        if (5-i===1) {
+          if (d===1) s += 'สิบ';
+          else if (d===2) s += 'ยี่สิบ';
+          else s += D[d]+'สิบ';
+        } else {
+          s += D[d]+P[5-i];
+        }
+      }
+      return s;
+    }
+    const satang = n % 100;
+    const baht = Math.floor(n/100);
+    let r = '';
+    if (baht >= 1000000) r += spellGroup(Math.floor(baht/1000000))+'ล้าน';
+    r += spellGroup(baht%1000000)+'บาท';
+    if (satang>0) r += spellGroup(satang)+'สตางค์';
+    else r += 'ถ้วน';
+    return r;
+  }
+
+  function calcTotal() {
+    return items.reduce((s,it)=>s+(parseFloat(it.price)||0),0);
+  }
+
+  function esc(s){ return (s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;'); }
+
+  // ===== ITEMS RENDER =====
+  function renderItems() {
+    const c = document.getElementById('itemsContainer');
+    c.innerHTML = '';
+    items.forEach((item,i) => {
+      const card = document.createElement('div');
+      card.className = 'item-card';
+      card.innerHTML = `
+        <div class="item-header">
+          <span class="item-badge">รายการที่ ${i+1}</span>
+          ${items.length>1 ? `<button class="btn-remove" onclick="removeItem(${i})">✕</button>` : '<div></div>'}
+        </div>
+        <div class="item-grid">
+          <div class="full">
+            <label>ชื่อรายการ</label>
+            <input type="text" placeholder="ระบุชื่อรายการ..." value="${esc(item.name)}"
+              oninput="items[${i}].name=this.value;updatePreview()">
+          </div>
+          <div>
+            <label>จำนวน</label>
+            <input type="number" placeholder="0" min="0" value="${item.qty}"
+              oninput="items[${i}].qty=this.value;updatePreview()">
+          </div>
+          <div style="position:relative;">
+            <label>หน่วย</label>
+            <input type="text"
+              class="unitInput" data-item-idx="${i}"
+              placeholder="พิมพ์เพื่อค้นหา เช่น ชิ้น, ตัว..."
+              value="${esc(item.unit)}"
+              autocomplete="off"
+              style="width:100%;padding:8px 12px;border:1.5px solid #e2e8f0;border-radius:7px;font-family:'Google Sans',sans-serif;font-size:0.9rem;color:#1a1a2e;background:#fafbfc;outline:none;">
+            <div class="unit-drop" data-item-idx="${i}"></div>
+          </div>
+<div style="display: flex; gap: 16px; width: 100%;">
+  
+  <div style="flex: 1;">
+    <label>จำนวนเงิน (บาท)</label>
+    <input type="text" placeholder="0.00" style="width: 100%;"
+      value="${item.price ? Number(item.price).toLocaleString('en-US') : ''}"
+      oninput="
+        /* 1. ลบตัวอักษรที่ไม่ใช่ตัวเลขและจุดออกให้หมด */
+        let rawValue = this.value.replace(/[^0-9.]/g, '');
+        
+        /* 2. แยกส่วนจำนวนเต็มและทศนิยม (ถ้ามีจุด) */
+        let parts = rawValue.split('.');
+        
+        /* 3. ใส่ลูกน้ำ (Comma) ให้กับส่วนจำนวนเต็ม */
+        if (parts[0]) parts[0] = Number(parts[0]).toLocaleString('en-US');
+        
+        /* 4. แสดงผลกลับไปที่ Input */
+        this.value = parts.join('.');
+        
+        /* 5. บันทึกค่าตัวเลขเพียวๆ (ไม่มีลูกน้ำ) กลับเข้า State ของคุณ */
+        items[${i}].price = rawValue;
+        
+        updateTotalDisplay();
+        updatePreview();
+      ">
+  </div>
+
+  <div style="flex: 1;">
+    <label>เลขที่ใบเสนอราคา (ถ้าไม่มีเว้นว่าง)</label>
+    <input type="text" placeholder="เช่น QT6811-0032" value="${esc(item.quoteNo)}"
+      oninput="items[${i}].quoteNo=this.value;updatePreview()" 
+      style="width: 100%;">
+  </div>
+
+</div>
+            <div style="flex: 1;">
+            <label>วันที่ใบเสนอราคา</label>
+            <input type="date" value="${item.quoteDate}"
+              oninput="items[${i}].quoteDate=this.value;updatePreview()">
+          </div>
+        </div>
+      `;
+      c.appendChild(card);
+    });
+    updateTotalDisplay();
+    attachUnitListeners();
+  }
+
+  // ===== UNIT AUTOCOMPLETE EVENT DELEGATION =====
+  function attachUnitListeners() {
+    const container = document.getElementById('itemsContainer');
+
+    // Remove old listeners by cloning (simplest approach since we re-render)
+    // Events attached via delegation on itemsContainer — re-render clears old DOM, no leak
+
+    container.addEventListener('input', handleUnitInput, { once: false });
+    container.addEventListener('focusin', handleUnitFocus, { once: false });
+    container.addEventListener('focusout', handleUnitBlur, { once: false });
+    container.addEventListener('mousedown', handleUnitPick, { once: false });
+  }
+
+  // Use a single delegated listener set on document for items container
+  // (Attach once, not per render)
+  document.addEventListener('DOMContentLoaded', () => {
+    const itemsContainer = document.getElementById('itemsContainer');
+
+    itemsContainer.addEventListener('input', e => {
+      const inp = e.target.closest('.unitInput');
+      if (!inp) return;
+      const i = parseInt(inp.dataset.itemIdx);
+      items[i].unit = inp.value;
+      showUnitDrop(i, inp.value, itemsContainer);
+      updatePreview();
+    });
+
+    itemsContainer.addEventListener('focusin', e => {
+      const inp = e.target.closest('.unitInput');
+      if (!inp) return;
+      const i = parseInt(inp.dataset.itemIdx);
+      showUnitDrop(i, inp.value, itemsContainer);
+    });
+
+    itemsContainer.addEventListener('focusout', e => {
+      const inp = e.target.closest('.unitInput');
+      if (!inp) return;
+      const i = parseInt(inp.dataset.itemIdx);
+      setTimeout(() => hideUnitDrop(i, itemsContainer), 200);
+    });
+
+    itemsContainer.addEventListener('mousedown', e => {
+      const item = e.target.closest('[data-unit-pick]');
+      if (!item) return;
+      e.preventDefault();
+      const i = parseInt(item.dataset.unitPickIdx);
+      const val = item.dataset.unitVal;
+      items[i].unit = val;
+      const inp = itemsContainer.querySelector(`.unitInput[data-item-idx="${i}"]`);
+      if (inp) inp.value = val;
+      hideUnitDrop(i, itemsContainer);
+      updatePreview();
+    });
+
+    // ===== GLOBAL UNIT (4. หน่วย) EVENTS =====
+    const unitoInput = document.getElementById('unito');
+    const unitoDrop = document.getElementById('unito-drop');
+
+    function showGlobalUnitDrop(val) {
+      const results = val.trim().length === 0 ? UNITS.slice(0, 12) : searchUnits(val);
+      if (results.length === 0) { unitoDrop.style.display = 'none'; return; }
+      unitoDrop.style.display = 'block';
+      unitoDrop.innerHTML = results.map(u =>
+        `<div class="unit-drop-item" data-val="${esc(u)}">${u}</div>`
+      ).join('');
+    }
+
+    unitoInput.addEventListener('input', e => {
+      showGlobalUnitDrop(e.target.value);
+      updatePreview();
+    });
+
+    unitoInput.addEventListener('focusin', e => {
+      showGlobalUnitDrop(e.target.value);
+    });
+
+    unitoInput.addEventListener('focusout', () => {
+      setTimeout(() => { unitoDrop.style.display = 'none'; }, 200);
+    });
+
+    unitoDrop.addEventListener('mousedown', e => {
+      const item = e.target.closest('.unit-drop-item');
+      if (!item) return;
+      e.preventDefault();
+      unitoInput.value = item.dataset.val;
+      unitoDrop.style.display = 'none';
+      updatePreview();
+    });
+
+
+    // ===== COMMITTEE EVENTS =====
+    const committeeContainer = document.getElementById('committeeContainer');
+
+    committeeContainer.addEventListener('input', e => {
+      const inp = e.target.closest('.cmInput');
+      if (!inp) return;
+      const i = parseInt(inp.dataset.idx);
+      committee[i].name = inp.value;
+      committee[i].fullName = '';
+      const confirmed = committeeContainer.querySelector(`.cmConfirmed[data-idx="${i}"]`);
+      if (confirmed) confirmed.innerHTML = '';
+      showCmDrop(i, inp.value, committeeContainer);
+      updatePreview();
+    });
+
+    committeeContainer.addEventListener('focusin', e => {
+      const inp = e.target.closest('.cmInput');
+      if (!inp) return;
+      const i = parseInt(inp.dataset.idx);
+      showCmDrop(i, inp.value, committeeContainer);
+    });
+
+    committeeContainer.addEventListener('focusout', e => {
+      const inp = e.target.closest('.cmInput');
+      if (!inp) return;
+      const i = parseInt(inp.dataset.idx);
+      setTimeout(() => hideCmDrop(i, committeeContainer), 250);
+    });
+
+    committeeContainer.addEventListener('change', e => {
+      const sel = e.target.closest('.cmRole');
+      if (!sel) return;
+      const i = parseInt(sel.dataset.idx);
+      committee[i].role = sel.value;
+      updatePreview();
+    });
+
+    committeeContainer.addEventListener('mousedown', e => {
+      const item = e.target.closest('[data-pick]');
+      if (!item) return;
+      e.preventDefault();
+      const i = parseInt(item.dataset.pickIdx);
+      const rawName = item.dataset.pickRaw;
+      const fullName = item.dataset.pickFull;
+      committee[i].name = rawName;
+      committee[i].fullName = fullName;
+      const inp = committeeContainer.querySelector(`.cmInput[data-idx="${i}"]`);
+      if (inp) inp.value = rawName;
+      const confirmed = committeeContainer.querySelector(`.cmConfirmed[data-idx="${i}"]`);
+      if (confirmed) confirmed.innerHTML = `<div style="font-size:0.75rem;color:#4D55CC;margin-top:3px;padding-left:2px;">✔ ${fullName}</div>`;
+      hideCmDrop(i, committeeContainer);
+      updatePreview();
+    });
+  });
+
+  function showUnitDrop(i, val, container) {
+    const dd = container.querySelector(`.unit-drop[data-item-idx="${i}"]`);
+    if (!dd) return;
+    // Show all common units on focus (empty query), filter when typing
+    const results = val.trim().length === 0
+      ? UNITS.slice(0, 12) // show top 12 popular units when empty
+      : searchUnits(val);
+    if (results.length === 0) { dd.style.display = 'none'; return; }
+    dd.style.display = 'block';
+    dd.innerHTML = results.map(u =>
+      `<div class="unit-drop-item" data-unit-pick="1" data-unit-pick-idx="${i}" data-unit-val="${esc(u)}">${u}</div>`
+    ).join('');
+  }
+
+  function hideUnitDrop(i, container) {
+    const dd = container.querySelector(`.unit-drop[data-item-idx="${i}"]`);
+    if (dd) dd.style.display = 'none';
+  }
+
+  function showCmDrop(i, val, container) {
+    const dd = container.querySelector(`.cmDrop[data-idx="${i}"]`);
+    if (!dd) return;
+    if (!val || val.trim().length < 1) { dd.style.display = 'none'; return; }
+    const results = searchPeople(val);
+    if (results.length === 0) { dd.style.display = 'none'; return; }
+    dd.style.display = 'block';
+    dd.innerHTML = results.map(p => {
+      const full = buildFullName(p);
+      return `<div data-pick="1" data-pick-idx="${i}" data-pick-raw="${p.name.replace(/"/g,'&quot;')}" data-pick-full="${full.replace(/"/g,'&quot;')}"
+        style="padding:9px 14px;cursor:pointer;border-bottom:1px solid #f0f0f0;font-size:0.9rem;line-height:1.5;"
+        onmouseover="this.style.background='#eef4ff'" onmouseout="this.style.background=''">
+        <div style="font-weight:600;color:#1a1a2e;">${full}</div>
+        <div style="font-size:0.75rem;color:#718096;">${p.name}</div>
+      </div>`;
+    }).join('');
+  }
+
+  function hideCmDrop(i, container) {
+    const dd = container.querySelector(`.cmDrop[data-idx="${i}"]`);
+    if (dd) dd.style.display = 'none';
+  }
+
+  function updateTotalDisplay() {
+    document.getElementById('totalDisplay').textContent = fmt(calcTotal())+' บาท';
+  }
+
+  function updatePreview() {
+    document.getElementById('previewBox').textContent = buildText();
+  }
+
+  // ===== COMMITTEE RENDER =====
+  function renderCommittee() {
+    const c = document.getElementById('committeeContainer');
+    c.innerHTML = '';
+    committee.forEach((m, i) => {
+      const row = document.createElement('div');
+      row.setAttribute('data-ci', i);
+      row.style.cssText = 'margin-bottom:8px;';
+      const opts = ROLES.map(r => `<option value="${r}" ${m.role === r ? 'selected' : ''}>${r}</option>`).join('');
+      const confirmed = m.fullName && m.fullName !== m.name
+        ? `<div style="font-size:0.75rem;color:#4D55CC;margin-top:3px;padding-left:2px;">✔ ${m.fullName}</div>`
+        : '';
+      row.innerHTML = `
+        <div style="display:grid;grid-template-columns:26px 1fr 155px auto;align-items:start;gap:7px;">
+          <div class="committee-num" style="margin-top:8px;">${i + 1}</div>
+          <div style="position:relative;">
+            <input type="text"
+              class="cmInput" data-idx="${i}"
+              placeholder="พิมพ์ชื่อเพื่อค้นหา..."
+              value="${esc(m.name)}"
+              autocomplete="off"
+              style="width:100%;padding:8px 12px;border:1.5px solid #e2e8f0;border-radius:7px;font-family:'Google Sans',sans-serif;font-size:0.88rem;outline:none;">
+            <div class="cmConfirmed" data-idx="${i}">${confirmed}</div>
+            <div class="cmDrop" data-idx="${i}"
+              style="display:none;position:absolute;top:100%;left:0;right:0;background:white;border:1.5px solid #e2e8f0;border-radius:7px;z-index:200;max-height:220px;overflow-y:auto;box-shadow:0 4px 16px rgba(0,0,0,0.12);margin-top:2px;"></div>
+          </div>
+          <select class="cmRole" data-idx="${i}"
+            style="padding:8px 10px;border:1.5px solid #e2e8f0;border-radius:7px;font-family:'Google Sans',sans-serif;font-size:0.82rem;background:#fafbfc;outline:none;cursor:pointer;appearance:none;background-image:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23718096' d='M6 8L1 3h10z'/%3E%3C/svg%3E\");background-repeat:no-repeat;background-position:right 10px center;padding-right:28px;">${opts}</select>
+          ${committee.length > 1
+            ? `<button class="btn-remove-sm" onclick="removeCommittee(${i})" style="margin-top:6px;">✕</button>`
+            : '<div></div>'}
+        </div>
+      `;
+      c.appendChild(row);
+    });
+  }
+
+  function buildText() {
+    const dept        = v('dept')        || 'งานกิจการนักศึกษา';
+    const matType     = v('matType')     || 'ซื้อ';
+    const law         = v('law')         || '56(2)(ข)';
+    const unito       = v('unito')       || 'รายการ';
+    const projectName = v('projectName') || '...'; // เพิ่มบรรทัดนี้
+    const docDate     = fmtFull(v('docDate'));
+    const total       = calcTotal();
+
+    let t = '';
+    t += `เรียน คณบดี (ผ่านผู้ช่วยคณบดีฝ่ายการคลังและแผน)\n`;
+    // แทรก ${projectName} เข้าไปในประโยค (คุณสามารถขยับตำแหน่งจัดวางได้ตามต้องการ)
+    t += `        ตามที่ ${dept} ได้เสนอความต้องการ${matType}${projectName} จำนวน ${items.length} ${unito} ดังนี้\n`;
+
+    items.forEach((it,i) => {
+      const name  = it.name  || '...';
+      const qty   = it.qty   || '...';
+      const unit  = it.unit  || '...';
+      const price = fmt(it.price);
+      const date  = fmtShort(it.quoteDate);
+      const quoteStr = it.quoteNo && it.quoteNo.trim() ? `เลขที่ ${it.quoteNo} ` : '';
+      t += `        ${i+1}. ${name} จำนวน ${qty} ${unit} เป็นเงิน ${price} บาท (${toBahtText(it.price)}) รายละเอียดตามใบเสนอราคา${quoteStr}ลงวันที่ ${date}\n`;
+    });
+
+    t += `        เป็นเงิน ${fmt(total)} บาท (${toBahtText(total)})\n`;
+
+    if (committee.length === 1) {
+      const m = committee[0];
+      const displayName = m.fullName || m.name || '...';
+      t += `        จึงขออนุมัติดำเนินการจัดจ้างตามพระราชบัญญัติการจัดซื้อจัดจ้างและการบริหารพัสดุภาครัฐ พ.ศ. 2560 มาตรา ${law} โดยวิธีเฉพาะเจาะจง และประกาศกฎกระทรวง เรื่อง กำหนดวงเงินการจัดซื้อจัดจ้างพัสดุโดยวิธีเฉพาะเจาะจงและวิธีประกวดราคาอิเล็กทรอนิกส์ ข้อ 4 ลงวันที่ 23 สิงหาคม 2560 ซึ่งกำหนดว่าในกรณีการจัดจ้างมีวงเงินเล็กน้อยไม่เกิน 100,000 บาท จะไม่ทำข้อตกลงเป็นหนังสือไว้ต่อกันก็ได้ แต่ต้องมีหลักฐานในการจัดซื้อจัดจ้าง พร้อมทั้งขออนุมัติแต่งตั้ง ${displayName} เป็นกรรมการตรวจรับพัสดุ\n`;
+    } else {
+      t += `        จึงขออนุมัติดำเนินการจัดจ้างตามพระราชบัญญัติการจัดซื้อจัดจ้างและการบริหารพัสดุภาครัฐ พ.ศ. 2560 มาตรา ${law} โดยวิธีเฉพาะเจาะจง และประกาศกฎกระทรวง เรื่อง กำหนดวงเงินการจัดซื้อจัดจ้างพัสดุโดยวิธีเฉพาะเจาะจงและวิธีประกวดราคาอิเล็กทรอนิกส์ ข้อ 4 ลงวันที่ 23 สิงหาคม 2560 ซึ่งกำหนดว่าในกรณีการจัดจ้างมีวงเงินเล็กน้อยไม่เกิน 100,000 บาท จะไม่ทำข้อตกลงเป็นหนังสือไว้ต่อกันก็ได้ แต่ต้องมีหลักฐานในการจัดซื้อจัดจ้าง พร้อมทั้งขออนุมัติแต่งตั้งคณะกรรมการตรวจรับพัสดุ ดังนี้\n`;
+      committee.forEach((m,i) => {
+        const displayName = m.fullName || m.name || '...';
+        t += `${i+1}. ${displayName}    ${m.role||'...'}\n`;
+      });
+    }
+
+    t += `        จึงเรียนมาเพื่อโปรดพิจารณา หากเห็นชอบด้วย โปรดอนุมัติ\n`;
+    t += `(นางสาวบุษกร ล้วนลอย)\nนักวิชาการพัสดุ\n${docDate}`;
+
+    return t;
+  }
+
+  function v(id) { return document.getElementById(id).value; }
+
+  function render() {
+    renderItems();
+    renderCommittee();
+    updatePreview();
+  }
+
+  function addItem() {
+    items.push({ name:'', qty:'', unit:'', price:'', quoteNo:'', quoteDate:'' });
+    render();
+  }
+  function removeItem(i) { items.splice(i,1); render(); }
+
+  function addCommittee() {
+    const role = committee.length < ROLE_DEFAULTS.length ? ROLE_DEFAULTS[committee.length] : 'กรรมการ';
+    committee.push({ name:'', fullName:'', role });
+    render();
+  }
+  function removeCommittee(i) { committee.splice(i,1); render(); }
+
+  function copyText() {
+    navigator.clipboard.writeText(document.getElementById('previewBox').textContent).then(()=>{
+      const btn = document.getElementById('copyBtn');
+      const toast = document.getElementById('toast');
+      btn.classList.add('copied');
+      btn.innerHTML = '✅ คัดลอกแล้ว!';
+      toast.classList.add('show');
+      setTimeout(()=>{
+        btn.classList.remove('copied');
+        btn.innerHTML = '📋 คัดลอกข้อความ';
+        toast.classList.remove('show');
+      }, 2500);
+    });
+  }
+
+  // Dummy functions to avoid errors from inline event refs that were removed
+  function handleUnitInput(){}
+  function handleUnitFocus(){}
+  function handleUnitBlur(){}
+  function handleUnitPick(){}
+
+  render();
+</script>
+</body>
+</html>

@@ -1,0 +1,2408 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ตัวคำนวณค่าเสื่อมราคา (Asset Depreciation)</title>
+
+    <!-- ไฟล์นี้ถูกสร้างอัตโนมัติจาก tools/build-single-file.mjs ห้ามแก้โดยตรง แก้ที่ js/*.js และ css/*.css แล้ว build ใหม่
+         VENDOR: ดู README.md หัวข้อ "SRI และ CSP" ก่อนนำขึ้นใช้งานจริง
+         รัน tools/fetch-vendor.sh เพื่อดาวน์โหลดไลบรารีมาไว้ใน vendor/ และรับค่า integrity -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous" referrerpolicy="no-referrer">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" crossorigin="anonymous" referrerpolicy="no-referrer">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/themes/material_blue.css" crossorigin="anonymous" referrerpolicy="no-referrer">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Libre+Barcode+128&family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+/* ===== css/app.css ===== */
+:root {
+    --main-font: 'Google Sans', 'Sarabun', sans-serif;
+    --barcode-font: "Libre Barcode 128", system-ui;
+}
+
+body {
+    background-color: #f8f9fa;
+    color: #202124;
+    font-family: var(--main-font);
+}
+
+input, select, textarea, button, .btn, .form-control, .form-select, table {
+    font-family: var(--main-font) !important;
+}
+
+.barcode {
+    font-family: var(--barcode-font);
+    font-size: 3.5rem;
+    line-height: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    display: inline-block;
+}
+
+.card { border: none; border-radius: 16px; transition: all 0.3s ease; }
+.form-label { font-weight: 500; font-size: 0.95rem; color: #444746; }
+.section-label { font-size: 0.78rem; font-weight: 700; letter-spacing: .04em; color: #9aa0a6; text-transform: uppercase; margin: 18px 0 8px; }
+.section-label:first-child { margin-top: 0; }
+
+.input-group-text { background-color: #f1f3f4; border-right: none; color: #5f6368; border-radius: 8px 0 0 8px; }
+.form-control, .form-select {
+    border-radius: 8px;
+    border: 1px solid #dadce0;
+    padding: 10px 12px;
+    font-size: 1rem;
+}
+.form-control:focus, .form-select:focus {
+    box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.2);
+    border-color: #1a73e8;
+}
+.input-group .form-control { border-radius: 0 8px 8px 0; }
+.currency-input { border-left: none; font-weight: 500; }
+
+/* โฟกัสต้องมองเห็นได้เสมอ (accessibility) */
+.btn:focus-visible, .form-control:focus-visible, .form-select:focus-visible {
+    outline: 3px solid #1a73e8;
+    outline-offset: 2px;
+}
+
+.is-invalid-custom { border-color: #d93025 !important; background-color: #fff8f7; }
+.error-msg { color: #d93025; font-size: 0.85rem; display: none; margin-top: 6px; font-weight: 500; }
+.alert-box-errors { display: none; }
+
+.visually-hidden-live {
+    position: absolute;
+    width: 1px; height: 1px;
+    margin: -1px; padding: 0;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+.chart-container {
+    width: 100%; height: 280px; position: relative;
+    background: #fff; border-radius: 12px; border: 1px solid #e9ecef;
+    padding: 10px; overflow: hidden;
+}
+.chart-container canvas { max-width: 100%; }
+
+.copy-area {
+    background-color: #f8f9fa;
+    border: 1px dashed #c4c7c5;
+    border-radius: 8px;
+    padding: 16px;
+    font-size: 0.9rem;
+}
+.user-select-all { user-select: all; -webkit-user-select: all; }
+
+.btn-primary {
+    background-color: #1a73e8; border-color: #1a73e8;
+    border-radius: 20px; padding: 8px 24px; font-weight: 500;
+}
+.btn-primary:hover { background-color: #1557b0; border-color: #1557b0; }
+.btn-primary:disabled { background-color: #7fa8e0; border-color: #7fa8e0; }
+.btn-outline-success, .btn-outline-danger, .btn-outline-primary { border-radius: 20px; }
+.btn-light { border-radius: 20px; color: #1a73e8; font-weight: 500; background: #e8f0fe; border: none; }
+
+.stat-card { border-radius: 14px; }
+.stat-card p { letter-spacing: .03em; }
+.stat-card h4, .stat-card h5, .stat-card h6 { line-height: 1.2; }
+
+.progress { height: 22px; border-radius: 20px; background-color: #eef1f4; }
+.progress-bar { border-radius: 20px; font-size: 0.78rem; font-weight: 600; }
+.progress-caption { display: flex; justify-content: space-between; font-size: 0.85rem; color: #5f6368; margin-bottom: 4px; }
+.life-kpi-strip { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; font-size: 0.85rem; background: #f1f6fe; border-radius: 10px; padding: 10px 14px; margin-bottom: 14px; }
+.life-kpi-strip .kpi-item span.v { font-weight: 700; color: #1f1f1f; display: block; }
+
+.status-badge { font-size: 0.85rem; font-weight: 600; padding: 5px 10px; border-radius: 20px; display: inline-block; }
+.status-active { background: #e6f4ea; color: #137333; }
+.status-warn { background: #fef7e0; color: #b06000; }
+.status-done { background: #fce8e6; color: #c5221f; }
+.status-neutral { background: #e8eaed; color: #444746; }
+
+.chart-toggle .btn { border-radius: 20px; font-size: 0.82rem; padding: 5px 14px; }
+
+.calc-method-box { background: #f8f9fa; border-radius: 10px; border: 1px solid #e9ecef; padding: 16px; font-size: 0.9rem; }
+.calc-method-box .formula { font-family: 'Courier New', monospace; background: #fff; border: 1px solid #e0e0e0; border-radius: 6px; padding: 10px 12px; margin: 6px 0 14px; white-space: pre-wrap; }
+
+tr.row-current-year { background-color: #fff8e1 !important; }
+tr.row-projection td { color: #5b3fa8; font-style: italic; }
+.current-year-tag { font-size: 0.68rem; background: #1a73e8; color: #fff; border-radius: 10px; padding: 1px 8px; margin-left: 6px; white-space: nowrap; }
+.snapshot-subrow { background-color: #eef6ff !important; }
+.status-pill { font-size: 0.72rem; padding: 3px 9px; border-radius: 10px; font-weight: 600; white-space: nowrap; }
+tr.row-total td { border-top: 2px solid #444746 !important; font-weight: 700; background: #f8f9fa; }
+.table-legend { font-size: 0.8rem; color: #5f6368; }
+
+.recon-box { border-radius: 12px; padding: 16px 18px; font-size: 0.9rem; }
+.recon-ok { background: #e6f4ea; border: 1px solid #b7e1c3; color: #0d652d; }
+.recon-fail { background: #fce8e6; border: 1px solid #f5b3ae; color: #a50e0e; }
+.recon-box .formula-line { font-family: 'Courier New', monospace; }
+
+.selftest-box { font-size: 0.85rem; border-radius: 12px; padding: 14px 16px; background: #f1f3f4; border: 1px solid #dadce0; }
+.selftest-box .t-pass { color: #137333; }
+.selftest-box .t-fail { color: #c5221f; font-weight: 700; }
+
+.note-inline { font-size: 0.78rem; color: #5f6368; }
+.print-signature { display: none; }
+
+/* ===== css/print.css ===== */
+@page { size: A4; margin: 13mm 12mm; }
+
+@media print {
+    body { background-color: white; margin-top: 20px; font-size: 11px; }
+    .container { max-width: 100% !important; padding: 0; }
+    .card { box-shadow: none !important; border: 1px solid #eee !important; }
+    .d-print-none { display: none !important; }
+    .col-print-12 {
+        width: 100% !important;
+        flex: 0 0 auto !important;
+        max-width: 100% !important;
+    }
+    .chart-container {
+        height: auto !important;
+        min-height: 150px;
+        max-height: 250px;
+        border: 1px solid #000;
+        page-break-inside: avoid;
+        padding: 4px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        margin: 0 auto;
+    }
+    .chart-container canvas {
+        max-width: 100% !important;
+        max-height: 100% !important;
+        height: auto !important;
+        width: auto !important;
+    }
+    table { font-size: 9.5px; width: 100%; }
+    th { background-color: #eee !important; color: #000 !important; }
+    tr.row-projection td { font-style: italic; }
+    .barcode { font-size: 4rem; color: #000; }
+    * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+
+    .print-header-overlay {
+        position: fixed;
+        top: 0;
+        right: 0;
+        width: 100%;
+        text-align: right;
+        padding: 10px 20px;
+        background-color: white;
+        z-index: 9999;
+        display: block !important;
+    }
+    .print-signature { display: flex !important; }
+    #scheduleCard { page-break-before: always; }
+    .recon-box { page-break-inside: avoid; }
+    .selftest-box { display: none !important; }
+}
+
+    </style>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+</head>
+<body>
+
+<div class="print-header-overlay d-none">
+    <span class="text-muted small">ลำดับที่เอกสาร: <span id="printDocRef" class="fw-bold text-dark" style="font-size: 1.1em;">-</span></span>
+</div>
+
+<div class="container py-5">
+    <div class="d-flex justify-content-between align-items-center mb-4 d-print-none flex-wrap gap-2">
+        <div>
+            <h1 class="h3 mb-1 fw-bold" style="color: #1f1f1f;">
+                <i class="fa-solid fa-calculator me-2 text-primary" aria-hidden="true"></i>คำนวณค่าเสื่อมราคา
+            </h1>
+            <p class="text-muted small mb-0">ระบบคำนวณค่าเสื่อมราคาครุภัณฑ์ (เส้นตรง)</p>
+        </div>
+        <div class="d-flex gap-2 flex-wrap">
+            <button id="btnSelfTest" type="button" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
+                <i class="fa-solid fa-vial-circle-check me-1" aria-hidden="true"></i> ตรวจสอบระบบ
+            </button>
+            <button id="btnReset" type="button" class="btn btn-outline-danger btn-sm rounded-pill px-3">
+                <i class="fa-solid fa-eraser me-1" aria-hidden="true"></i> ล้างข้อมูล
+            </button>
+            <button id="btnPrint" type="button" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
+                <i class="fa-solid fa-print me-1" aria-hidden="true"></i> พิมพ์รายงาน
+            </button>
+        </div>
+    </div>
+
+    <div class="d-none d-print-block mb-3 text-center" style="margin-top: 20px;">
+        <h4 class="mb-1">รายงานการคำนวณค่าเสื่อมราคาครุภัณฑ์</h4>
+        <p class="small text-muted mb-0">พิมพ์เมื่อ: <span id="printDate"></span></p>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-4 d-print-none">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-white py-3 border-bottom-0 d-flex justify-content-between align-items-center">
+                    <h2 class="mb-0 fw-bold h5"><i class="fa-regular fa-pen-to-square me-2" aria-hidden="true"></i>ข้อมูลสินทรัพย์</h2>
+                    <button id="btnExample" type="button" class="btn btn-light btn-sm">
+                        <i class="fa-solid fa-rotate-right me-1" aria-hidden="true"></i> ตัวอย่าง
+                    </button>
+                </div>
+                <div class="card-body pt-0">
+                    <form id="assetForm" novalidate>
+
+                    <div id="formAlertBox" class="alert alert-danger alert-box-errors" role="alert" aria-live="assertive">
+                        <div class="fw-bold mb-1"><i class="fa-solid fa-circle-exclamation me-1" aria-hidden="true"></i> ข้อมูลไม่ถูกต้อง</div>
+                        <ul class="mb-0 ps-3 small" id="formAlertList"></ul>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-5">
+                            <label class="form-label" for="assetCode">รหัสครุภัณฑ์</label>
+                            <input id="assetCode" type="text" class="form-control" placeholder="เช่น 1234-001-0001">
+                        </div>
+                        <div class="col-7">
+                            <label class="form-label" for="assetName">รายการ</label>
+                            <input id="assetName" type="text" class="form-control" placeholder="เช่น เครื่องสำรองไฟ 1KVA">
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label" for="cost">ราคาทุน (บาท)</label>
+                        <div class="input-group">
+                            <span class="input-group-text" aria-hidden="true">฿</span>
+                            <input id="cost" type="text" inputmode="decimal" class="form-control currency-input fw-bold text-primary" placeholder="0.00" aria-describedby="costError">
+                        </div>
+                        <div id="costError" class="error-msg"></div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-6">
+                            <label class="form-label" for="salvage">มูลค่าซาก</label>
+                            <input id="salvage" type="text" inputmode="decimal" value="1.00" class="form-control currency-input text-end" aria-describedby="salvageError">
+                            <div id="salvageError" class="error-msg"></div>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label" for="lifeYears">อายุตามบัญชี (ปี)</label>
+                            <input id="lifeYears" type="number" value="5" min="1" max="100" step="1" class="form-control text-end" aria-describedby="lifeYearsError">
+                            <div id="lifeYearsError" class="error-msg"></div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label" for="startDate">วันที่เริ่มใช้ (วว/ดด/ปปปป)</label>
+                        <div class="input-group">
+                            <input type="text" id="startDate" class="form-control date-input" placeholder="เช่น 01/10/2567" maxlength="10" aria-describedby="startDateError">
+                            <span class="input-group-text bg-white" aria-hidden="true"><i class="fa-regular fa-calendar text-muted"></i></span>
+                        </div>
+                        <div id="startDateError" class="error-msg"></div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label" for="currentDate">คำนวณถึงวันที่ (Snapshot)</label>
+                        <div class="input-group">
+                            <input type="text" id="currentDate" class="form-control date-input" placeholder="วันที่ปัจจุบัน" maxlength="10" aria-describedby="currentDateError">
+                            <span class="input-group-text bg-white" aria-hidden="true"><i class="fa-regular fa-calendar text-muted"></i></span>
+                        </div>
+                        <div id="currentDateError" class="error-msg"></div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small mb-1" for="operStatus">สถานะการใช้งาน</label>
+                        <select id="operStatus" class="form-select">
+                            <option value="ใช้งานอยู่" selected>ใช้งานอยู่</option>
+                            <option value="ส่งซ่อม">ส่งซ่อม</option>
+                            <option value="ชำรุด">ชำรุด</option>
+                            <option value="รอจำหน่าย">รอจำหน่าย</option>
+                            <option value="จำหน่ายแล้ว">จำหน่ายแล้ว</option>
+                            <option value="โอน">โอน</option>
+                            <option value="สูญหาย">สูญหาย</option>
+                        </select>
+                        <div class="form-text small">สถานะนี้ใช้เพื่อแสดงผลเท่านั้น ไม่มีผลต่อการหยุดคิดค่าเสื่อม</div>
+                    </div>
+
+                    <div class="section-label">หลักเกณฑ์การคำนวณ</div>
+
+                    <div class="mb-3">
+                        <span class="form-label small mb-1 d-block" id="depMethodLabel">วิธีคำนวณ</span>
+                        <div class="d-flex flex-wrap gap-3 small" role="radiogroup" aria-labelledby="depMethodLabel">
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="depMethod" id="methodStraight" checked>
+                                <label class="form-check-label" for="methodStraight">เส้นตรง</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="depMethod" id="methodMonth" disabled>
+                                <label class="form-check-label text-muted" for="methodMonth">ตามจำนวนเดือน (เร็วๆ นี้)</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="depMethod" id="methodCustom" disabled>
+                                <label class="form-check-label text-muted" for="methodCustom">กำหนดเอง (เร็วๆ นี้)</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small mb-1" for="yearBasis">ปีฐาน (จำนวนวันต่อปี)</label>
+                        <select id="yearBasis" class="form-select">
+                            <option value="actual" selected>ตามจริง (365 หรือ 366 วัน ตามปีอธิกสุรทิน)</option>
+                            <option value="fixed365">คงที่ 365 วันทุกปี</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small mb-1" for="eolPolicy">นโยบายวันครบอายุ</label>
+                        <select id="eolPolicy" class="form-select">
+                            <option value="anniversaryMinusOneDay" selected>วันก่อนวันครบรอบ (ใช้สูตรเดียวทุกกรณี)</option>
+                            <option value="clampedAnniversaryAsLastDay">กรณี 29 ก.พ. ให้ใช้วันสิ้นเดือนกุมภาพันธ์เป็นวันครบอายุ</option>
+                        </select>
+                        <div class="form-text small">เป็นนโยบายทางบัญชีของหน่วยงาน ไม่ใช่กฎสากล มีผลเฉพาะกรณีวันที่เริ่มใช้ไม่มีอยู่จริงในปีปลายทาง เช่น 29 กุมภาพันธ์</div>
+                    </div>
+
+                    <div class="section-label">ข้อมูลเอกสาร</div>
+
+                    <div class="mb-3">
+                        <label class="form-label" for="budget">แหล่งงบประมาณ</label>
+                        <select id="budget" class="form-select">
+                            <option value="กองทุนค่าธรรมเนียมการศึกษา">กองทุนค่าธรรมเนียมการศึกษา</option>
+                            <option value="งบคลัง มหาวิทยาลัยธรรมศาสตร์">งบคลัง มหาวิทยาลัยธรรมศาสตร์</option>
+                            <option selected value="งบรายได้วิทยาลัยแพทยศาสตร์นานาชาติจุฬาภรณ์">งบรายได้วิทยาลัยแพทยศาสตร์นานาชาติจุฬาภรณ์</option>
+                            <option value="งบบริจาค">งบบริจาค</option>
+                            <option value="งบกองทุนวิจัย">งบกองทุนวิจัย</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label" for="docRef">ลำดับที่เอกสาร</label>
+                        <input type="text" id="docRef" class="form-control" placeholder="เช่น 000">
+                        <div class="form-text small">เลขที่นี้จะแสดงมุมขวาบนเมื่อสั่งพิมพ์</div>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <button id="calcBtn" type="button" class="btn btn-primary shadow-sm">
+                            <span id="calcBtnLabel">คำนวณผลลัพธ์</span>
+                        </button>
+                        <div class="d-flex gap-2">
+                            <button id="btnCSV" type="button" class="btn btn-outline-success flex-fill btn-sm">
+                                <i class="fa-solid fa-file-csv me-1" aria-hidden="true"></i> CSV
+                            </button>
+                            <button id="btnExcel" type="button" class="btn btn-outline-success flex-fill btn-sm">
+                                <i class="fa-solid fa-file-excel me-1" aria-hidden="true"></i> Excel
+                            </button>
+                            <button id="btnPDF" type="button" class="btn btn-outline-danger flex-fill btn-sm">
+                                <i class="fa-solid fa-file-pdf me-1" aria-hidden="true"></i> PDF
+                            </button>
+                        </div>
+                        <div id="dirtyNotice" class="note-inline text-danger" style="display:none;" role="status">
+                            <i class="fa-solid fa-triangle-exclamation me-1" aria-hidden="true"></i>
+                            ข้อมูลเปลี่ยนแปลงหลังคำนวณ กรุณากดคำนวณใหม่ก่อนพิมพ์หรือส่งออก
+                        </div>
+                    </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-8 col-print-12">
+
+            <p id="resultStatusLive" class="visually-hidden-live" role="status" aria-live="polite"></p>
+
+            <div class="d-none d-print-block mb-3">
+    <table class="table table-bordered mb-2" style="font-size: 0.85rem;">
+        <tbody>
+            <tr><td class="fw-bold bg-light" style="width:28%;">รหัสครุภัณฑ์</td><td id="printAssetCode">-</td><td class="fw-bold bg-light" style="width:22%;">รายการ</td><td id="printAssetName">-</td></tr>
+            <tr><td class="fw-bold bg-light">ราคาทุน</td><td id="printCost">-</td><td class="fw-bold bg-light">มูลค่าซาก</td><td id="printSalvage">-</td></tr>
+            <tr><td class="fw-bold bg-light">อายุตามบัญชี</td><td id="printLife">-</td><td class="fw-bold bg-light">วันที่เริ่มใช้งาน</td><td id="printStartDate">-</td></tr>
+            <tr><td class="fw-bold bg-light">วันที่คำนวณ</td><td id="printCurrentDate">-</td><td class="fw-bold bg-light">ครบอายุการใช้งาน</td><td id="printEndOfLife">-</td></tr>
+            <tr><td class="fw-bold bg-light">อายุการใช้งานจริง</td><td id="printDuration">-</td><td class="fw-bold bg-light">อายุคงเหลือ</td><td id="printRemaining">-</td></tr>
+            <tr><td class="fw-bold bg-light">ค่าเสื่อมสะสมที่เกิดขึ้นจริง (ถึงวันคำนวณ)</td><td id="printAccumulated2">-</td><td class="fw-bold bg-light">มูลค่าตามบัญชี</td><td id="printBookValue2">-</td></tr>
+            <tr><td class="fw-bold bg-light">ค่าเสื่อมปีนี้ เกิดขึ้นจริงถึงวันคำนวณ</td><td id="printThisYearActual">-</td><td class="fw-bold bg-light">สถานะค่าเสื่อม</td><td id="printDepStatus">-</td></tr>
+            <tr><td class="fw-bold bg-light">สถานะการใช้งาน</td><td id="printOperStatus">-</td><td></td><td></td></tr>
+        </tbody>
+    </table>
+</div>
+
+            <!-- Dashboard -->
+            <div class="row row-cols-2 row-cols-md-4 g-3 mb-4 d-print-none">
+                <div class="col">
+                    <div class="card shadow-sm border-start border-4 border-primary h-100 stat-card">
+                        <div class="card-body p-3">
+                            <p class="text-muted small mb-1 fw-bold text-uppercase">ราคาทุน</p>
+                            <h4 class="mb-0 text-primary fw-bold" id="resCost">-</h4>
+                        </div>
+                    </div>
+                </div>
+                <div class="col">
+                    <div class="card shadow-sm border-start border-4 border-danger h-100 stat-card">
+                        <div class="card-body p-3">
+                            <p class="text-muted small mb-1 fw-bold text-uppercase">ค่าเสื่อมสะสมที่เกิดขึ้นจริง (ถึงวันคำนวณ)</p>
+                            <h4 class="mb-0 text-danger fw-bold" id="resAccumulated">-</h4>
+                        </div>
+                    </div>
+                </div>
+                <div class="col">
+                    <div class="card shadow-sm border-start border-4 border-success h-100 stat-card">
+                        <div class="card-body p-3">
+                            <p class="text-muted small mb-1 fw-bold text-uppercase">มูลค่าตามบัญชี</p>
+                            <h4 class="mb-0 text-success fw-bold" id="resBookValue">-</h4>
+                        </div>
+                    </div>
+                </div>
+                <div class="col">
+                    <div class="card shadow-sm border-start border-4 border-info h-100 stat-card">
+                        <div class="card-body p-3">
+                            <p class="text-muted small mb-1 fw-bold text-uppercase">ค่าเสื่อมปีนี้ เกิดขึ้นจริงถึงวันคำนวณ</p>
+                            <h5 class="mb-0 fw-bold" style="color:#0b8793;" id="resThisYear">-</h5>
+                            <p class="text-muted mb-0" style="font-size:0.72rem;">
+                                ประมาณการหลังวันคำนวณ: <span id="resThisYearProjected">-</span><br>
+                                รวมทั้งช่วงในปีนี้: <span id="resThisYearPeriod">-</span><br>
+                                เต็มปีตามอัตราบัญชี: <span id="resThisYearRate">-</span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col">
+                    <div class="card shadow-sm border-start border-4 border-secondary h-100 stat-card">
+                        <div class="card-body p-3">
+                            <p class="text-muted small mb-1 fw-bold text-uppercase">อายุการใช้งานจริง</p>
+                            <h6 class="mb-0 fw-bold" id="resDuration">-</h6>
+                        </div>
+                    </div>
+                </div>
+                <div class="col">
+                    <div class="card shadow-sm border-start border-4 border-secondary h-100 stat-card">
+                        <div class="card-body p-3">
+                            <p class="text-muted small mb-1 fw-bold text-uppercase">อายุคงเหลือ</p>
+                            <h6 class="mb-0 fw-bold" id="resRemaining">-</h6>
+                        </div>
+                    </div>
+                </div>
+                <div class="col">
+                    <div class="card shadow-sm border-start border-4 border-warning h-100 stat-card">
+                        <div class="card-body p-3">
+                            <p class="text-muted small mb-1 fw-bold text-uppercase">สถานะการใช้งาน</p>
+                            <span class="status-badge status-neutral" id="resOperStatus">-</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col">
+                    <div class="card shadow-sm border-start border-4 border-warning h-100 stat-card">
+                        <div class="card-body p-3">
+                            <p class="text-muted small mb-1 fw-bold text-uppercase">สถานะค่าเสื่อม</p>
+                            <span class="status-badge status-neutral" id="resDepStatus">-</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Progress -->
+            <div class="card shadow-sm mb-4 d-print-none">
+                <div class="card-body">
+                    <div class="life-kpi-strip">
+                        <div class="kpi-item"><span>เริ่มใช้งาน</span><span class="v" id="kpiStart">-</span></div>
+                        <div class="kpi-item"><span>ครบอายุการใช้งาน</span><span class="v" id="kpiEndOfLife">-</span></div>
+                        <div class="kpi-item"><span>เหลืออายุ</span><span class="v" id="kpiRemaining">-</span></div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="progress-caption">
+                            <span id="ageProgressCaptionLabel">อายุการใช้งาน (เทียบกับวันครบอายุจริง)</span>
+                            <span id="ageProgressLabel">0%</span>
+                        </div>
+                        <div class="progress">
+                            <div id="ageProgressBar" class="progress-bar bg-primary" role="progressbar"
+                                 aria-labelledby="ageProgressCaptionLabel" style="width:0%" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="progress-caption">
+                            <span id="depProgressCaptionLabel">ค่าเสื่อม</span>
+                            <span id="depProgressLabel">0%</span>
+                        </div>
+                        <div class="progress">
+                            <div id="depProgressBar" class="progress-bar bg-danger" role="progressbar"
+                                 aria-labelledby="depProgressCaptionLabel" style="width:0%" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+                        </div>
+                        <div class="small text-muted mt-1" id="depProgressCaption">เหลือมูลค่าตามบัญชี -</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-white py-3 border-bottom-0 d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    <h2 class="mb-0 fw-bold h6"><i class="fa-solid fa-chart-line me-2 text-primary" aria-hidden="true"></i>แนวโน้มค่าเสื่อมราคา</h2>
+                    <div class="btn-group chart-toggle d-print-none" role="group" aria-label="เลือกตัวชี้วัดกราฟ">
+                        <button type="button" class="btn btn-primary active" data-metric="book" aria-pressed="true">มูลค่าตามบัญชี</button>
+                        <button type="button" class="btn btn-outline-primary" data-metric="accum" aria-pressed="false">ค่าเสื่อมสะสม</button>
+                        <button type="button" class="btn btn-outline-primary" data-metric="annual" aria-pressed="false">ค่าเสื่อมตามช่วง</button>
+                    </div>
+                </div>
+                <div class="card-body pt-0">
+                    <div class="row">
+                        <div class="col-md-5 mb-3">
+                            <ul class="list-group list-group-flush small">
+                                <li class="list-group-item d-flex justify-content-between px-0">
+                                    <span class="text-muted">ช่วงวันที่</span>
+                                    <span class="fw-bold text-end" id="resDateRange">-</span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between px-0">
+                                    <span class="text-muted">แหล่งงบประมาณ</span>
+                                    <span class="fw-bold text-end" id="resBudgetDisplay">-</span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between px-0">
+                                    <span class="text-muted">รหัสครุภัณฑ์</span>
+                                    <span class="fw-bold text-end" id="resAssetCodeDisplay">-</span>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="col-md-7">
+                             <div id="chartContainer" class="chart-container d-flex align-items-center justify-content-center bg-light rounded">
+                                <canvas id="depChart" role="img" aria-label="กราฟแนวโน้มค่าเสื่อมราคา ข้อมูลตัวเลขทั้งหมดอยู่ในตารางด้านล่าง"></canvas>
+                                <div id="chartEmptyMsg" class="text-muted small"><i class="fa-solid fa-info-circle me-1" aria-hidden="true"></i> กดคำนวณเพื่อแสดงกราฟ</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Calculation method -->
+            <div class="card shadow-sm mb-4 d-print-none">
+                <div class="card-header bg-white py-3 border-bottom-0">
+                    <button class="btn btn-light btn-sm w-100 text-start" type="button" data-bs-toggle="collapse" data-bs-target="#calcMethodCollapse" aria-expanded="false" aria-controls="calcMethodCollapse">
+                        <i class="fa-solid fa-square-root-variable me-2" aria-hidden="true"></i> แสดงวิธีคำนวณ
+                    </button>
+                </div>
+                <div class="collapse" id="calcMethodCollapse">
+                    <div class="card-body pt-0">
+                        <div class="calc-method-box text-muted" id="calcMethodBody">กดคำนวณเพื่อแสดงวิธีคิด</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-print-none row g-3">
+                <div class="col-md-6">
+                    <div class="card shadow-sm bg-light border-0 h-100">
+                        <div class="card-body">
+                            <h3 class="text-primary fw-bold mb-2 small h6"><i class="fa-regular fa-copy me-1" aria-hidden="true"></i> สรุปข้อมูล (Copy)</h3>
+                            <div class="copy-area user-select-all bg-white shadow-sm">
+                                <table class="w-100" style="font-size:0.85rem;">
+                                    <tbody>
+                                        <tr><td class="text-muted">รหัสครุภัณฑ์</td><td class="text-end fw-bold"><span id="copyAssetCode">-</span></td></tr>
+                                        <tr><td class="text-muted">รายการ</td><td class="text-end fw-bold"><span id="copyAssetName">-</span></td></tr>
+                                        <tr><td class="text-muted">ราคาทุน</td><td class="text-end fw-bold"><span id="copyCost">-</span> บาท</td></tr>
+                                        <tr><td class="text-muted">อายุการใช้งาน</td><td class="text-end"><span id="copyDuration">-</span></td></tr>
+                                        <tr><td class="text-muted">ค่าเสื่อมสะสม</td><td class="text-end fw-bold text-danger"><span id="copyAccumulated">-</span> บาท</td></tr>
+                                        <tr><td class="text-muted">มูลค่าคงเหลือ</td><td class="text-end fw-bold text-success"><span id="copyBookValue">-</span> บาท</td></tr>
+                                        <tr><td class="text-muted">สถานะการใช้งาน</td><td class="text-end"><span id="copyOperStatus">-</span></td></tr>
+                                        <tr><td class="text-muted">แหล่งงบ</td><td class="text-end"><span id="copyBudget">-</span></td></tr>
+                                        <tr><td class="text-muted">เลขที่เอกสาร</td><td class="text-end"><span id="copyDocRef">-</span></td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card shadow-sm bg-light border-0 h-100">
+                        <div class="card-body">
+                            <h3 class="text-success fw-bold mb-2 small h6"><i class="fa-solid fa-barcode me-1" aria-hidden="true"></i> ข้อความสำหรับ Acrobat / PDF</h3>
+                            <div class="copy-area user-select-all bg-white shadow-sm text-center">
+                                <div class="text-start mb-2">
+                                    <table class="w-100" style="font-size:0.85rem;">
+                                        <tbody>
+                                            <tr><td colspan="2">ไม่พบประวัติการซ่อม</td></tr>
+                                            <tr><td colspan="2">นางสาวบุษกร ล้วนลอย</td></tr>
+                                            <tr><td colspan="2" class="fw-bold" id="acrobatDate">-</td></tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow-sm mt-4" id="scheduleCard">
+        <div class="card-header bg-white py-3 border-bottom">
+            <h2 class="mb-0 fw-bold h6"><i class="fa-solid fa-table me-2 text-secondary" aria-hidden="true"></i>ตารางค่าเสื่อมราคาแยกตามปีปฏิทิน (Full Schedule)</h2>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover table-striped align-middle mb-0" id="depreciationTable">
+                <caption class="visually-hidden-live">ตารางค่าเสื่อมราคาแยกตามปีปฏิทิน แสดงช่วงวันที่ จำนวนวัน ค่าเสื่อมประจำช่วง ค่าเสื่อมสะสม มูลค่าสุทธิ และประเภทข้อมูล</caption>
+                <thead class="table-light">
+                    <tr>
+                        <th scope="col" class="text-center">ลำดับ</th>
+                        <th scope="col" class="text-center">ปี พ.ศ.</th>
+                        <th scope="col">ช่วงวันที่ (พ.ศ.)</th>
+                        <th scope="col" class="text-center">จำนวนวัน</th>
+                        <th scope="col" class="text-end">ค่าเสื่อมประจำช่วง</th>
+                        <th scope="col" class="text-end">ค่าเสื่อมสะสม ณ สิ้นช่วง</th>
+                        <th scope="col" class="text-end text-success fw-bold">มูลค่าสุทธิ</th>
+                        <th scope="col" class="text-center">ประเภทข้อมูล</th>
+                    </tr>
+                </thead>
+                <tbody id="depreciationTableBody">
+                    <tr><td colspan="8" class="text-center py-5 text-muted">กรุณากดคำนวณเพื่อแสดงข้อมูล</td></tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="card-body">
+            <p id="tableLegend" class="table-legend mb-3"></p>
+            <div id="reconBox" class="recon-box recon-ok" style="display:none;"></div>
+            <div id="selfTestBox" class="selftest-box mt-3" style="display:none;"></div>
+        </div>
+    </div>
+
+    <div class="print-signature justify-content-between mt-5 pt-4">
+        <div class="text-center" style="width:45%;">
+            <div style="border-bottom:1px dotted #333; height:40px;"></div>
+            <div class="small mt-1">ผู้จัดทำ</div>
+            <div class="small mt-3">วันที่ ....../....../..........</div>
+        </div>
+        <div class="text-center" style="width:45%;">
+            <div style="border-bottom:1px dotted #333; height:40px;"></div>
+            <div class="small mt-1">ผู้ตรวจสอบ</div>
+            <div class="small mt-3">วันที่ ....../....../..........</div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/l10n/th.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+<script>
+/* ===================== js/utils-money.js ===================== */
+/* utils-money.js — จำนวนเงินเป็นจำนวนเต็มสตางค์ และเลขตรรกยะแบบ BigInt (ไม่ใช้ floating point) */
+
+// ขอบเขตที่ระบบรองรับ (ข้อ 6): 9,999,999,999.99 บาท
+const MAX_COST_CENTS = 999999999999;
+const MAX_LIFE_YEARS = 100;
+
+function toCents(amount) {
+    return Math.round(amount * 100);
+}
+
+function formatMoney(cents) {
+    return new Intl.NumberFormat('en-US', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    }).format(cents / 100);
+}
+
+/** แปลงข้อความเป็นจำนวนสตางค์ (integer) คืน null ถ้าไม่ถูกต้องหรือเกินขอบเขตที่ปลอดภัย */
+function parseMoneyToCents(str) {
+    if (str === null || str === undefined) return null;
+    const raw = String(str).replace(/,/g, '').trim();
+    if (raw === '') return null;
+    if (!/^\d{1,15}(\.\d{1,2})?$/.test(raw)) return null;
+    const [intPart, decPart = ''] = raw.split('.');
+    const cents = Number(intPart) * 100 + Number((decPart + '00').slice(0, 2));
+    if (!Number.isSafeInteger(cents)) return null;
+    return cents;
+}
+
+/* ---------- เลขตรรกยะแบบ BigInt (ข้อ 5) ----------
+ * อัตราค่าเสื่อมต่อวัน = depreciableCents / (lifeYears * daysInYear)
+ * เก็บเป็นเศษส่วนแท้ ไม่แปลงเป็นทศนิยมจนกว่าจะปัดเป็นสตางค์
+ */
+function gcdBig(a, b) {
+    let x = a < 0n ? -a : a;
+    let y = b < 0n ? -b : b;
+    while (y) { const t = x % y; x = y; y = t; }
+    return x;
+}
+
+function zeroFraction() {
+    return { n: 0n, d: 1n };
+}
+
+/** คืนเศษส่วนใหม่ = f + (n/d) โดยลดทอนเศษส่วนทุกครั้งเพื่อไม่ให้ตัวเลขโตเกินจำเป็น */
+function addFraction(f, n, d) {
+    const nb = BigInt(n);
+    const db = BigInt(d);
+    if (db === 0n) throw new Error('ตัวส่วนเป็นศูนย์');
+    const g = gcdBig(f.d, db);
+    const den = (f.d / g) * db;
+    const num = f.n * (den / f.d) + nb * (den / db);
+    const g2 = gcdBig(num, den);
+    if (g2 > 1n) return { n: num / g2, d: den / g2 };
+    return { n: num, d: den };
+}
+
+/** ปัดเศษส่วน (ไม่ติดลบ) เป็นจำนวนเต็มแบบครึ่งขึ้น */
+function roundFractionToInt(f) {
+    if (f.n < 0n) throw new Error('ไม่รองรับค่าติดลบ');
+    return Number((2n * f.n + f.d) / (2n * f.d));
+}
+
+/** ใช้แสดงผลเท่านั้น */
+function fractionToNumber(f) {
+    return Number(f.n) / Number(f.d);
+}
+
+/* ---------- ข้อความ ---------- */
+function escapeHtml(value) {
+    return String(value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
+function csvCell(value) {
+    return `"${String(value).replace(/"/g, '""').replace(/\r?\n/g, ' ')}"`;
+}
+
+function safeFileName(value) {
+    return String(value).replace(/[<>:"/\\|?*\u0000-\u001F]/g, '_').slice(0, 80) || 'report';
+}
+
+/* ===================== js/utils-date.js ===================== */
+/* utils-date.js — วันที่ พ.ศ. และนโยบายวันครบอายุ */
+
+const MS_PER_DAY = 1000 * 60 * 60 * 24;
+
+// ขอบเขตปี พ.ศ. ที่ระบบยอมรับ (ข้อ 7) ปรับได้ตามระเบียบของหน่วยงาน
+const MIN_YEAR_BE = 2400;
+const MAX_YEAR_BE = 2700;
+
+const isGregorianLeapYear = (y) => (y % 4 === 0 && y % 100 !== 0) || (y % 400 === 0);
+const getDaysInGregorianYear = (adYear, basis) =>
+    basis === 'fixed365' ? 365 : (isGregorianLeapYear(adYear) ? 366 : 365);
+
+/** ใช้ UTC เพื่อหลีกเลี่ยงผลกระทบจาก DST */
+function utcDayNumber(date) {
+    return Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()) / MS_PER_DAY;
+}
+
+function diffDaysInclusive(start, end) {
+    return utcDayNumber(end) - utcDayNumber(start) + 1;
+}
+
+function addDays(date, n) {
+    const d = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    d.setDate(d.getDate() + n);
+    return d;
+}
+
+function sameDay(a, b) {
+    return a.getFullYear() === b.getFullYear()
+        && a.getMonth() === b.getMonth()
+        && a.getDate() === b.getDate();
+}
+
+function startOfDay(date) {
+    return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+}
+
+function formatDateThai(dateObj) {
+    if (!dateObj || isNaN(dateObj)) return '';
+    const d = String(dateObj.getDate()).padStart(2, '0');
+    const m = String(dateObj.getMonth() + 1).padStart(2, '0');
+    return `${d}/${m}/${dateObj.getFullYear() + 543}`;
+}
+
+function formatDateThaiShort(dateObj) {
+    if (!dateObj || isNaN(dateObj)) return '-';
+    const months = ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."];
+    return `${dateObj.getDate()} ${months[dateObj.getMonth()]} ${dateObj.getFullYear() + 543}`;
+}
+
+function formatDateThaiLong(dateObj) {
+    if (!dateObj || isNaN(dateObj)) return '-';
+    const months = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
+    return `${dateObj.getDate()} ${months[dateObj.getMonth()]} ${dateObj.getFullYear() + 543}`;
+}
+
+function calculateDuration(a, b) {
+    if (b < a) return '0 ปี 0 เดือน 0 วัน';
+    let years = b.getFullYear() - a.getFullYear();
+    let months = b.getMonth() - a.getMonth();
+    let days = b.getDate() - a.getDate();
+    if (days < 0) {
+        months--;
+        days += new Date(b.getFullYear(), b.getMonth(), 0).getDate();
+    }
+    if (months < 0) { years--; months += 12; }
+    return `${years} ปี ${months} เดือน ${days} วัน`;
+}
+
+/** แปลง วว/ดด/ปปปป (พ.ศ.) เป็น Date คืน null ถ้าไม่ถูกต้องหรือปีอยู่นอกช่วงที่รองรับ (ข้อ 7) */
+function parseThaiDateString(dateStr) {
+    if (!dateStr || dateStr.length !== 10) return null;
+    if (!/^\d{2}\/\d{2}\/\d{4}$/.test(dateStr)) return null;
+    const [dStr, mStr, yStr] = dateStr.split('/');
+    const day = parseInt(dStr, 10);
+    const month = parseInt(mStr, 10);
+    const yearBE = parseInt(yStr, 10);
+    if (yearBE < MIN_YEAR_BE || yearBE > MAX_YEAR_BE) return null;
+    const yearAD = yearBE - 543;
+    const dateObj = new Date(yearAD, month - 1, day);
+    if (dateObj.getFullYear() !== yearAD || dateObj.getMonth() !== (month - 1) || dateObj.getDate() !== day) return null;
+    return dateObj;
+}
+
+/* ============================================================
+ * นโยบายวันครบอายุ (ข้อ 1)
+ * ------------------------------------------------------------
+ * เรื่องนี้เป็น "นโยบายทางบัญชีของหน่วยงาน" ไม่ใช่กฎสากล
+ * ระบบจึงแยกออกมาเป็นตัวเลือกที่ผู้ใช้กำหนดได้ และมี test กำกับทั้งสองแบบ
+ *
+ * วันครบรอบ (anniversary) = วันเริ่มใช้ + N ปี
+ *   ถ้าวันดังกล่าวไม่มีจริงในปีปลายทาง (เช่น 29 ก.พ. -> ปีที่ไม่ใช่อธิกสุรทิน)
+ *   จะถูกปรับลงเป็นวันสุดท้ายของเดือนนั้น (28 ก.พ.) เรียกว่า "clamped"
+ *
+ * A) anniversaryMinusOneDay  (ค่าเริ่มต้น)
+ *    วันครบอายุ = วันครบรอบ - 1 วัน ทุกกรณี
+ *    เริ่ม 29/02/2567 อายุ 5 ปี -> ครบรอบ 28/02/2572 -> ครบอายุ 27/02/2572
+ *    ข้อดี: สูตรเดียวใช้ได้ทุกกรณี  ข้อเสีย: กรณี 29 ก.พ. สั้นกว่าที่คาด 1 วัน
+ *
+ * B) clampedAnniversaryAsLastDay  (ข้อยกเว้นกรณี 29 ก.พ.)
+ *    ถ้าวันครบรอบถูกปรับลง ให้ถือ "วันครบรอบนั้นเอง" เป็นวันสุดท้ายของอายุการใช้งาน
+ *    เริ่ม 29/02/2567 อายุ 5 ปี -> ครบอายุ 28/02/2572
+ *    กรณีอื่นเหมือนนโยบาย A ทุกประการ
+ * ============================================================ */
+
+const EOL_POLICIES = {
+    anniversaryMinusOneDay: {
+        id: 'anniversaryMinusOneDay',
+        label: 'วันก่อนวันครบรอบ (ใช้สูตรเดียวทุกกรณี)',
+        describe: () => 'วันครบอายุ = วันครบรอบการใช้งาน ลบ 1 วัน ทุกกรณี'
+    },
+    clampedAnniversaryAsLastDay: {
+        id: 'clampedAnniversaryAsLastDay',
+        label: 'กรณี 29 ก.พ. ให้ใช้วันสิ้นเดือนกุมภาพันธ์เป็นวันครบอายุ',
+        describe: () => 'ปกติใช้วันครบรอบ ลบ 1 วัน แต่ถ้าวันครบรอบถูกปรับลงเพราะไม่มีวันนั้นจริง ให้ถือวันครบรอบนั้นเป็นวันครบอายุ'
+    }
+};
+
+const DEFAULT_EOL_POLICY = 'anniversaryMinusOneDay';
+
+/** วันครบรอบ ปรับลงเป็นวันสุดท้ายของเดือนถ้าวันที่ไม่มีจริง */
+function addYearsClamped(date, years) {
+    const targetYear = date.getFullYear() + years;
+    const targetMonth = date.getMonth();
+    const lastDay = new Date(targetYear, targetMonth + 1, 0).getDate();
+    return new Date(targetYear, targetMonth, Math.min(date.getDate(), lastDay));
+}
+
+/** วันครบรอบถูกปรับลงหรือไม่ (เช่น 29 ก.พ. ในปีที่ไม่ใช่อธิกสุรทิน) */
+function isAnniversaryClamped(date, years) {
+    const targetYear = date.getFullYear() + years;
+    const lastDay = new Date(targetYear, date.getMonth() + 1, 0).getDate();
+    return date.getDate() > lastDay;
+}
+
+function getEndOfLifeInfo(startDate, lifeYears, policyId = DEFAULT_EOL_POLICY) {
+    const policy = EOL_POLICIES[policyId] ? policyId : DEFAULT_EOL_POLICY;
+    const anniversary = addYearsClamped(startDate, lifeYears);
+    const clamped = isAnniversaryClamped(startDate, lifeYears);
+    const endOfLifeDate = (policy === 'clampedAnniversaryAsLastDay' && clamped)
+        ? anniversary
+        : addDays(anniversary, -1);
+    return { endOfLifeDate, anniversary, clamped, policy };
+}
+
+function getEndOfLifeDate(startDate, lifeYears, policyId = DEFAULT_EOL_POLICY) {
+    return getEndOfLifeInfo(startDate, lifeYears, policyId).endOfLifeDate;
+}
+
+/* ===================== js/depreciation-model.js ===================== */
+/* depreciation-model.js — การคำนวณล้วน ไม่แตะ DOM
+ *
+ * หลักการ (แก้ข้อ 4 และ 5)
+ *  - ยอดสะสม ณ วันใด ๆ คำนวณจากฟังก์ชัน accumulatedUntilDate() โดยตรง
+ *    ไม่ได้อ่านย้อนจากตาราง ตารางเป็นเพียงผลลัพธ์ที่ derive ออกมา
+ *  - อัตราค่าเสื่อมเก็บเป็นเศษส่วน BigInt ไม่ใช้ floating point
+ *      ค่าเสื่อมสะสมทางทฤษฎีถึงวันที่ D = Σ (วันในช่วง × depreciableCents) / (lifeYears × วันในปีนั้น)
+ *    แล้วจึงปัดครึ่งขึ้นเป็นสตางค์ครั้งเดียวตอนท้าย
+ *  - ค่าเสื่อมของแต่ละแถว = ยอดสะสมเป้าหมายสิ้นแถว − ยอดสะสมเป้าหมายต้นแถว
+ *    จึงไม่มีทางสะสมความคลาดเคลื่อนจากการปัดเศษ
+ *  - ช่วงสุดท้ายถูกบังคับให้ยอดรวม = (ราคาทุน − มูลค่าซาก) พอดี
+ */
+
+
+const ROW_TYPE = {
+    ACTUAL: 'actual',        // เกิดขึ้นจริงแล้ว ณ วันที่คำนวณ
+    SNAPSHOT: 'snapshot',    // แถวที่สิ้นสุดพอดีที่วันที่คำนวณ
+    PROJECTION: 'projection' // ประมาณการหลังวันที่คำนวณ
+};
+
+const ROW_TYPE_LABEL = {
+    actual: 'เกิดขึ้นจริง',
+    snapshot: 'Snapshot',
+    projection: 'ประมาณการ'
+};
+
+/** แบ่งช่วงอายุการใช้งานออกเป็นช่วงตามปีปฏิทิน */
+function buildCalendarSegments(startDate, endOfLifeDate, yearBasis) {
+    const segments = [];
+    let cursor = startOfDay(startDate);
+    const end = startOfDay(endOfLifeDate);
+    while (cursor <= end) {
+        const year = cursor.getFullYear();
+        const yearEnd = new Date(year, 11, 31);
+        const segmentEnd = yearEnd < end ? yearEnd : end;
+        segments.push({
+            year,
+            start: new Date(cursor),
+            end: new Date(segmentEnd),
+            days: diffDaysInclusive(cursor, segmentEnd),
+            daysInYear: getDaysInGregorianYear(year, yearBasis),
+            isFinal: sameDay(segmentEnd, end)
+        });
+        cursor = addDays(segmentEnd, 1);
+    }
+    return segments;
+}
+
+/**
+ * ยอดค่าเสื่อมสะสม (สตางค์) ตั้งแต่วันเริ่มใช้จนถึงและรวมวันที่ targetDate
+ * คำนวณจากนิยามโดยตรง ไม่พึ่งพาโครงสร้างตาราง (ข้อ 4)
+ */
+function accumulatedUntilDate(params, targetDate) {
+    const { startDate, endOfLifeDate, depreciableCents, lifeYears, yearBasis } = params;
+    const target = startOfDay(targetDate);
+    if (target < startOfDay(startDate)) return 0;
+    if (target >= startOfDay(endOfLifeDate)) return depreciableCents; // ครบอายุ = ตัดครบพอดี
+
+    let acc = zeroFraction();
+    const segments = buildCalendarSegments(startDate, endOfLifeDate, yearBasis);
+    for (const seg of segments) {
+        if (target < seg.start) break;
+        const daysCounted = target < seg.end ? diffDaysInclusive(seg.start, target) : seg.days;
+        acc = addFraction(acc, BigInt(daysCounted) * BigInt(depreciableCents), BigInt(lifeYears) * BigInt(seg.daysInYear));
+        if (target <= seg.end) break;
+    }
+    return Math.min(depreciableCents, roundFractionToInt(acc));
+}
+
+function buildDepreciationModel(input) {
+    const {
+        costCents,
+        salvageCents,
+        lifeYears,
+        yearBasis,
+        startDate: rawStart,
+        currentDate: rawCurrent,
+        eolPolicy = DEFAULT_EOL_POLICY
+    } = input;
+
+    const startDate = startOfDay(rawStart);
+    const currentDate = startOfDay(rawCurrent);
+    const depreciableCents = costCents - salvageCents;
+    const eolInfo = getEndOfLifeInfo(startDate, lifeYears, eolPolicy);
+    const endOfLifeDate = eolInfo.endOfLifeDate;
+
+    const calcParams = { startDate, endOfLifeDate, depreciableCents, lifeYears, yearBasis };
+    const segments = buildCalendarSegments(startDate, endOfLifeDate, yearBasis);
+
+    // ยอดสะสม ณ วันที่คำนวณ — คำนวณจาก model โดยตรง (แหล่งข้อมูลหลัก)
+    const snapshotAccumulatedCents = accumulatedUntilDate(calcParams, currentDate);
+    const snapshotBookValueCents = costCents - snapshotAccumulatedCents;
+    const snapshotAfterLife = currentDate > endOfLifeDate;
+
+    // ---- สร้างแถวสำหรับแสดงผล/ส่งออก ----
+    const displayRows = [];
+    const chartLabels = ['เริ่ม'];
+    const chartBook = [costCents];
+    const chartAccum = [0];
+    const chartAnnual = [0];
+
+    let seq = 1;
+    let snapshotIndex = null;
+    let snapshotLabel = '';
+    let firstDailyRate = null;
+    let totalDaysAll = 0;
+    let totalDepAllCents = 0;
+
+    const pushRow = (row) => {
+        const rowType = row.end <= currentDate
+            ? (sameDay(row.end, currentDate) ? ROW_TYPE.SNAPSHOT : ROW_TYPE.ACTUAL)
+            : ROW_TYPE.PROJECTION;
+        displayRows.push({ ...row, rowType });
+    };
+
+    segments.forEach((seg) => {
+        if (firstDailyRate === null) {
+            firstDailyRate = {
+                year: seg.year,
+                days: seg.daysInYear,
+                // แสดงผลเท่านั้น การคำนวณจริงใช้เศษส่วน
+                ratePerDay: depreciableCents / (lifeYears * seg.daysInYear)
+            };
+        }
+
+        const accBefore = accumulatedUntilDate(calcParams, addDays(seg.start, -1));
+        const accAfter = seg.isFinal ? depreciableCents : accumulatedUntilDate(calcParams, seg.end);
+        const segmentDepCents = accAfter - accBefore;
+
+        totalDaysAll += seg.days;
+        totalDepAllCents += segmentDepCents;
+
+        const splitHere = currentDate >= seg.start && currentDate < seg.end;
+
+        if (splitHere) {
+            const firstDays = diffDaysInclusive(seg.start, currentDate);
+            const firstDep = snapshotAccumulatedCents - accBefore;
+            snapshotLabel = formatDateThaiShort(currentDate);
+            snapshotIndex = chartLabels.length;
+
+            pushRow({
+                seq, year: seg.year,
+                start: new Date(seg.start), end: new Date(currentDate),
+                days: firstDays,
+                depCents: firstDep,
+                accumulatedCents: accBefore + firstDep,
+                bookValueCents: costCents - (accBefore + firstDep),
+                isCurrentYear: true, isContinuation: false, isFinal: false
+            });
+            pushRow({
+                seq, year: seg.year,
+                start: addDays(currentDate, 1), end: new Date(seg.end),
+                days: seg.days - firstDays,
+                depCents: segmentDepCents - firstDep,
+                accumulatedCents: accAfter,
+                bookValueCents: costCents - accAfter,
+                isCurrentYear: false, isContinuation: true, isFinal: seg.isFinal
+            });
+        } else {
+            const isSnapshotEnd = sameDay(currentDate, seg.end);
+            if (isSnapshotEnd) {
+                snapshotLabel = formatDateThaiShort(currentDate);
+                snapshotIndex = chartLabels.length;
+            }
+            pushRow({
+                seq, year: seg.year,
+                start: new Date(seg.start), end: new Date(seg.end),
+                days: seg.days,
+                depCents: segmentDepCents,
+                accumulatedCents: accAfter,
+                bookValueCents: costCents - accAfter,
+                isCurrentYear: isSnapshotEnd,
+                isContinuation: false,
+                isFinal: seg.isFinal
+            });
+        }
+
+        chartLabels.push(String(seg.year + 543));
+        chartBook.push(costCents - accAfter);
+        chartAccum.push(accAfter);
+        chartAnnual.push(segmentDepCents);
+        seq++;
+    });
+
+    if (snapshotAfterLife) {
+        chartLabels.push(formatDateThaiShort(currentDate));
+        chartBook.push(salvageCents);
+        chartAccum.push(depreciableCents);
+        chartAnnual.push(0);
+        snapshotIndex = chartLabels.length - 1;
+        snapshotLabel = formatDateThaiShort(currentDate) + ' (หลังครบอายุ)';
+    }
+
+    // ---- ค่าเสื่อมของปีที่คำนวณ แยก actual / projection (ข้อ 3) ----
+    const snapshotYear = currentDate.getFullYear();
+    const rowsThisYear = displayRows.filter(r => r.year === snapshotYear);
+    const actualThroughSnapshotCents = rowsThisYear
+        .filter(r => r.rowType !== ROW_TYPE.PROJECTION)
+        .reduce((s, r) => s + r.depCents, 0);
+    const projectedAfterSnapshotCents = rowsThisYear
+        .filter(r => r.rowType === ROW_TYPE.PROJECTION)
+        .reduce((s, r) => s + r.depCents, 0);
+
+    const firstRowThisYear = rowsThisYear[0];
+    const lastRowThisYear = rowsThisYear[rowsThisYear.length - 1];
+    const thisYear = {
+        actualThroughSnapshotCents,
+        projectedAfterSnapshotCents,
+        periodTotalCents: actualThroughSnapshotCents + projectedAfterSnapshotCents,
+        theoreticalFullYearCents: Math.round(depreciableCents / lifeYears),
+        hasRowsThisYear: rowsThisYear.length > 0,
+        coversFullCalendarYear: rowsThisYear.length > 0
+            && firstRowThisYear.start.getMonth() === 0 && firstRowThisYear.start.getDate() === 1
+            && lastRowThisYear.end.getMonth() === 11 && lastRowThisYear.end.getDate() === 31
+    };
+
+    const finalAccumulatedCents = displayRows.length ? displayRows[displayRows.length - 1].accumulatedCents : 0;
+
+    const model = {
+        input: { costCents, salvageCents, lifeYears, yearBasis, startDate, currentDate, eolPolicy: eolInfo.policy },
+        depreciableCents,
+        annualDepCentsExact: depreciableCents / lifeYears,
+        endOfLifeDate,
+        eolInfo,
+        firstDailyRate,
+        segments,
+        displayRows,
+        totals: {
+            totalDaysAll,
+            totalDepAllCents,
+            finalAccumulatedCents,
+            finalBookValueCents: costCents - finalAccumulatedCents
+        },
+        snapshot: {
+            accumulatedCents: snapshotAccumulatedCents,
+            bookValueCents: snapshotBookValueCents,
+            afterLife: snapshotAfterLife,
+            index: snapshotIndex,
+            label: snapshotLabel
+        },
+        thisYear,
+        chart: {
+            labels: chartLabels, book: chartBook, accum: chartAccum, annual: chartAnnual,
+            snapshotIndex, snapshotLabel
+        }
+    };
+
+    model.recon = reconcileModel(model);
+    return model;
+}
+
+/** ตรวจความต่อเนื่องของช่วงวัน (ข้อ 6 รอบก่อน) */
+function validateDisplayRows(rows, startDate, endOfLifeDate) {
+    const problems = [];
+    if (rows.length === 0) return ['ไม่มีแถวค่าเสื่อม'];
+    if (!sameDay(rows[0].start, startDate)) problems.push('แถวแรกไม่ได้เริ่มที่วันที่เริ่มใช้งาน');
+    if (!sameDay(rows[rows.length - 1].end, endOfLifeDate)) problems.push('แถวสุดท้ายไม่ได้สิ้นสุดที่วันครบอายุ');
+    for (let i = 0; i < rows.length; i++) {
+        const row = rows[i];
+        if (row.start > row.end) problems.push(`แถวที่ ${i + 1}: ช่วงวันที่กลับด้าน`);
+        if (row.days <= 0) problems.push(`แถวที่ ${i + 1}: จำนวนวันเป็นศูนย์หรือติดลบ`);
+        if (row.days !== diffDaysInclusive(row.start, row.end)) problems.push(`แถวที่ ${i + 1}: จำนวนวันไม่ตรงกับช่วงวันที่`);
+        if (row.depCents < 0) problems.push(`แถวที่ ${i + 1}: ค่าเสื่อมติดลบ`);
+        if (i > 0 && !sameDay(row.start, addDays(rows[i - 1].end, 1))) {
+            problems.push(`แถวที่ ${i + 1}: ช่วงวันที่ไม่ต่อเนื่องกับแถวก่อนหน้า`);
+        }
+    }
+    return problems;
+}
+
+/** ตรวจสอบผลลัพธ์จริง ไม่ใช่ identity ที่สร้างเอง */
+function reconcileModel(model) {
+    const { displayRows, totals, snapshot, depreciableCents, input, endOfLifeDate } = model;
+    const { costCents, salvageCents, startDate, currentDate } = input;
+
+    const rowsDepSum = displayRows.reduce((s, r) => s + r.depCents, 0);
+    const rowsDaySum = displayRows.reduce((s, r) => s + r.days, 0);
+    const expectedDays = diffDaysInclusive(startDate, endOfLifeDate);
+
+    // ยอดสะสมถึง Snapshot จากแถว (ไม่รวมแถวประมาณการ) ต้องตรงกับที่คำนวณจาก model โดยตรง
+    const actualRows = displayRows.filter(r => r.rowType !== ROW_TYPE.PROJECTION);
+    const accumulatedFromRows = actualRows.reduce((s, r) => s + r.depCents, 0);
+    const lastActualAccum = actualRows.length ? actualRows[actualRows.length - 1].accumulatedCents : 0;
+
+    // ตรวจซ้ำด้วยการเดินวันแบบอิสระที่จุดสุ่ม เพื่อยืนยันว่ายอดสะสมของทุกแถวสอดคล้องกับนิยาม
+    const calcParams = { startDate, endOfLifeDate, depreciableCents, lifeYears: input.lifeYears, yearBasis: input.yearBasis };
+    let rowAccumMismatch = 0;
+    for (const row of displayRows) {
+        const expected = accumulatedUntilDate(calcParams, row.end);
+        rowAccumMismatch = Math.max(rowAccumMismatch, Math.abs(expected - row.accumulatedCents));
+    }
+
+    const checks = {
+        scheduleDiff: Math.abs(totals.totalDepAllCents - depreciableCents),
+        rowsVsSegmentsDiff: Math.abs(rowsDepSum - totals.totalDepAllCents),
+        dayDiff: Math.abs(rowsDaySum - expectedDays),
+        finalBookDiff: Math.abs(totals.finalBookValueCents - salvageCents),
+        snapshotRowsDiff: Math.abs(accumulatedFromRows - snapshot.accumulatedCents),
+        snapshotLastRowDiff: Math.abs(lastActualAccum - snapshot.accumulatedCents),
+        rowAccumMismatch
+    };
+
+    const continuityProblems = validateDisplayRows(displayRows, startDate, endOfLifeDate);
+    const maxDiff = Math.max(...Object.values(checks));
+
+    return {
+        checks,
+        continuityProblems,
+        rowsDepSum,
+        rowsDaySum,
+        expectedDays,
+        accumulatedFromRows,
+        ok: maxDiff === 0 && continuityProblems.length === 0
+    };
+}
+
+/* ===================== js/validation.js ===================== */
+/* validation.js — อ่านค่าจากฟอร์มและตรวจสอบก่อนคำนวณ */
+
+
+function clearErrors() {
+    document.querySelectorAll('.is-invalid-custom').forEach(el => {
+        el.classList.remove('is-invalid-custom');
+        el.removeAttribute('aria-invalid');
+    });
+    document.querySelectorAll('.error-msg').forEach(el => { el.style.display = 'none'; el.textContent = ''; });
+    const box = document.getElementById('formAlertBox');
+    box.style.display = 'none';
+    document.getElementById('formAlertList').textContent = '';
+}
+
+function showError(elementId, msg) {
+    const el = document.getElementById(elementId);
+    const errDiv = document.getElementById(elementId + 'Error');
+    if (el) {
+        el.classList.add('is-invalid-custom');
+        el.setAttribute('aria-invalid', 'true');
+    }
+    if (errDiv) {
+        errDiv.textContent = msg;      // textContent เสมอ ไม่ใช้ innerHTML (ข้อ 10)
+        errDiv.style.display = 'block';
+    }
+    const li = document.createElement('li');
+    li.textContent = msg;
+    document.getElementById('formAlertList').appendChild(li);
+    document.getElementById('formAlertBox').style.display = 'block';
+}
+
+/** คืน {input, meta} ถ้าผ่าน หรือ null ถ้าไม่ผ่าน (พร้อมแสดงข้อความและย้าย focus) */
+function readAndValidateForm() {
+    clearErrors();
+    const val = (id) => document.getElementById(id).value;
+
+    const meta = {
+        assetCode: val('assetCode').trim() || '-',
+        assetName: val('assetName').trim() || '-',
+        budget: val('budget'),
+        operStatus: val('operStatus'),
+        docRef: val('docRef').trim() || '-'
+    };
+
+    const costCents = parseMoneyToCents(val('cost'));
+    const salvageCents = parseMoneyToCents(val('salvage'));
+    const rawLife = Number(val('lifeYears'));
+    const yearBasis = val('yearBasis');
+    const eolPolicy = val('eolPolicy');
+    const startDateStr = val('startDate');
+    const currentDateStr = val('currentDate');
+
+    let firstErrorId = null;
+    const fail = (id, msg) => {
+        if (!firstErrorId) firstErrorId = id;
+        showError(id, msg);
+    };
+
+    if (!startDateStr || startDateStr.length < 10) fail('startDate', 'กรุณาระบุวันที่เริ่มใช้งาน');
+    if (!currentDateStr || currentDateStr.length < 10) fail('currentDate', 'กรุณาระบุวันที่คำนวณ');
+
+    const startDate = startDateStr.length === 10 ? parseThaiDateString(startDateStr) : null;
+    const currentDate = currentDateStr.length === 10 ? parseThaiDateString(currentDateStr) : null;
+
+    if (startDateStr.length === 10 && !startDate) {
+        fail('startDate', `รูปแบบวันที่ไม่ถูกต้อง หรือปี พ.ศ. อยู่นอกช่วง ${MIN_YEAR_BE}-${MAX_YEAR_BE}`);
+    }
+    if (currentDateStr.length === 10 && !currentDate) {
+        fail('currentDate', `รูปแบบวันที่ไม่ถูกต้อง หรือปี พ.ศ. อยู่นอกช่วง ${MIN_YEAR_BE}-${MAX_YEAR_BE}`);
+    }
+    if (startDate && currentDate && startDate > currentDate) {
+        fail('currentDate', 'วันที่คำนวณต้องอยู่ในวันเดียวกันหรือหลังวันที่เริ่มใช้งาน');
+    }
+
+    if (costCents === null || costCents <= 0) {
+        fail('cost', 'ราคาทุนต้องเป็นตัวเลขที่ถูกต้องและมากกว่า 0');
+    } else if (costCents > MAX_COST_CENTS) {
+        fail('cost', `ราคาทุนสูงเกินขอบเขตที่ระบบรองรับ (สูงสุด ${formatMoney(MAX_COST_CENTS)} บาท)`);
+    }
+
+    if (salvageCents === null || salvageCents < 0) {
+        fail('salvage', 'มูลค่าซากต้องเป็นตัวเลขที่ถูกต้องและไม่ติดลบ');
+    } else if (costCents !== null && salvageCents > costCents) {
+        fail('salvage', 'มูลค่าซากต้องไม่สูงกว่าราคาทุน');
+    }
+
+    if (!Number.isInteger(rawLife) || rawLife <= 0) {
+        fail('lifeYears', 'อายุการใช้งานต้องเป็นจำนวนเต็มมากกว่า 0');
+    } else if (rawLife > MAX_LIFE_YEARS) {
+        fail('lifeYears', `อายุการใช้งานต้องไม่เกิน ${MAX_LIFE_YEARS} ปี`);
+    }
+
+    if (startDate && rawLife > 0 && (startDate.getFullYear() + rawLife + 543) > MAX_YEAR_BE) {
+        fail('lifeYears', `วันครบอายุเกินปี พ.ศ. ${MAX_YEAR_BE} ที่ระบบรองรับ`);
+    }
+
+    if (firstErrorId) {
+        const el = document.getElementById(firstErrorId);
+        if (el && typeof el.focus === 'function') el.focus({ preventScroll: false });
+        return null;
+    }
+
+    return {
+        input: { costCents, salvageCents, lifeYears: rawLife, yearBasis, startDate, currentDate, eolPolicy },
+        meta
+    };
+}
+
+function computeDepStatus(accumulatedCents, depreciableCents, bookValueCents) {
+    if (depreciableCents === 0) return { text: 'ไม่มีค่าเสื่อม (มูลค่าซาก = ราคาทุน)', cls: 'status-neutral', icon: 'fa-circle-minus' };
+    if (accumulatedCents <= 0) return { text: 'ยังไม่เริ่มคิดค่าเสื่อม', cls: 'status-neutral', icon: 'fa-hourglass-start' };
+    if (depreciableCents - accumulatedCents > 0) return { text: 'อยู่ระหว่างคิดค่าเสื่อม', cls: 'status-warn', icon: 'fa-hourglass-half' };
+    if (bookValueCents > 0) return { text: 'ครบค่าเสื่อม (มีมูลค่าซาก)', cls: 'status-done', icon: 'fa-circle-check' };
+    return { text: 'ครบค่าเสื่อม', cls: 'status-done', icon: 'fa-circle-check' };
+}
+
+/* ===================== js/chart.js ===================== */
+/* chart.js — กราฟแนวโน้ม (Chart.js) */
+
+const snapshotLinePlugin = {
+    id: 'snapshotLine',
+    afterDraw(chart) {
+        const opts = chart.options.plugins && chart.options.plugins.snapshotLine;
+        if (!opts || opts.index == null) return;
+        const xScale = chart.scales.x;
+        if (!xScale) return;
+        const xPos = xScale.getPixelForValue(opts.index);
+        const { top, bottom } = chart.chartArea;
+        const ctx = chart.ctx;
+        ctx.save();
+        ctx.beginPath();
+        ctx.strokeStyle = '#ea4335';
+        ctx.setLineDash([4, 4]);
+        ctx.lineWidth = 1.5;
+        ctx.moveTo(xPos, top);
+        ctx.lineTo(xPos, bottom);
+        ctx.stroke();
+        ctx.fillStyle = '#ea4335';
+        ctx.font = '10px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(opts.label || 'วันนี้', xPos, top - 4);
+        ctx.restore();
+    }
+};
+
+if (typeof Chart !== 'undefined') {
+    Chart.register(snapshotLinePlugin);
+}
+
+let depChartInstance = null;
+let lastChartData = null;
+let currentChartMetric = 'book';
+
+function destroyChart() {
+    if (depChartInstance) { depChartInstance.destroy(); depChartInstance = null; }
+    lastChartData = null;
+}
+
+function resizeChart() {
+    if (depChartInstance) depChartInstance.resize();
+}
+
+function setChartMetric(metric) {
+    const allowed = ['book', 'accum', 'annual'];
+    if (!allowed.includes(metric)) metric = 'book';
+    currentChartMetric = metric;
+
+    document.querySelectorAll('.chart-toggle .btn').forEach(btn => {
+        btn.classList.remove('btn-primary', 'active');
+        btn.classList.add('btn-outline-primary');
+        btn.setAttribute('aria-pressed', 'false');
+    });
+    const button = document.querySelector(`.chart-toggle button[data-metric="${metric}"]`);
+    if (button) {
+        button.classList.add('btn-primary', 'active');
+        button.classList.remove('btn-outline-primary');
+        button.setAttribute('aria-pressed', 'true');
+    }
+    if (lastChartData) renderChart(lastChartData);
+}
+
+function renderChart(data) {
+    lastChartData = data;
+    const emptyMsg = document.getElementById('chartEmptyMsg');
+    const canvas = document.getElementById('depChart');
+    if (!data || data.labels.length < 2 || typeof Chart === 'undefined') {
+        emptyMsg.style.display = 'flex';
+        canvas.style.display = 'none';
+        return;
+    }
+    emptyMsg.style.display = 'none';
+    canvas.style.display = 'block';
+
+    const seriesMap = {
+        book: { label: 'มูลค่าตามบัญชี', data: data.book, color: '#1a73e8' },
+        accum: { label: 'ค่าเสื่อมสะสม', data: data.accum, color: '#d93025' },
+        annual: { label: 'ค่าเสื่อมตามช่วง', data: data.annual, color: '#0b8793' }
+    };
+    const series = seriesMap[currentChartMetric];
+
+    if (depChartInstance) depChartInstance.destroy();
+    depChartInstance = new Chart(canvas.getContext('2d'), {
+        type: currentChartMetric === 'annual' ? 'bar' : 'line',
+        data: {
+            labels: data.labels,
+            datasets: [{
+                label: series.label,
+                data: series.data,
+                borderColor: series.color,
+                backgroundColor: currentChartMetric === 'annual' ? series.color + 'aa' : series.color + '22',
+                fill: currentChartMetric !== 'annual',
+                tension: 0.25,
+                pointRadius: 4,
+                pointBackgroundColor: series.color,
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            aspectRatio: 1.8,
+            layout: { padding: { top: 18 } },
+            plugins: {
+                legend: { display: false },
+                snapshotLine: { index: data.snapshotIndex, label: data.snapshotLabel }
+            },
+            scales: {
+                y: { beginAtZero: true, ticks: { callback: (v) => (v >= 1000 ? (v / 1000) + 'k' : v) } }
+            }
+        }
+    });
+}
+
+/* ===================== js/render.js ===================== */
+/* render.js — แปลง model เป็น DOM
+ * กฎ: ข้อมูลทุกชิ้นใส่ผ่าน textContent เท่านั้น ใช้ innerHTML เฉพาะ markup คงที่ที่เขียนไว้ในโค้ด (ข้อ 10)
+ */
+
+
+/* ---------- helper ---------- */
+function td(text, className) {
+    const el = document.createElement('td');
+    if (className) el.className = className;
+    el.textContent = text;
+    return el;
+}
+
+function pillCell(text, style) {
+    const cell = document.createElement('td');
+    cell.className = 'text-center';
+    const span = document.createElement('span');
+    span.className = 'status-pill';
+    Object.assign(span.style, style);
+    span.textContent = text;
+    cell.appendChild(span);
+    return cell;
+}
+
+function setText(id, text) {
+    const el = document.getElementById(id);
+    if (el) el.textContent = text;
+}
+
+function line(parent, text, className) {
+    const div = document.createElement('div');
+    if (className) div.className = className;
+    div.textContent = text;
+    parent.appendChild(div);
+    return div;
+}
+
+function formulaBlock(parent, text) {
+    const div = document.createElement('div');
+    div.className = 'formula';
+    div.textContent = text;
+    parent.appendChild(div);
+    return div;
+}
+
+const ROW_PILL_STYLE = {
+    [ROW_TYPE.SNAPSHOT]: { background: '#1a73e8', color: '#fff' },
+    [ROW_TYPE.ACTUAL]: { background: '#e6f4ea', color: '#137333' },
+    [ROW_TYPE.PROJECTION]: { background: '#ede7f6', color: '#5b3fa8' }
+};
+
+function rowStatusText(row) {
+    if (row.rowType === ROW_TYPE.SNAPSHOT) return 'Snapshot';
+    if (row.rowType === ROW_TYPE.PROJECTION) return row.isFinal ? 'ประมาณการ (ครบอายุ)' : 'ประมาณการ';
+    return row.isFinal ? 'เกิดขึ้นจริง (ครบอายุ)' : 'เกิดขึ้นจริง';
+}
+
+/* ---------- ตาราง ---------- */
+function renderScheduleTable(model) {
+    const tbody = document.getElementById('depreciationTableBody');
+    tbody.textContent = '';
+    const { input, displayRows, totals } = model;
+
+    const startTr = document.createElement('tr');
+    startTr.appendChild(td('0', 'text-center'));
+    startTr.appendChild(td(String(input.startDate.getFullYear() + 543), 'text-center'));
+    startTr.appendChild(td(`จุดเริ่มต้น (${formatDateThai(input.startDate)})`));
+    startTr.appendChild(td('0', 'text-center'));
+    startTr.appendChild(td(formatMoney(0), 'text-end'));
+    startTr.appendChild(td(formatMoney(0), 'text-end'));
+    startTr.appendChild(td(formatMoney(input.costCents), 'text-end text-success fw-bold'));
+    startTr.appendChild(pillCell('เริ่มต้น', { background: '#e8eaed', color: '#444746' }));
+    tbody.appendChild(startTr);
+
+    displayRows.forEach(row => {
+        const tr = document.createElement('tr');
+        if (row.isCurrentYear) tr.classList.add('row-current-year');
+        if (row.rowType === ROW_TYPE.PROJECTION) tr.classList.add('row-projection');
+        else if (row.rowType === ROW_TYPE.SNAPSHOT) tr.classList.add('snapshot-subrow');
+
+        const seqCell = document.createElement('td');
+        seqCell.className = 'text-center';
+        seqCell.textContent = row.isContinuation ? `${row.seq} (ต่อ)` : String(row.seq);
+        if (row.isCurrentYear) {
+            const tag = document.createElement('span');
+            tag.className = 'current-year-tag';
+            tag.textContent = 'ปีปัจจุบัน';
+            seqCell.appendChild(tag);
+        }
+        tr.appendChild(seqCell);
+        tr.appendChild(td(String(row.year + 543), 'text-center'));
+        tr.appendChild(td(`${formatDateThai(row.start)} - ${formatDateThai(row.end)}`));
+        tr.appendChild(td(row.days.toLocaleString(), 'text-center'));
+        tr.appendChild(td(formatMoney(row.depCents), 'text-end'));
+        tr.appendChild(td(formatMoney(row.accumulatedCents), 'text-end'));
+        tr.appendChild(td(formatMoney(row.bookValueCents), 'text-end text-success fw-bold'));
+        tr.appendChild(pillCell(rowStatusText(row), ROW_PILL_STYLE[row.rowType]));
+        tbody.appendChild(tr);
+    });
+
+    const totalTr = document.createElement('tr');
+    totalTr.className = 'row-total';
+    const totalLabel = td('รวมตลอดอายุการใช้งาน (รวมช่วงประมาณการ)', 'text-center');
+    totalLabel.colSpan = 3;
+    totalTr.appendChild(totalLabel);
+    totalTr.appendChild(td(totals.totalDaysAll.toLocaleString(), 'text-center'));
+    totalTr.appendChild(td(formatMoney(totals.totalDepAllCents), 'text-end'));
+    totalTr.appendChild(td(formatMoney(totals.finalAccumulatedCents), 'text-end'));
+    totalTr.appendChild(td(formatMoney(totals.finalBookValueCents), 'text-end text-success'));
+    totalTr.appendChild(td('-', 'text-center'));
+    tbody.appendChild(totalTr);
+
+    // คำอธิบายประเภทแถว (ข้อ 2)
+    setText('tableLegend',
+        `เกิดขึ้นจริง = ช่วงที่สิ้นสุดไม่เกินวันที่คำนวณ (${formatDateThai(input.currentDate)}) • ` +
+        `Snapshot = ช่วงที่สิ้นสุดพอดีที่วันที่คำนวณ • ` +
+        `ประมาณการ = ช่วงหลังวันที่คำนวณ ยังไม่เกิดขึ้นจริง จึงไม่ถูกนับเป็นค่าเสื่อมสะสมถึงวันที่คำนวณ`);
+}
+
+/* ---------- Reconciliation ---------- */
+function renderReconciliation(model) {
+    const { recon, totals, depreciableCents, snapshot, input } = model;
+    const box = document.getElementById('reconBox');
+    box.textContent = '';
+    box.style.display = 'block';
+
+    const head = document.createElement('div');
+    head.className = 'fw-bold mb-2';
+    head.textContent = recon.ok ? '✓ ตรวจสอบสมการสำเร็จ' : '✗ พบความคลาดเคลื่อน';
+    box.appendChild(head);
+
+    if (recon.ok) {
+        box.className = 'recon-box recon-ok';
+        line(box, `ค่าเสื่อมรวมจากแถวจริง: ${formatMoney(recon.rowsDepSum)} บาท (ควรเป็น ${formatMoney(depreciableCents)} บาท)`, 'formula-line');
+        line(box, `จำนวนวันรวมจากแถวจริง: ${recon.rowsDaySum.toLocaleString()} วัน (ควรเป็น ${recon.expectedDays.toLocaleString()} วัน)`, 'formula-line');
+        line(box, `มูลค่าสุดท้าย: ${formatMoney(totals.finalBookValueCents)} บาท (ควรเป็น ${formatMoney(input.salvageCents)} บาท)`, 'formula-line');
+        line(box, `ค่าเสื่อมจากแถวที่เกิดขึ้นจริงถึงวันที่คำนวณ: ${formatMoney(recon.accumulatedFromRows)} บาท (ตรงกับยอดที่คำนวณจากนิยามโดยตรง ${formatMoney(snapshot.accumulatedCents)} บาท)`, 'formula-line');
+        line(box, 'ยอดสะสมทุกแถวตรงกับการคำนวณอิสระ และช่วงวันที่ต่อเนื่องครบถ้วน', 'formula-line');
+    } else {
+        box.className = 'recon-box recon-fail';
+        const c = recon.checks;
+        const msgs = [
+            [c.scheduleDiff, `ค่าเสื่อมรวมคลาดเคลื่อน ${formatMoney(c.scheduleDiff)} บาท`],
+            [c.rowsVsSegmentsDiff, `ผลรวมแถวไม่ตรงกับผลรวมช่วง คลาดเคลื่อน ${formatMoney(c.rowsVsSegmentsDiff)} บาท`],
+            [c.dayDiff, `จำนวนวันคลาดเคลื่อน ${c.dayDiff} วัน`],
+            [c.finalBookDiff, `มูลค่าสุดท้ายคลาดเคลื่อน ${formatMoney(c.finalBookDiff)} บาท`],
+            [c.snapshotRowsDiff, `ค่าเสื่อมจากแถวถึงวันที่คำนวณคลาดเคลื่อน ${formatMoney(c.snapshotRowsDiff)} บาท`],
+            [c.snapshotLastRowDiff, `ยอดสะสมแถวสุดท้ายก่อนวันที่คำนวณคลาดเคลื่อน ${formatMoney(c.snapshotLastRowDiff)} บาท`],
+            [c.rowAccumMismatch, `ยอดสะสมของบางแถวไม่ตรงกับการคำนวณอิสระ คลาดเคลื่อน ${formatMoney(c.rowAccumMismatch)} บาท`]
+        ];
+        msgs.filter(([v]) => v > 0).forEach(([, text]) => line(box, text, 'formula-line'));
+        recon.continuityProblems.forEach(p => line(box, p, 'formula-line'));
+    }
+}
+
+/* ---------- วิธีคำนวณ ---------- */
+function renderCalcMethod(model, meta) {
+    const { input, endOfLifeDate, eolInfo, firstDailyRate, thisYear, snapshot, depreciableCents } = model;
+    const box = document.getElementById('calcMethodBody');
+    box.textContent = '';
+
+    const basisLabel = input.yearBasis === 'fixed365' ? '365 วันคงที่ทุกปี' : 'ตามจริง (365/366 วัน ตามปีอธิกสุรทิน)';
+
+    line(box, `ราคาทุน = ${formatMoney(input.costCents)} บาท`);
+    line(box, `มูลค่าซาก = ${formatMoney(input.salvageCents)} บาท`);
+    line(box, `อายุการใช้งานตามบัญชี = ${input.lifeYears} ปี (${formatDateThai(input.startDate)} ถึง ${formatDateThai(endOfLifeDate)})`);
+    line(box, `หลักเกณฑ์ปีฐาน = ${basisLabel}`);
+    line(box, `นโยบายวันครบอายุ = ${EOL_POLICIES[eolInfo.policy].label}`);
+
+    formulaBlock(box,
+`ค่าเสื่อมราคาต่อปี (เส้นตรง)
+= (ราคาทุน - มูลค่าซาก) ÷ อายุการใช้งาน
+= (${formatMoney(input.costCents)} - ${formatMoney(input.salvageCents)}) ÷ ${input.lifeYears}
+= ${formatMoney(Math.round(depreciableCents / input.lifeYears))} บาท/ปี (ค่าปัดเศษเพื่อแสดงผล)`);
+
+    if (firstDailyRate) {
+        formulaBlock(box,
+`ค่าเสื่อมต่อวัน (ปี พ.ศ. ${firstDailyRate.year + 543})
+= (ราคาทุน - มูลค่าซาก) ÷ (อายุการใช้งาน × จำนวนวันในปี)
+= ${formatMoney(depreciableCents)} ÷ (${input.lifeYears} × ${firstDailyRate.days})
+= ${(firstDailyRate.ratePerDay / 100).toFixed(6)} บาท/วัน (ระบบคำนวณจริงด้วยเศษส่วนแบบ exact ไม่ปัดกลางทาง)`);
+    }
+
+    if (snapshot.afterLife && !thisYear.hasRowsThisYear) {
+        formulaBlock(box,
+`ค่าเสื่อมของปีที่คำนวณ
+= 0.00 บาท
+สินทรัพย์ครบอายุการใช้งานแล้วเมื่อ ${formatDateThai(endOfLifeDate)} จึงไม่มีค่าเสื่อมในปีนี้`);
+    } else {
+        formulaBlock(box,
+`ค่าเสื่อมของปี พ.ศ. ${input.currentDate.getFullYear() + 543}
+
+1) เกิดขึ้นจริงถึงวันที่คำนวณ = ${formatMoney(thisYear.actualThroughSnapshotCents)} บาท
+2) ประมาณการหลังวันที่คำนวณถึงสิ้นช่วงในปีนี้ = ${formatMoney(thisYear.projectedAfterSnapshotCents)} บาท
+3) รวมทั้งปีตามช่วงที่สินทรัพย์มีสิทธิคิดค่าเสื่อม = ${formatMoney(thisYear.periodTotalCents)} บาท${thisYear.coversFullCalendarYear ? ' (ครบปีปฏิทินพอดี)' : ' (ไม่ครบปีปฏิทิน เพราะเริ่มใช้หรือครบอายุกลางปี)'}
+4) เต็มปีตามอัตราบัญชี (อ้างอิง) = ${formatMoney(thisYear.theoreticalFullYearCents)} บาท
+
+เฉพาะข้อ 1 เท่านั้นที่ถือเป็นค่าเสื่อมที่เกิดขึ้นแล้ว ณ วันที่คำนวณ`);
+    }
+
+    line(box, 'การปัดเศษ: ระบบคำนวณยอดสะสมทางทฤษฎีด้วยเศษส่วนจำนวนเต็ม (BigInt) แล้วปัดครึ่งขึ้นเป็นสตางค์เฉพาะตอนสรุปยอดสะสม ค่าเสื่อมของแต่ละช่วงคือผลต่างของยอดสะสม จึงไม่มีการสะสมความคลาดเคลื่อน งวดสุดท้ายรับเศษทั้งหมดเพื่อให้ยอดรวมเท่ากับ (ราคาทุน - มูลค่าซาก) พอดี', 'text-muted small');
+    line(box, `หมายเหตุ: สถานะการใช้งาน (${meta.operStatus}) ไม่มีผลต่อการคำนวณค่าเสื่อมในระบบนี้`, 'text-muted small mt-2');
+
+    if (eolInfo.clamped) {
+        line(box,
+            `หมายเหตุนโยบายวันที่: วันที่เริ่มใช้งานคือวันที่ ${input.startDate.getDate()} ซึ่งไม่มีอยู่ในเดือนเดียวกันของปีปลายทาง ` +
+            `ระบบจึงใช้ ${formatDateThai(eolInfo.anniversary)} เป็นวันครบรอบ และได้วันครบอายุเป็น ${formatDateThai(endOfLifeDate)} ตามนโยบายที่เลือกไว้ ` +
+            `หากระเบียบของหน่วยงานกำหนดต่างจากนี้ ให้เปลี่ยนตัวเลือก "นโยบายวันครบอายุ" ในฟอร์ม`,
+            'text-muted small mt-2');
+    }
+}
+
+/* ---------- ผลลัพธ์รวม ---------- */
+function renderResults(model, meta) {
+    const { input, snapshot, thisYear, endOfLifeDate, depreciableCents } = model;
+
+    renderScheduleTable(model);
+    renderReconciliation(model);
+    renderCalcMethod(model, meta);
+
+    const durationText = calculateDuration(input.startDate, input.currentDate);
+    const remainingText = input.currentDate <= endOfLifeDate
+        ? calculateDuration(input.currentDate, endOfLifeDate)
+        : 'เกินอายุการใช้งานแล้ว ' + calculateDuration(endOfLifeDate, input.currentDate);
+    const depStatus = computeDepStatus(snapshot.accumulatedCents, depreciableCents, snapshot.bookValueCents);
+    model.depStatusText = depStatus.text;
+
+    setText('resCost', formatMoney(input.costCents));
+    setText('resAccumulated', formatMoney(snapshot.accumulatedCents));
+    setText('resBookValue', formatMoney(snapshot.bookValueCents));
+
+    if (snapshot.afterLife && !thisYear.hasRowsThisYear) {
+        setText('resThisYear', '0.00');
+        setText('resThisYearProjected', 'ครบอายุแล้ว ไม่มีค่าเสื่อมในปีที่คำนวณ');
+        setText('resThisYearPeriod', '-');
+        setText('resThisYearRate', '-');
+    } else {
+        setText('resThisYear', formatMoney(thisYear.actualThroughSnapshotCents));
+        setText('resThisYearProjected', formatMoney(thisYear.projectedAfterSnapshotCents) + ' บาท');
+        setText('resThisYearPeriod', formatMoney(thisYear.periodTotalCents) + ' บาท' + (thisYear.coversFullCalendarYear ? '' : ' (ไม่ครบปีปฏิทิน)'));
+        setText('resThisYearRate', formatMoney(thisYear.theoreticalFullYearCents) + ' บาท');
+    }
+
+    setText('resDuration', durationText);
+    setText('resRemaining', remainingText);
+
+    const operEl = document.getElementById('resOperStatus');
+    operEl.textContent = meta.operStatus;
+    operEl.className = 'status-badge ' + (meta.operStatus === 'ใช้งานอยู่'
+        ? 'status-active'
+        : (['ชำรุด', 'สูญหาย'].includes(meta.operStatus) ? 'status-done' : 'status-warn'));
+
+    const depStatusEl = document.getElementById('resDepStatus');
+    depStatusEl.textContent = depStatus.text;
+    depStatusEl.className = 'status-badge ' + depStatus.cls;
+
+    setText('resDateRange', `${formatDateThai(input.startDate)} - ${formatDateThai(input.currentDate)}`);
+    setText('resBudgetDisplay', meta.budget);
+    setText('resAssetCodeDisplay', meta.assetCode);
+
+    // Progress bars
+    const totalLifeDays = diffDaysInclusive(input.startDate, endOfLifeDate);
+    const ageDays = Math.min(totalLifeDays, Math.max(0, diffDaysInclusive(input.startDate, input.currentDate)));
+    const agePct = totalLifeDays > 0 ? Math.min(100, (ageDays / totalLifeDays) * 100) : 100;
+    const depPct = depreciableCents > 0 ? Math.min(100, (snapshot.accumulatedCents / depreciableCents) * 100) : 100;
+
+    const ageBar = document.getElementById('ageProgressBar');
+    const depBar = document.getElementById('depProgressBar');
+    ageBar.style.width = agePct.toFixed(1) + '%';
+    ageBar.setAttribute('aria-valuenow', agePct.toFixed(1));
+    ageBar.classList.toggle('bg-danger', input.currentDate > endOfLifeDate);
+    ageBar.classList.toggle('bg-primary', input.currentDate <= endOfLifeDate);
+    setText('ageProgressLabel', agePct.toFixed(1) + '%');
+    depBar.style.width = depPct.toFixed(1) + '%';
+    depBar.setAttribute('aria-valuenow', depPct.toFixed(1));
+    setText('depProgressLabel', depPct.toFixed(1) + '%');
+    setText('depProgressCaption', `ค่าเสื่อม ${depPct.toFixed(3)}% • เหลือมูลค่าตามบัญชี ${formatMoney(snapshot.bookValueCents)} บาท`);
+
+    setText('kpiStart', formatDateThaiShort(input.startDate));
+    setText('kpiEndOfLife', formatDateThaiShort(endOfLifeDate));
+    setText('kpiRemaining', remainingText);
+
+    // Copy area
+    setText('copyAssetCode', meta.assetCode);
+    setText('copyAssetName', meta.assetName);
+    setText('copyCost', formatMoney(input.costCents));
+    setText('copyDuration', durationText);
+    setText('copyAccumulated', formatMoney(snapshot.accumulatedCents));
+    setText('copyBookValue', formatMoney(snapshot.bookValueCents));
+    setText('copyOperStatus', meta.operStatus);
+    setText('copyBudget', meta.budget);
+    setText('copyDocRef', meta.docRef);
+    setText('acrobatDate', formatDateThaiShort(input.currentDate));
+
+    // Print area
+    setText('printDocRef', meta.docRef);
+    setText('printAssetCode', meta.assetCode);
+    setText('printAssetName', meta.assetName);
+    setText('printCost', formatMoney(input.costCents) + ' บาท');
+    setText('printSalvage', formatMoney(input.salvageCents) + ' บาท');
+    setText('printLife', input.lifeYears + ' ปี');
+    setText('printStartDate', formatDateThaiLong(input.startDate));
+    setText('printCurrentDate', formatDateThaiLong(input.currentDate));
+    setText('printEndOfLife', formatDateThaiLong(endOfLifeDate));
+    setText('printDuration', durationText);              // เพิ่ม
+setText('printRemaining', remainingText);            // เพิ่ม
+setText('printThisYearActual', formatMoney(thisYear.actualThroughSnapshotCents) + ' บาท'); // เพิ่ม
+    setText('printAccumulated2', formatMoney(snapshot.accumulatedCents) + ' บาท');
+    setText('printBookValue2', formatMoney(snapshot.bookValueCents) + ' บาท');
+    setText('printOperStatus', meta.operStatus);
+    setText('printDepStatus', depStatus.text);
+    document.querySelectorAll('.print-signature').forEach(el => el.style.display = 'flex');
+
+    setText('resultStatusLive',
+        `คำนวณเสร็จแล้ว ค่าเสื่อมสะสมถึงวันที่ ${formatDateThai(input.currentDate)} เท่ากับ ${formatMoney(snapshot.accumulatedCents)} บาท ` +
+        `มูลค่าตามบัญชี ${formatMoney(snapshot.bookValueCents)} บาท สถานะ ${depStatus.text}`);
+
+    renderChart({
+        labels: model.chart.labels,
+        book: model.chart.book.map(c => c / 100),
+        accum: model.chart.accum.map(c => c / 100),
+        annual: model.chart.annual.map(c => c / 100),
+        snapshotIndex: model.chart.snapshotIndex,
+        snapshotLabel: model.chart.snapshotLabel
+    });
+}
+
+
+/* ===================== js/export.js ===================== */
+/* export.js — CSV / Excel / PDF สร้างจาก model ไม่อ่านจาก DOM */
+
+
+const SCHEDULE_HEADER = [
+    'ลำดับ', 'ปี พ.ศ.', 'ช่วงวันที่ (พ.ศ.)', 'จำนวนวัน',
+    'ค่าเสื่อมประจำช่วง', 'ค่าเสื่อมสะสม', 'มูลค่าสุทธิ',
+    'ประเภทข้อมูล', 'หมายเหตุ'
+];
+
+const EXPORT_ROW_TYPE = {
+    [ROW_TYPE.ACTUAL]: 'Actual',
+    [ROW_TYPE.SNAPSHOT]: 'Snapshot',
+    [ROW_TYPE.PROJECTION]: 'Projection'
+};
+
+/** numeric=true สำหรับ Excel (เก็บเป็นตัวเลขจริง), false สำหรับ CSV */
+function buildScheduleAoA(model, numeric) {
+    const money = (cents) => numeric ? cents / 100 : (cents / 100).toFixed(2);
+    const rows = [];
+
+    rows.push([
+        0,
+        model.input.startDate.getFullYear() + 543,
+        `จุดเริ่มต้น (${formatDateThai(model.input.startDate)})`,
+        0, money(0), money(0), money(model.input.costCents),
+        'Opening', 'ยอดยกมา'
+    ]);
+
+    model.displayRows.forEach(row => {
+        rows.push([
+            row.isContinuation ? `${row.seq} (ต่อ)` : row.seq,
+            row.year + 543,
+            `${formatDateThai(row.start)} - ${formatDateThai(row.end)}`,
+            row.days,
+            money(row.depCents),
+            money(row.accumulatedCents),
+            money(row.bookValueCents),
+            EXPORT_ROW_TYPE[row.rowType],
+            ROW_TYPE_LABEL[row.rowType] + (row.isFinal ? ' / ครบอายุ' : '')
+        ]);
+    });
+
+    rows.push([
+        'รวมตลอดอายุการใช้งาน', '', '',
+        model.totals.totalDaysAll,
+        money(model.totals.totalDepAllCents),
+        money(model.totals.finalAccumulatedCents),
+        money(model.totals.finalBookValueCents),
+        'Total', 'รวมช่วงประมาณการด้วย'
+    ]);
+
+    return rows;
+}
+
+function buildInfoRows(model, meta) {
+    const m = model;
+    return [
+        ['รายงานการคำนวณค่าเสื่อมราคาครุภัณฑ์'],
+        [],
+        ['รหัสครุภัณฑ์', meta.assetCode],
+        ['รายการ', meta.assetName],
+        ['ราคาทุน', m.input.costCents / 100],
+        ['มูลค่าซาก', m.input.salvageCents / 100],
+        ['อายุการใช้งานตามบัญชี (ปี)', m.input.lifeYears],
+        ['วันที่เริ่มใช้งาน', formatDateThai(m.input.startDate)],
+        ['วันที่คำนวณ (Snapshot)', formatDateThai(m.input.currentDate)],
+        ['ครบอายุการใช้งาน', formatDateThai(m.endOfLifeDate)],
+        ['ค่าเสื่อมสะสมที่เกิดขึ้นจริงถึงวันที่คำนวณ', m.snapshot.accumulatedCents / 100],
+        ['มูลค่าตามบัญชี ณ วันที่คำนวณ', m.snapshot.bookValueCents / 100],
+        ['ค่าเสื่อมปีที่คำนวณ เกิดขึ้นจริงถึงวันที่คำนวณ', m.thisYear.actualThroughSnapshotCents / 100],
+        ['ค่าเสื่อมปีที่คำนวณ ประมาณการหลังวันที่คำนวณ', m.thisYear.projectedAfterSnapshotCents / 100],
+        ['ค่าเสื่อมปีที่คำนวณ รวมทั้งช่วงในปีนั้น', m.thisYear.periodTotalCents / 100],
+        ['ค่าเสื่อมเต็มปีตามอัตราบัญชี (อ้างอิง)', m.thisYear.theoreticalFullYearCents / 100],
+        ['สถานะการใช้งาน', meta.operStatus],
+        ['สถานะค่าเสื่อม', m.depStatusText || ''],
+        ['แหล่งงบประมาณ', meta.budget],
+        ['เลขที่เอกสาร', meta.docRef],
+        ['หมายเหตุ', 'แถวประเภท Projection คือช่วงหลังวันที่คำนวณ ยังไม่เกิดขึ้นจริง'],
+        []
+    ];
+}
+
+// แถว info ที่เป็นจำนวนเงิน (index 0-based ใน buildInfoRows)
+const INFO_MONEY_ROWS = [4, 5, 10, 11, 12, 13, 14, 15];
+
+function exportToCSV(model, meta) {
+    let csv = '\uFEFF';
+    csv += SCHEDULE_HEADER.map(csvCell).join(',') + '\n';
+    buildScheduleAoA(model, false).forEach(row => {
+        csv += row.map(csvCell).join(',') + '\n';
+    });
+
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `depreciation_${safeFileName(meta.assetCode)}.csv`;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+function exportToExcel(model, meta) {
+    if (typeof XLSX === 'undefined') {
+        alert('ไม่สามารถส่งออก Excel ได้ เนื่องจากไลบรารีไม่พร้อมใช้งาน');
+        return;
+    }
+    const infoRows = buildInfoRows(model, meta);
+    const scheduleRows = buildScheduleAoA(model, true);
+    const wsData = [...infoRows, SCHEDULE_HEADER, ...scheduleRows];
+    const ws = XLSX.utils.aoa_to_sheet(wsData);
+    ws['!cols'] = [{ wch: 38 }, { wch: 12 }, { wch: 28 }, { wch: 12 },
+                   { wch: 18 }, { wch: 18 }, { wch: 18 }, { wch: 14 }, { wch: 22 }];
+
+    const setFormat = (r, c) => {
+        const addr = XLSX.utils.encode_cell({ r, c });
+        if (ws[addr] && ws[addr].t === 'n') ws[addr].z = '#,##0.00';
+    };
+    INFO_MONEY_ROWS.forEach(r => setFormat(r, 1));
+    const firstDataRow = infoRows.length + 1;
+    for (let r = firstDataRow; r < firstDataRow + scheduleRows.length; r++) {
+        [4, 5, 6].forEach(c => setFormat(r, c));
+    }
+
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Depreciation');
+    XLSX.writeFile(wb, `depreciation_${safeFileName(meta.assetCode)}.xlsx`);
+}
+
+function exportToPDF() {
+    alert('ระบบจะเปิดหน้าต่างพิมพ์ กรุณาเลือกปลายทางเป็น "บันทึกเป็น PDF" (Save as PDF)');
+    window.print();
+}
+
+/* ===================== js/selftest.js ===================== */
+/* selftest.js — ชุดทดสอบภายใน ใช้ข้อมูลจำลอง ไม่กระทบข้อมูลในฟอร์ม */
+
+
+function d(y, m, day) { return new Date(y, m - 1, day); }
+
+function runSelfTests() {
+    const results = [];
+    const check = (name, fn) => {
+        try {
+            const r = fn();
+            results.push({ name, ok: r.ok !== false, detail: r.detail || '' });
+        } catch (e) {
+            results.push({ name, ok: false, detail: 'ข้อผิดพลาด: ' + e.message });
+        }
+    };
+    const base = { costCents: 5000000, salvageCents: 100, lifeYears: 5, yearBasis: 'actual' };
+
+    check('Snapshot กลางปีแรก: ยอดสะสมตรงกับผลรวมแถวที่เกิดขึ้นจริง', () => {
+        const m = buildDepreciationModel({ ...base, startDate: d(2024, 10, 1), currentDate: d(2024, 12, 15) });
+        const sum = m.displayRows.filter(r => r.rowType !== ROW_TYPE.PROJECTION).reduce((s, r) => s + r.depCents, 0);
+        return { ok: sum === m.snapshot.accumulatedCents && m.recon.ok, detail: formatMoney(sum) };
+    });
+
+    check('Snapshot ปีที่ 2: ค่าเสื่อมปีนี้นับเฉพาะ 1 ม.ค. ถึงวันที่คำนวณ', () => {
+        const m = buildDepreciationModel({ ...base, startDate: d(2023, 4, 10), currentDate: d(2024, 6, 30) });
+        const rows = m.displayRows.filter(r => r.year === 2024 && r.rowType !== ROW_TYPE.PROJECTION);
+        const ok = rows.length > 0 && rows[0].start.getMonth() === 0 && rows[0].start.getDate() === 1
+            && m.thisYear.actualThroughSnapshotCents === rows.reduce((s, r) => s + r.depCents, 0);
+        return { ok, detail: formatMoney(m.thisYear.actualThroughSnapshotCents) };
+    });
+
+    check('แยกค่าเสื่อมจริงกับประมาณการในปีเดียวกัน', () => {
+        const m = buildDepreciationModel({ ...base, startDate: d(2023, 1, 1), currentDate: d(2024, 6, 30) });
+        const proj = m.displayRows.filter(r => r.year === 2024 && r.rowType === ROW_TYPE.PROJECTION);
+        const ok = m.thisYear.projectedAfterSnapshotCents > 0
+            && proj.length === 1 && proj[0].start > m.input.currentDate
+            && m.thisYear.periodTotalCents === m.thisYear.actualThroughSnapshotCents + m.thisYear.projectedAfterSnapshotCents
+            && m.snapshot.accumulatedCents < m.thisYear.periodTotalCents + m.displayRows[0].depCents;
+        return { ok, detail: `จริง ${formatMoney(m.thisYear.actualThroughSnapshotCents)} / ประมาณการ ${formatMoney(m.thisYear.projectedAfterSnapshotCents)}` };
+    });
+
+    check('ยอดสะสมไม่รวมแถวประมาณการ', () => {
+        const m = buildDepreciationModel({ ...base, startDate: d(2022, 3, 1), currentDate: d(2023, 8, 10) });
+        const independent = accumulatedUntilDate({
+            startDate: m.input.startDate, endOfLifeDate: m.endOfLifeDate,
+            depreciableCents: m.depreciableCents, lifeYears: m.input.lifeYears, yearBasis: m.input.yearBasis
+        }, m.input.currentDate);
+        return { ok: independent === m.snapshot.accumulatedCents, detail: formatMoney(independent) };
+    });
+
+    check('Snapshot ตรงวันเริ่ม segment: ไม่มีแถวว่าง', () => {
+        const m = buildDepreciationModel({ ...base, startDate: d(2023, 6, 1), currentDate: d(2024, 1, 1) });
+        return { ok: !m.displayRows.some(r => r.days <= 0) && m.recon.ok, detail: `แถวทั้งหมด ${m.displayRows.length}` };
+    });
+
+    check('Snapshot ตรงวันสิ้น segment: ไม่มีช่วง 0 วัน', () => {
+        const m = buildDepreciationModel({ ...base, startDate: d(2023, 3, 15), currentDate: d(2023, 12, 31) });
+        const snapRows = m.displayRows.filter(r => r.rowType === ROW_TYPE.SNAPSHOT);
+        return { ok: !m.displayRows.some(r => r.days <= 0) && snapRows.length === 1 && m.recon.ok, detail: `แถว Snapshot ${snapRows.length}` };
+    });
+
+    check('Snapshot หลังหมดอายุหลายปี: ค่าเสื่อมปีนี้ = 0', () => {
+        const m = buildDepreciationModel({ ...base, startDate: d(2010, 1, 1), currentDate: d(2026, 5, 20) });
+        return {
+            ok: m.thisYear.actualThroughSnapshotCents === 0 && m.snapshot.afterLife
+                && m.snapshot.accumulatedCents === m.depreciableCents,
+            detail: 'สะสม ' + formatMoney(m.snapshot.accumulatedCents)
+        };
+    });
+
+    check('เริ่มใช้ 31 ธันวาคม: งวดแรกมี 1 วัน', () => {
+        const m = buildDepreciationModel({ ...base, startDate: d(2023, 12, 31), currentDate: d(2024, 6, 1) });
+        return { ok: m.segments[0].days === 1, detail: `${m.segments[0].days} วัน` };
+    });
+
+    check('นโยบาย A (29 ก.พ.): ครบอายุ 27/02/2572', () => {
+        const eol = getEndOfLifeDate(d(2024, 2, 29), 5, 'anniversaryMinusOneDay');
+        return { ok: eol.getFullYear() === 2029 && eol.getMonth() === 1 && eol.getDate() === 27, detail: formatDateThai(eol) };
+    });
+
+    check('นโยบาย B (29 ก.พ.): ครบอายุ 28/02/2572', () => {
+        const eol = getEndOfLifeDate(d(2024, 2, 29), 5, 'clampedAnniversaryAsLastDay');
+        return { ok: eol.getFullYear() === 2029 && eol.getMonth() === 1 && eol.getDate() === 28, detail: formatDateThai(eol) };
+    });
+
+    check('นโยบาย B ไม่กระทบกรณีปกติ', () => {
+        const a = getEndOfLifeDate(d(2023, 5, 17), 5, 'anniversaryMinusOneDay');
+        const b = getEndOfLifeDate(d(2023, 5, 17), 5, 'clampedAnniversaryAsLastDay');
+        return { ok: a.getTime() === b.getTime(), detail: formatDateThai(a) };
+    });
+
+    check('นโยบาย B: ยอดรวมยังตรงพอดี', () => {
+        const m = buildDepreciationModel({ ...base, startDate: d(2024, 2, 29), currentDate: d(2026, 7, 1), eolPolicy: 'clampedAnniversaryAsLastDay' });
+        return { ok: m.recon.ok && m.totals.totalDepAllCents === m.depreciableCents, detail: `ครบอายุ ${formatDateThai(m.endOfLifeDate)}` };
+    });
+
+    check('มูลค่าซากเท่าราคาทุน: ค่าเสื่อมทุกช่วงเป็น 0', () => {
+        const m = buildDepreciationModel({ costCents: 5000000, salvageCents: 5000000, lifeYears: 5, yearBasis: 'actual', startDate: d(2023, 1, 1), currentDate: d(2024, 6, 1) });
+        return { ok: m.displayRows.every(r => r.depCents === 0) && m.recon.ok, detail: `รวม ${formatMoney(m.totals.totalDepAllCents)}` };
+    });
+
+    check('ค่าเสื่อมมีเศษสตางค์: งวดสุดท้ายทำให้ยอดรวมตรงพอดี', () => {
+        const m = buildDepreciationModel({ costCents: 1000000, salvageCents: 100, lifeYears: 3, yearBasis: 'actual', startDate: d(2023, 5, 17), currentDate: d(2024, 8, 9) });
+        return { ok: m.totals.totalDepAllCents === m.depreciableCents && m.recon.ok, detail: `${formatMoney(m.totals.totalDepAllCents)}` };
+    });
+
+    check('จำนวนเงินสูงและอายุยาว (30 ปี): ยอดรวมยังตรงพอดี', () => {
+        const m = buildDepreciationModel({ costCents: MAX_COST_CENTS - 7, salvageCents: 1, lifeYears: 30, yearBasis: 'actual', startDate: d(2020, 2, 29), currentDate: d(2035, 6, 15) });
+        return { ok: m.recon.ok && m.totals.totalDepAllCents === m.depreciableCents, detail: formatMoney(m.totals.totalDepAllCents) };
+    });
+
+    check('ยอดสะสมเพิ่มขึ้นทีละวันแบบไม่ถอยหลัง', () => {
+        const start = d(2023, 11, 20);
+        const p = { startDate: start, endOfLifeDate: getEndOfLifeDate(start, 2), depreciableCents: 123457, lifeYears: 2, yearBasis: 'actual' };
+        let prev = -1, ok = true;
+        for (let i = 0; i < diffDaysInclusive(start, p.endOfLifeDate); i++) {
+            const v = accumulatedUntilDate(p, addDays(start, i));
+            if (v < prev) { ok = false; break; }
+            prev = v;
+        }
+        return { ok: ok && prev === 123457, detail: `ยอดสุดท้าย ${formatMoney(prev)}` };
+    });
+
+    check('ปีฐานคงที่ 365 วัน: ยอดรวมยังตรงพอดี', () => {
+        const m = buildDepreciationModel({ ...base, yearBasis: 'fixed365', startDate: d(2024, 2, 29), currentDate: d(2027, 3, 1) });
+        return { ok: m.recon.ok, detail: `รวม ${formatMoney(m.totals.totalDepAllCents)}` };
+    });
+
+    check('Snapshot = วันเริ่มใช้งาน: ค่าเสื่อม 1 วัน', () => {
+        const m = buildDepreciationModel({ ...base, startDate: d(2024, 7, 1), currentDate: d(2024, 7, 1) });
+        const first = m.displayRows[0];
+        return { ok: first.days === 1 && m.snapshot.accumulatedCents === first.depCents && m.recon.ok, detail: formatMoney(m.snapshot.accumulatedCents) };
+    });
+
+    check('ปี พ.ศ. นอกช่วงถูกปฏิเสธ', () => {
+        const ok = parseThaiDateString('01/01/0001') === null
+            && parseThaiDateString('01/01/9999') === null
+            && parseThaiDateString('01/01/2568') !== null;
+        return { ok, detail: 'ช่วงที่รองรับ 2400-2700' };
+    });
+
+    check('จำนวนเงินผิดรูปแบบหรือเกินขอบเขตถูกปฏิเสธ', () => {
+        const ok = parseMoneyToCents('1.234') === null
+            && parseMoneyToCents('-5') === null
+            && parseMoneyToCents('abc') === null
+            && parseMoneyToCents('99999999999999999999') === null
+            && parseMoneyToCents('1,234.50') === 123450;
+        return { ok, detail: 'ตรวจ 5 กรณี' };
+    });
+
+    check('ความต่อเนื่องของช่วงวัน (หลายกรณี)', () => {
+        const cases = [
+            { s: d(2021, 1, 1), c: d(2023, 7, 4) },
+            { s: d(2022, 8, 31), c: d(2022, 8, 31) },
+            { s: d(2020, 2, 29), c: d(2024, 2, 29) },
+            { s: d(2023, 12, 31), c: d(2028, 12, 30) }
+        ];
+        const bad = cases.filter(cs => !buildDepreciationModel({ ...base, startDate: cs.s, currentDate: cs.c }).recon.ok);
+        return { ok: bad.length === 0, detail: `ผ่าน ${cases.length - bad.length}/${cases.length}` };
+    });
+
+    return results;
+}
+
+/* ===================== js/app.js ===================== */
+/* app.js — state, event binding, การทำงานของหน้าจอ */
+
+
+const appState = { model: null, meta: null };
+let isDirty = false;
+let isCalculating = false;
+
+const DIRTY_IDS = ['assetCode', 'assetName', 'cost', 'salvage', 'lifeYears', 'startDate',
+                   'currentDate', 'budget', 'yearBasis', 'eolPolicy', 'operStatus', 'docRef'];
+
+function setDirty(flag) {
+    isDirty = flag;
+    const notice = document.getElementById('dirtyNotice');
+    if (notice) notice.style.display = (flag && appState.model) ? 'block' : 'none';
+}
+
+function setCalcLoading(loading) {
+    isCalculating = loading;
+    const btn = document.getElementById('calcBtn');
+    const label = document.getElementById('calcBtnLabel');
+    btn.disabled = loading;
+    btn.setAttribute('aria-busy', loading ? 'true' : 'false');
+    label.textContent = loading ? 'กำลังคำนวณ...' : '✓ คำนวณผลลัพธ์';
+}
+
+/** คำนวณ: ใช้ try/finally ปุ่มจึงกลับมาใช้งานได้เสมอแม้เกิดข้อผิดพลาด (ข้อ 12) */
+async function calculateDepreciation() {
+    if (isCalculating) return;
+    setCalcLoading(true);
+    try {
+        const form = readAndValidateForm();
+        if (!form) return;
+
+        const model = buildDepreciationModel(form.input);
+        renderResults(model, form.meta);
+        appState.model = model;
+        appState.meta = form.meta;
+        window._lastCalc = appState;   // สำหรับตรวจสอบผ่าน console
+        saveSettings();
+        setDirty(false);
+    } catch (error) {
+        console.error(error);
+        clearErrors();
+        showError('cost', 'เกิดข้อผิดพลาดระหว่างคำนวณ กรุณาตรวจสอบข้อมูลนำเข้า');
+    } finally {
+        setCalcLoading(false);
+    }
+}
+
+function guardOutput(actionLabel) {
+    if (!appState.model) {
+        alert('กรุณาคำนวณข้อมูลก่อน' + actionLabel);
+        return false;
+    }
+    if (isDirty) {
+        alert('ข้อมูลมีการเปลี่ยนแปลงหลังคำนวณ กรุณากดคำนวณใหม่ก่อน' + actionLabel);
+        return false;
+    }
+    return true;
+}
+
+/* ---------- การตั้งค่าที่จำไว้ ---------- */
+function saveSettings() {
+    try {
+        localStorage.setItem('dep_settings', JSON.stringify({
+            budget: document.getElementById('budget').value,
+            lifeYears: document.getElementById('lifeYears').value,
+            yearBasis: document.getElementById('yearBasis').value,
+            eolPolicy: document.getElementById('eolPolicy').value,
+            salvage: document.getElementById('salvage').value,
+            operStatus: document.getElementById('operStatus').value
+        }));
+    } catch (e) {
+        console.warn('ไม่สามารถบันทึกการตั้งค่าได้', e);
+    }
+}
+
+function loadSettings() {
+    try {
+        const saved = localStorage.getItem('dep_settings');
+        if (!saved) return;
+        const s = JSON.parse(saved);
+        ['budget', 'lifeYears', 'yearBasis', 'eolPolicy', 'salvage', 'operStatus'].forEach(id => {
+            if (s[id]) document.getElementById(id).value = s[id];
+        });
+    } catch (e) {
+        console.warn('ไม่สามารถโหลดการตั้งค่าได้', e);
+    }
+}
+
+/* ---------- ล้างข้อมูล / ตัวอย่าง ---------- */
+function resetForm() {
+    ['assetCode', 'assetName', 'cost', 'docRef'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('salvage').value = '1.00';
+    document.getElementById('lifeYears').value = '5';
+    document.getElementById('yearBasis').value = 'actual';
+    document.getElementById('eolPolicy').value = DEFAULT_EOL_POLICY;
+    document.getElementById('operStatus').value = 'ใช้งานอยู่';
+    document.getElementById('budget').selectedIndex = 2;
+    document.getElementById('printDocRef').textContent = '-';
+
+    const today = new Date();
+    if (window.startPicker) window.startPicker.clear();
+    if (window.currentPicker) window.currentPicker.setDate(today, true);
+    else document.getElementById('currentDate').value = formatDateThai(today);
+
+    clearErrors();
+
+    const tbody = document.getElementById('depreciationTableBody');
+    tbody.textContent = '';
+    const tr = document.createElement('tr');
+    const cell = document.createElement('td');
+    cell.colSpan = 8;
+    cell.className = 'text-center py-5 text-muted';
+    cell.textContent = 'กรุณากดคำนวณเพื่อแสดงข้อมูล';
+    tr.appendChild(cell);
+    tbody.appendChild(tr);
+    document.getElementById('tableLegend').textContent = '';
+
+    ['resCost', 'resAccumulated', 'resBookValue', 'resThisYear', 'resThisYearProjected',
+     'resThisYearPeriod', 'resThisYearRate', 'resDuration', 'resRemaining', 'resDateRange',
+     'resBudgetDisplay', 'resAssetCodeDisplay', 'kpiStart', 'kpiEndOfLife', 'kpiRemaining']
+        .forEach(id => document.getElementById(id).textContent = '-');
+
+    const operEl = document.getElementById('resOperStatus');
+    operEl.textContent = '-'; operEl.className = 'status-badge status-neutral';
+    const depEl = document.getElementById('resDepStatus');
+    depEl.textContent = '-'; depEl.className = 'status-badge status-neutral';
+
+    document.getElementById('ageProgressBar').style.width = '0%';
+    document.getElementById('ageProgressLabel').textContent = '0%';
+    document.getElementById('depProgressBar').style.width = '0%';
+    document.getElementById('depProgressLabel').textContent = '0%';
+    document.getElementById('depProgressCaption').textContent = 'เหลือมูลค่าตามบัญชี -';
+
+    const calcBody = document.getElementById('calcMethodBody');
+    calcBody.textContent = 'กดคำนวณเพื่อแสดงวิธีคิด';
+    calcBody.className = 'calc-method-box text-muted';
+
+    document.getElementById('reconBox').style.display = 'none';
+    document.getElementById('selfTestBox').style.display = 'none';
+    document.getElementById('resultStatusLive').textContent = 'ล้างข้อมูลแล้ว';
+    document.querySelectorAll('.print-signature').forEach(el => el.style.display = 'none');
+
+    destroyChart();
+    document.getElementById('chartEmptyMsg').style.display = 'flex';
+    document.getElementById('depChart').style.display = 'none';
+
+    appState.model = null;
+    appState.meta = null;
+    window._lastCalc = null;
+    setDirty(false);
+}
+
+function loadExample() {
+    document.getElementById('assetCode').value = '1234-001-0001';
+    document.getElementById('assetName').value = 'เครื่องสำรองไฟ 1KVA';
+    document.getElementById('cost').value = '50,000.00';
+    document.getElementById('salvage').value = '1.00';
+    document.getElementById('lifeYears').value = '5';
+    document.getElementById('yearBasis').value = 'actual';
+    document.getElementById('operStatus').value = 'ใช้งานอยู่';
+    document.getElementById('budget').value = 'งบรายได้วิทยาลัยแพทยศาสตร์นานาชาติจุฬาภรณ์';
+    document.getElementById('docRef').value = '000';
+    document.getElementById('printDocRef').textContent = '000';
+
+    const today = new Date();
+    const past = new Date(today.getFullYear() - 1, today.getMonth(), today.getDate());
+    if (window.startPicker) window.startPicker.setDate(past, true);
+    else document.getElementById('startDate').value = formatDateThai(past);
+    if (window.currentPicker) window.currentPicker.setDate(today, true);
+    else document.getElementById('currentDate').value = formatDateThai(today);
+
+    setDirty(true);
+    calculateDepreciation();
+}
+
+/* ---------- Self-test ---------- */
+function renderSelfTests() {
+    const results = runSelfTests();
+    const box = document.getElementById('selfTestBox');
+    box.textContent = '';
+    box.style.display = 'block';
+
+    const head = document.createElement('div');
+    head.className = 'fw-bold mb-2';
+    const passed = results.filter(r => r.ok).length;
+    head.textContent = `ผลการตรวจสอบระบบ (self-test): ผ่าน ${passed}/${results.length}`;
+    box.appendChild(head);
+
+    results.forEach(r => {
+        const div = document.createElement('div');
+        div.className = r.ok ? 't-pass' : 't-fail';
+        div.textContent = `${r.ok ? '✓' : '✗'} ${r.name}${r.detail ? ' — ' + r.detail : ''}`;
+        box.appendChild(div);
+    });
+
+    const note = document.createElement('div');
+    note.className = 'text-muted mt-2';
+    note.textContent = 'การตรวจสอบนี้ใช้ข้อมูลจำลอง ไม่กระทบข้อมูลที่กรอกไว้';
+    box.appendChild(note);
+    box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    return results;
+}
+
+/* ---------- Date pickers ---------- */
+function initDatePickers() {
+    if (typeof flatpickr === 'undefined') return;
+    const thaiLocale = (window.flatpickr.l10ns && window.flatpickr.l10ns.th) || 'default';
+    const commonConfig = {
+        locale: thaiLocale,
+        dateFormat: 'd/m/Y',
+        disableMobile: 'true',
+        allowInput: true,
+        onChange: () => setDirty(true),
+        formatDate: (date) => {
+            const day = String(date.getDate()).padStart(2, '0');
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            return `${day}/${month}/${date.getFullYear() + 543}`;
+        },
+        parseDate: (dateStr) => {
+            if (!dateStr) return null;
+            const parts = dateStr.split('/');
+            if (parts.length !== 3) return null;
+            const day = parseInt(parts[0], 10);
+            const month = parseInt(parts[1], 10) - 1;
+            const yearAD = parseInt(parts[2], 10) - 543;
+            const date = new Date(yearAD, month, day);
+            if (date.getFullYear() !== yearAD || date.getMonth() !== month || date.getDate() !== day) return null;
+            return date;
+        }
+    };
+    window.startPicker = flatpickr('#startDate', commonConfig);
+    window.currentPicker = flatpickr('#currentDate', commonConfig);
+}
+
+/* ---------- Event binding ---------- */
+function init() {
+    const today = new Date();
+    initDatePickers();
+    if (window.currentPicker) window.currentPicker.setDate(today, true);
+    else document.getElementById('currentDate').value = formatDateThai(today);
+    document.getElementById('printDate').textContent = formatDateThai(today);
+
+    DIRTY_IDS.forEach(id => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.addEventListener('input', () => setDirty(true));
+        el.addEventListener('change', () => setDirty(true));
+    });
+
+    document.getElementById('docRef').addEventListener('input', (e) => {
+        document.getElementById('printDocRef').textContent = e.target.value.trim() || '-';
+    });
+
+    document.querySelectorAll('.currency-input').forEach(input => {
+        input.addEventListener('focus', (e) => { e.target.value = e.target.value.replace(/,/g, ''); e.target.select(); });
+        input.addEventListener('blur', (e) => {
+            const val = parseMoneyToCents(e.target.value);
+            e.target.value = val !== null ? formatMoney(val) : '';
+            setDirty(true);
+        });
+        input.addEventListener('keypress', (e) => { if (e.key === 'Enter') e.target.blur(); });
+    });
+
+    // กด Enter ในฟอร์มให้คำนวณ (ปุ่มถูกล็อกระหว่างคำนวณอยู่แล้ว)
+    document.getElementById('assetForm').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && e.target.tagName === 'INPUT' && !e.target.classList.contains('currency-input')) {
+            e.preventDefault();
+            calculateDepreciation();
+        }
+    });
+
+    document.getElementById('calcBtn').addEventListener('click', calculateDepreciation);
+    document.getElementById('btnReset').addEventListener('click', resetForm);
+    document.getElementById('btnExample').addEventListener('click', loadExample);
+    document.getElementById('btnSelfTest').addEventListener('click', renderSelfTests);
+    document.getElementById('btnCSV').addEventListener('click', () => {
+        if (guardOutput('ส่งออก')) exportToCSV(appState.model, appState.meta);
+    });
+    document.getElementById('btnExcel').addEventListener('click', () => {
+        if (guardOutput('ส่งออก')) exportToExcel(appState.model, appState.meta);
+    });
+    document.getElementById('btnPDF').addEventListener('click', () => {
+        if (guardOutput('บันทึกเป็น PDF')) exportToPDF();
+    });
+    document.getElementById('btnPrint').addEventListener('click', () => {
+        if (guardOutput('พิมพ์')) window.print();
+    });
+
+    document.querySelectorAll('.chart-toggle .btn').forEach(btn => {
+        btn.addEventListener('click', function () { setChartMetric(this.dataset.metric); });
+    });
+
+    window.addEventListener('beforeprint', resizeChart);
+    window.addEventListener('afterprint', resizeChart);
+
+    document.getElementById('chartEmptyMsg').style.display = 'flex';
+    document.getElementById('depChart').style.display = 'none';
+
+    loadSettings();
+    setDirty(false);
+
+    window.runSelfTests = runSelfTests;
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+} else {
+    init();
+}
+
+</script>
+
+</body>
+</html>
