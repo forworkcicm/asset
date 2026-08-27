@@ -1,0 +1,5 @@
+# บังคับให้ Apache ส่ง charset เป็น UTF-8 เสมอ
+# หัวข้อ Content-Type ที่เซิร์ฟเวอร์ส่งมา จะ "ชนะ" meta charset ในไฟล์เสมอ
+# ถ้า XAMPP ตั้ง AddDefaultCharset เป็นอย่างอื่นไว้ ภาษาไทยจะเพี้ยนแม้ไฟล์จะถูกต้อง
+AddDefaultCharset UTF-8
+AddType "text/html; charset=UTF-8" .html .htm
