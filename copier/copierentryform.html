@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>บันทึกจำนวนแผ่นรายเดือน · ค่าเช่าเครื่องถ่ายเอกสาร</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;600;700&family=Google+Sans+Code:wght@400;500&display=swap">
+<style>
+:root{
+  --ground:#F1F3F3; --surface:#FFFFFF; --surface-2:#E9EDEC; --sunk:#E4E9E9; --row-on:#EAF4F7;
+  --ink:#14191C; --ink-2:#3D4A50; --muted:#66757C; --line:#D8DFDE; --line-2:#BFCBCA;
+  --accent:#0F6E86; --accent-ink:#FFFFFF; --accent-soft:#DCEAEE;
+  --bw:#3B6EA5; --col:#B0246B;
+  --good:#2B6B4A; --warn:#8A5A11; --bad:#9C2B24;
+  --good-bg:#E3F0E8; --warn-bg:#FAF1DE; --bad-bg:#FAE7E4; --bad-line:#E0A9A2;
+  --shadow:0 -1px 0 var(--line), 0 -8px 24px rgba(20,25,28,.07);
+  --scrim:rgba(20,25,28,.42);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --ground:#0D1214; --surface:#141C1F; --surface-2:#1B2529; --sunk:#0A0F11; --row-on:#132A31;
+    --ink:#E8EFEF; --ink-2:#B6C4C7; --muted:#8A9AA0; --line:#243135; --line-2:#33454A;
+    --accent:#4FB6CE; --accent-ink:#08141A; --accent-soft:#123842;
+    --bw:#3E92C8; --col:#DB4E85;
+    --good:#68C093; --warn:#D9A441; --bad:#E8837A;
+    --good-bg:#152A20; --warn-bg:#2A2213; --bad-bg:#2C1917; --bad-line:#5E2C26;
+    --shadow:0 -1px 0 var(--line), 0 -8px 24px rgba(0,0,0,.5);
+    --scrim:rgba(0,0,0,.6);
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#0D1214; --surface:#141C1F; --surface-2:#1B2529; --sunk:#0A0F11; --row-on:#132A31;
+  --ink:#E8EFEF; --ink-2:#B6C4C7; --muted:#8A9AA0; --line:#243135; --line-2:#33454A;
+  --accent:#4FB6CE; --accent-ink:#08141A; --accent-soft:#123842;
+  --bw:#3E92C8; --col:#DB4E85;
+  --good:#68C093; --warn:#D9A441; --bad:#E8837A;
+  --good-bg:#152A20; --warn-bg:#2A2213; --bad-bg:#2C1917; --bad-line:#5E2C26;
+  --shadow:0 -1px 0 var(--line), 0 -8px 24px rgba(0,0,0,.5);
+  --scrim:rgba(0,0,0,.6);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--ground);color:var(--ink);
+  font-family:"Google Sans","Google Sans Text","Noto Sans Thai","IBM Plex Sans Thai",system-ui,sans-serif;
+  font-size:15px;line-height:1.62;-webkit-font-smoothing:antialiased;padding-bottom:132px}
+.num{font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 1}
+.wrap{max-width:880px;margin:0 auto;padding:0 20px}
+.sr{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+.skip{position:absolute;left:-999px;top:8px;background:var(--accent);color:var(--accent-ink);
+  padding:9px 16px;border-radius:8px;font-weight:600;z-index:60}
+.skip:focus{left:20px}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+header{padding:34px 0 20px}
+h1{font-size:clamp(24px,3.6vw,32px);font-weight:700;margin:0 0 6px;letter-spacing:-.015em}
+.sub{color:var(--muted);font-size:14px;max-width:62ch;margin:0}
+
+/* steps */
+.steps{display:flex;flex-wrap:wrap;gap:6px 8px;margin:16px 0 0;padding:0;list-style:none;font-size:13px}
+.steps li{display:flex;align-items:center;gap:7px;color:var(--muted)}
+.steps li b{display:grid;place-items:center;width:19px;height:19px;border-radius:50%;
+  background:var(--surface-2);color:var(--ink-2);font-size:11.5px;font-weight:700}
+.steps li.on{color:var(--ink);font-weight:600}
+.steps li.on b{background:var(--accent);color:var(--accent-ink)}
+.steps li.done b{background:var(--good-bg);color:var(--good)}
+.steps span.sep{color:var(--line-2)}
+
+.controls{display:flex;flex-wrap:wrap;gap:12px 16px;align-items:flex-end;
+  background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin:18px 0 8px}
+.field{display:flex;flex-direction:column;gap:5px}
+.field label,.field .lbl{font-size:12px;font-weight:600;color:var(--muted);letter-spacing:.02em}
+.ro{display:inline-block;padding:8px 12px;border-radius:8px;background:var(--accent-soft);
+  color:var(--accent);font-size:15px;font-weight:700;min-width:72px;text-align:center}
+.fybox{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.fyspan{font-size:12.5px;color:var(--muted);line-height:1.35}
+select,input[type=number]{font:inherit;color:var(--ink);background:var(--surface);
+  border:1px solid var(--line-2);border-radius:8px;padding:8px 11px}
+select{min-width:152px}
+.toggle{display:flex;align-items:center;gap:9px;font-size:13.5px;color:var(--ink-2);cursor:pointer;
+  padding:9px 0;margin-left:auto;user-select:none}
+.toggle input{width:38px;height:22px;appearance:none;background:var(--line-2);border-radius:99px;
+  position:relative;cursor:pointer;transition:background .15s;flex:none}
+.toggle input:checked{background:var(--accent)}
+.toggle input::after{content:"";position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;
+  background:var(--surface);transition:transform .15s}
+.toggle input:checked::after{transform:translateX(16px)}
+.hint{font-size:13px;color:var(--muted);margin:0 0 20px;padding-left:2px}
+
+h2.grp{font-size:13px;font-weight:600;color:var(--muted);letter-spacing:.05em;
+  margin:24px 0 10px;padding-left:2px;display:flex;align-items:center;gap:10px}
+h2.grp::after{content:"";flex:1;height:1px;background:var(--line)}
+
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:13px 16px 5px;margin-bottom:10px}
+.card-h{display:flex;flex-wrap:wrap;gap:2px 12px;align-items:baseline;margin-bottom:8px}
+.card-h .dept{font-size:15px;font-weight:600}
+.card-h .sn{font-size:12px;color:var(--muted);font-family:"Google Sans Code",ui-monospace,monospace;letter-spacing:.01em}
+.card-h .mdl{font-size:11.5px;color:var(--muted)}
+
+.line{display:grid;grid-template-columns:126px 132px 1fr;gap:8px 14px;align-items:center;
+  padding:10px 8px;margin:0 -8px;border-top:1px solid var(--line);border-radius:8px;transition:background .12s}
+.line:first-of-type{border-top:none}
+.line.focus{background:var(--row-on)}
+.line.bad{background:var(--bad-bg)}
+.ltag{display:inline-flex;align-items:center;gap:7px;font-size:13.5px;font-weight:500;color:var(--ink-2);cursor:pointer}
+.ltag i{width:9px;height:9px;border-radius:2px;flex:none}
+.i-bw{background:var(--bw)} .i-col{background:var(--col)}
+.line input{width:100%;text-align:right;font-variant-numeric:tabular-nums;font-size:16.5px;font-weight:600;font-family:"Google Sans Code","Google Sans",ui-monospace,monospace;
+  padding:9px 11px;background:var(--sunk);border:1px solid var(--line-2)}
+.line input[aria-invalid="true"]{border-color:var(--bad);background:var(--surface)}
+.line input::-webkit-outer-spin-button,.line input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.line input[type=number]{-moz-appearance:textfield}
+.out{display:flex;flex-wrap:wrap;gap:4px 14px;align-items:center;font-size:13px;color:var(--muted);min-height:24px}
+.out b{color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums}
+.spark{display:flex;align-items:flex-end;gap:1.5px;height:22px;flex:none}
+.spark u{display:block;width:4px;background:var(--line-2);border-radius:1px 1px 0 0;text-decoration:none}
+.spark u.now{background:var(--accent)}
+.chip{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;padding:2px 9px;border-radius:99px}
+.c-warn{background:var(--warn-bg);color:var(--warn)}
+.c-bad{background:var(--bad-bg);color:var(--bad);border:1px solid var(--bad-line)}
+.meter{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.meter,.out b{font-feature-settings:"tnum" 1}
+.fix{grid-column:2/-1;font-size:12.5px;color:var(--bad);font-weight:500;display:none}
+.line.bad .fix{display:block}
+@media(max-width:620px){.fix{grid-column:1/-1}}
+
+.bar{position:fixed;left:0;right:0;bottom:0;background:var(--surface);box-shadow:var(--shadow);z-index:20}
+.bar-in{max-width:880px;margin:0 auto;padding:11px 20px;display:flex;flex-wrap:wrap;gap:10px 24px;align-items:center}
+.stat{display:flex;flex-direction:column;gap:0;min-width:100px}
+.stat .k{font-size:11.5px;color:var(--muted);font-weight:500}
+.stat .v{font-size:20px;font-weight:700;letter-spacing:-.015em;font-variant-numeric:tabular-nums;line-height:1.25}
+.stat .v small{font-size:12px;font-weight:500;color:var(--muted);margin-left:3px}
+.stat .d{font-size:11.5px;font-variant-numeric:tabular-nums;min-height:17px}
+.acts{margin-left:auto;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.acts .gap{width:1px;height:30px;background:var(--line);margin:0 2px}
+button{font:inherit;font-size:14px;font-weight:600;border-radius:9px;padding:10px 16px;cursor:pointer;
+  border:1px solid var(--line-2);background:var(--surface);color:var(--ink);transition:background .12s,filter .12s}
+button:hover{background:var(--surface-2)}
+button.pri{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+button.pri:hover{filter:brightness(1.08);background:var(--accent)}
+button.ok{background:var(--good);border-color:var(--good);color:#fff}
+button.danger{color:var(--bad);border-color:var(--bad-line);background:var(--surface)}
+button.danger:hover{background:var(--bad-bg)}
+button.link{border:none;background:none;color:var(--accent);padding:6px 4px;text-decoration:underline;font-size:13px}
+button:disabled{opacity:.42;cursor:not-allowed;filter:none}
+button:disabled:hover{background:var(--surface)}
+button.pri:disabled:hover{background:var(--accent)}
+
+details{background:var(--surface);border:1px solid var(--line);border-radius:12px;margin:22px 0 0;overflow:hidden}
+summary{padding:13px 16px;cursor:pointer;font-size:14px;font-weight:600;list-style:none;
+  display:flex;justify-content:space-between;align-items:center;gap:10px}
+summary::-webkit-details-marker{display:none}
+summary .cnt{font-weight:500;color:var(--muted);font-size:13px}
+summary::after{content:"▾";color:var(--muted);font-size:12px}
+details[open] summary{border-bottom:1px solid var(--line)}
+details[open] summary::after{content:"▴"}
+.tbl{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:12.5px;min-width:660px}
+table td{font-family:"Google Sans Code","Google Sans",ui-monospace,monospace}
+table td:first-child,table td:nth-child(2),table td:nth-child(4),table td:nth-child(5),table td:nth-child(6){font-family:inherit}
+caption{text-align:left;padding:10px 16px 2px;font-size:12.5px;color:var(--muted)}
+th,td{padding:7px 11px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap;font-variant-numeric:tabular-nums}
+th{font-size:11px;color:var(--muted);font-weight:600;background:var(--surface-2)}
+td:first-child,th:first-child,td:nth-child(2),th:nth-child(2){text-align:left}
+tbody tr:last-child td{border-bottom:none}
+
+dialog{border:1px solid var(--line);border-radius:14px;background:var(--surface);color:var(--ink);
+  padding:22px 24px;max-width:400px;box-shadow:0 12px 40px rgba(0,0,0,.22)}
+dialog::backdrop{background:var(--scrim)}
+dialog h2{font-size:17px;margin:0 0 8px;font-weight:700}
+dialog p{margin:0 0 18px;font-size:14px;color:var(--ink-2)}
+dialog .row{display:flex;gap:10px;justify-content:flex-end}
+
+.toast{position:fixed;left:50%;bottom:136px;transform:translate(-50%,10px);background:var(--ink);color:var(--ground);
+  padding:11px 20px;border-radius:99px;font-size:13.5px;font-weight:600;opacity:0;pointer-events:none;
+  transition:opacity .18s,transform .18s;z-index:40;max-width:90vw;text-align:center}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+.saved{font-size:12.5px;color:var(--muted);margin:14px 0 0;padding-left:2px}
+footer{color:var(--muted);font-size:12.5px;padding:24px 0 0;border-top:1px solid var(--line);margin-top:24px}
+
+/* โหมดแก้ไขข้อมูลเครื่อง */
+.editbar{display:none;gap:10px 14px;align-items:center;flex-wrap:wrap;background:var(--accent-soft);
+  border:1px solid var(--accent);border-radius:12px;padding:12px 16px;margin:0 0 18px;font-size:13.5px;color:var(--ink)}
+body.edit .editbar{display:flex}
+.editbar .t{font-weight:600}
+.editbar .acts2{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap}
+.editbar button{padding:7px 13px;font-size:13.5px}
+.mform{display:none;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px 14px;
+  padding:10px 0 12px;border-bottom:1px dashed var(--line-2);margin-bottom:8px}
+body.edit .mform{display:grid}
+body.edit .card-h{display:none}
+.mf{display:flex;flex-direction:column;gap:4px}
+.mf label{font-size:11.5px;font-weight:600;color:var(--muted)}
+.mf input,.mf select{font:inherit;font-size:14px;color:var(--ink);background:var(--surface);
+  border:1px solid var(--line-2);border-radius:8px;padding:7px 10px;width:100%}
+.mf.wide{grid-column:span 2}
+@media(max-width:620px){.mf.wide{grid-column:span 1}}
+.mrow{display:flex;gap:8px;align-items:center;justify-content:flex-end;padding:0 0 10px}
+.mrow .del{color:var(--bad);border-color:var(--bad-line);background:var(--surface);padding:6px 12px;font-size:13px}
+.mrow .del:hover{background:var(--bad-bg)}
+body:not(.edit) .mrow{display:none}
+.meters{display:none;gap:10px 14px;grid-template-columns:1fr 1fr;flex:1}
+body.edit .meters{display:grid}
+body.edit .line .qty,body.edit .line .out,body.edit .line .fix{display:none}
+body.edit .line{grid-template-columns:126px 1fr}
+.syncbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:12.5px;color:var(--muted);
+  margin:14px 0 0;padding-left:2px}
+.syncbar b{font-weight:600;color:var(--ink-2)}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--muted);flex:none}
+.dot.on{background:var(--good)} .dot.off{background:var(--warn)} .dot.err{background:var(--bad)}
+.syncbar button{padding:4px 10px;font-size:12.5px;border-radius:7px}
+.newbadge{font-size:11px;font-weight:700;color:var(--accent);background:var(--surface);
+  border:1px solid var(--accent);border-radius:99px;padding:1px 8px;margin-left:8px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+@media(max-width:620px){
+  .line{grid-template-columns:1fr 124px;gap:7px 12px}
+  .line .out{grid-column:1/-1}
+  .bar-in{gap:9px 16px;padding:10px 16px}
+  .stat{min-width:76px}.stat .v{font-size:17px}
+  .acts{width:100%}.acts .gap{display:none}
+  .acts button{flex:1}
+}
+</style>
+</head>
+<body>
+<a class="skip" href="#list">ข้ามไปที่ช่องกรอกข้อมูล</a>
+<div class="wrap">
+<header>
+  <h1>บันทึกจำนวนแผ่นรายเดือน</h1>
+  <p class="sub">กรอกจำนวนแผ่นที่ใช้ของเครื่องถ่ายเอกสารทั้ง 14 เครื่อง ระบบคำนวณยอดใช้สุทธิและยอดเบิกให้ทันที แล้วคัดลอกไปวางในชีต บันทึกมิเตอร์ ได้ในคลิกเดียว</p>
+  <ol class="steps" id="steps">
+    <li id="st1"><b>1</b>กรอกข้อมูล</li><span class="sep">→</span>
+    <li id="st2"><b>2</b>ตรวจสอบ</li><span class="sep">→</span>
+    <li id="st3"><b>3</b>คัดลอกไปวางในชีต</li>
+  </ol>
+
+  <div class="controls">
+    <div class="field">
+      <label for="mon">เดือนที่บันทึก (ตามปฏิทิน)</label>
+      <select id="mon"></select>
+    </div>
+    <div class="field">
+      <span class="lbl" id="fylbl">ปีงบประมาณ</span>
+      <div class="fybox">
+        <output class="ro num" id="fy" aria-labelledby="fylbl">—</output>
+        <span class="fyspan num" id="fyspan"></span>
+      </div>
+    </div>
+    <label class="toggle" for="mmode">
+      <input type="checkbox" id="mmode">
+      <span>กรอกเลขมิเตอร์ครั้งหลังแทน</span>
+    </label>
+    <button id="editbtn" type="button" aria-pressed="false">แก้ไขข้อมูลเครื่อง</button>
+  </div>
+
+  <div class="editbar" id="editbar">
+    <span class="t">กำลังแก้ไขข้อมูลเครื่อง</span>
+    <span>แก้รหัสเครื่อง สถานที่ หน่วยงาน รุ่น และเลขมิเตอร์ได้ ระบบจำค่าที่แก้ไว้ในเบราว์เซอร์นี้ให้เอง</span>
+    <span class="acts2">
+      <button id="addmc" type="button">เพิ่มเครื่อง</button>
+      <button id="resetmc" type="button" class="danger">คืนค่าเริ่มต้น</button>
+      <button id="editdone" type="button" class="pri">เสร็จแล้ว</button>
+    </span>
+  </div>
+  <p class="hint" id="hint"></p>
+</header>
+
+<main id="list"></main>
+<datalist id="dl-place"></datalist>
+<datalist id="dl-dept"></datalist>
+<datalist id="dl-model"></datalist>
+
+<p class="saved" id="saved">&nbsp;</p>
+<p class="syncbar" id="syncbar"><span class="dot" id="syncdot"></span><span id="synctxt">กำลังตรวจแหล่งข้อมูลเครื่อง…</span></p>
+
+<details id="prevbox">
+  <summary><span>ดูตารางที่จะคัดลอก <span class="cnt" id="prevcnt"></span></span></summary>
+  <div class="tbl">
+    <table id="prev">
+      <caption>คัดลอกเฉพาะรายการที่กรอกแล้ว เรียงคอลัมน์ตรงกับชีต บันทึกมิเตอร์ ช่อง A ถึง N</caption>
+    </table>
+  </div>
+</details>
+
+<footer>
+  ปีงบประมาณไทยเริ่ม 1 ตุลาคม ของปีก่อนหน้า ถึง 30 กันยายน และเรียกชื่อตามปีที่สิ้นสุด เดือนตุลาคมถึงธันวาคมจึงนับเข้าปีงบของปีถัดไป ระบบคิดให้อัตโนมัติจากเดือนที่เลือก ·
+  เลขมิเตอร์ครั้งก่อนของทุกเครื่องมาจากข้อมูลเดือน ก.ค. 2569 ที่บันทึกไว้แล้ว ·
+  ราคาต่อแผ่น 0.33 บาท (ขาว-ดำ บนเครื่องขาว-ดำ) · 0.59 บาท (ขาว-ดำ บนเครื่องสี) · 2.90 บาท (สี) ·
+  ยอดใช้สุทธิ = ปัดเศษ(จำนวนแผ่น × 97%) หักกระดาษเสีย 3% ตามสัญญา
+</footer>
+</div>
+
+<div class="bar">
+  <div class="bar-in">
+    <div class="stat">
+      <span class="k" id="k1">กรอกข้อมูลแล้ว</span>
+      <span class="v num" id="s-fill" aria-live="polite" aria-labelledby="k1">0<small>/20</small></span>
+      <span class="d" id="s-fill-d">&nbsp;</span>
+    </div>
+    <div class="stat">
+      <span class="k" id="k2">จำนวนแผ่นรวม</span>
+      <span class="v num" id="s-sheet" aria-labelledby="k2">0</span>
+      <span class="d" id="s-sheet-d">&nbsp;</span>
+    </div>
+    <div class="stat">
+      <span class="k" id="k3">ยอดเบิกทั้งหมด</span>
+      <span class="v num" id="s-baht" aria-labelledby="k3">0<small>บาท</small></span>
+      <span class="d" id="s-baht-d">&nbsp;</span>
+    </div>
+    <div class="acts">
+      <button id="jump" class="link" hidden>ไปช่องที่ยังไม่ได้กรอก</button>
+      <button id="clear" class="danger">ล้างข้อมูลทั้งหมด</button>
+      <span class="gap" aria-hidden="true"></span>
+      <button class="pri" id="copy" disabled>คัดลอกข้อมูลสำหรับ Google Sheets</button>
+    </div>
+  </div>
+</div>
+
+<dialog id="dlg2" aria-labelledby="dlg2t">
+  <h2 id="dlg2t">คืนค่าเริ่มต้นของข้อมูลเครื่อง</h2>
+  <p>รหัสเครื่อง สถานที่ หน่วยงาน รุ่น และเลขมิเตอร์ครั้งก่อน จะกลับไปเป็นชุดเดิมที่ตั้งมาจากข้อมูลเดือน ก.ค. 2569 ตัวเลขจำนวนแผ่นที่กรอกไว้จะไม่ถูกลบ</p>
+  <div class="row">
+    <button id="dlg2-cancel" autofocus>ยกเลิก</button>
+    <button id="dlg2-ok" class="danger">คืนค่าเริ่มต้น</button>
+  </div>
+</dialog>
+<dialog id="dlg" aria-labelledby="dlgt">
+  <h2 id="dlgt">ล้างข้อมูลทั้งหมด</h2>
+  <p>ตัวเลขที่กรอกไว้ทุกช่องจะถูกลบ และย้อนกลับไม่ได้ ถ้ายังไม่ได้คัดลอกไปวางในชีต ข้อมูลจะหายถาวร</p>
+  <div class="row">
+    <button id="dlg-cancel" autofocus>ยกเลิก</button>
+    <button id="dlg-ok" class="danger">ล้างข้อมูล</button>
+  </div>
+</dialog>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+const PRICE={bw:0.33,bwc:0.59,col:2.90};
+const PNAME={bw:'ขาว-ดำ (เครื่องขาว-ดำ)',bwc:'ขาว-ดำ (เครื่องสี)',col:'สี (เครื่องสี)'};
+const SHORT={bw:'ขาว-ดำ',bwc:'ขาว-ดำ',col:'สี'};
+const AVG_MONTH_BAHT=16190, AVG_MONTH_SHEET=27291;
+const DEFAULTS=[{"serial": "07RRBJMK100009N", "kind": "สี", "model": "SL-X4300LX", "place": "อาคารเรียนและปฏิบัติการรวม ชั้น 1", "dept": "งานกิจการนักศึกษา และวิเทศสัมพันธ์", "lines": [{"pk": "bwc", "lastMeter": 36759, "avg": 23, "hist": [36, 42, 27, 43, 9, 19, 61, 9, 26, 5, 4, 25]}, {"pk": "col", "lastMeter": 20226, "avg": 226, "hist": [160, 327, 291, 256, 200, 198, 138, 181, 97, 18, 524, 362]}], "uid": "m1"}, {"serial": "0A3HB1DH600055M", "kind": "ขาว-ดำ", "model": "SL-K7500LX", "place": "อาคารเรียนและปฏิบัติการรวม ชั้น 1", "dept": "งานกิจการนักศึกษา และวิเทศสัมพันธ์", "lines": [{"pk": "bw", "lastMeter": 392446, "avg": 787, "hist": [1112, 2451, 1218, 744, 458, 1476, 825, 483, 497, 295, 651, 1220]}], "uid": "m2"}, {"serial": "07RUBJPJC00004Y", "kind": "สี", "model": "SL-X4300LX", "place": "อาคารเรียนและปฏิบัติการรวม ชั้น 5", "dept": "งานส่งเสริมและสนับสนุนการศึกษา", "lines": [{"pk": "bwc", "lastMeter": 369918, "avg": 417, "hist": [460, 708, 355, 468, 464, 289, 240, 204, 402, 576]}, {"pk": "col", "lastMeter": 54556, "avg": 129, "hist": [121, 137, 212, 307, 80, 101, 119, 68, 98, 44]}], "uid": "m3"}, {"serial": "0A3HBJNJCOO017H", "kind": "ขาว-ดำ", "model": "SL-K7500LX", "place": "อาคารเรียนและปฏิบัติการรวม ชั้น 6", "dept": "ห้องพักอาจารย์ สาขา CVS", "lines": [{"pk": "bw", "lastMeter": 404544, "avg": 381, "hist": [472, 3092, 558, 366, 1069, 350, 447, 231, 250, 11, 417, 107]}], "uid": "m4"}, {"serial": "0A3HBJNJCOO02BR", "kind": "ขาว-ดำ", "model": "SL-K7500LX", "place": "อาคารเรียนและปฏิบัติการรวม ชั้น 8", "dept": "ห้องปฏิบัติการวิจัย", "lines": [{"pk": "bw", "lastMeter": 549373, "avg": 985, "hist": [840, 1476, 761, 1175, 691, 1105, 1363, 335, 670, 1276, 966, 1505]}], "uid": "m5"}, {"serial": "0A3HBJNJCOOO1ML", "kind": "ขาว-ดำ", "model": "SL-K7500LX", "place": "อาคารเรียนและปฏิบัติการรวม ชั้น 9", "dept": "ห้องพักอาจารย์", "lines": [{"pk": "bw", "lastMeter": 295883, "avg": 1946, "hist": [2287, 5131, 1633, 1635, 970, 3629, 1416, 1992, 2220, 1426, 1628, 2907]}], "uid": "m6"}, {"serial": "07RUBJKK00005E", "kind": "สี", "model": "SL-X4300LX", "place": "อาคารเรียนและปฏิบัติการรวม ชั้น 10", "dept": "งานบริการการศึกษา", "lines": [{"pk": "bwc", "lastMeter": 327055, "avg": 95, "hist": [299, 126, 31, 438, 23, 1, 257, 3, 129, 3, 66, 3]}, {"pk": "col", "lastMeter": 111531, "avg": 41, "hist": [3, 34, 22, 60, 76, 0, 0, 0, 66, 0, 0, 186]}], "uid": "m7"}, {"serial": "07RUBJKK0000SA", "kind": "สี", "model": "SL-X4300LX", "place": "อาคารเรียนและปฏิบัติการรวม ชั้น 10", "dept": "งานบริการการศึกษา", "lines": [{"pk": "bwc", "lastMeter": 255560, "avg": 894, "hist": [226, 245, 106, 1192, 1157, 1579, 701, 515, 2670, 713, 278, 29]}, {"pk": "col", "lastMeter": 238930, "avg": 511, "hist": [3, 172, 27, 1418, 1400, 672, 393, 386, 412, 61, 0, 342]}], "uid": "m8"}, {"serial": "07RUBJMK10001BW", "kind": "สี", "model": "SL-X4300LX", "place": "อาคารเรียนและปฏิบัติการรวม ชั้น 10", "dept": "สำนักงานคณบดี", "lines": [{"pk": "bwc", "lastMeter": 156361, "avg": 6, "hist": [99, 1439, 15, 3, 0, 3, 0, 9, 3, 27, 3, 1]}, {"pk": "col", "lastMeter": 23334, "avg": 5, "hist": [142, 980, 36, 3, 0, 1, 0, 0, 1, 0, 0, 5]}], "uid": "m9"}, {"serial": "07RRB1BG900000GR", "kind": "สี", "model": "SL-X4300LX", "place": "อาคารเรียนและปฏิบัติการรวม ชั้น 10", "dept": "สำนักงานเลขานุการวิทยาลัยฯ", "lines": [{"pk": "bwc", "lastMeter": 409532, "avg": 440, "hist": [158, 2409, 259, 359, 482, 439, 86, 396, 321, 109, 308, 1640]}, {"pk": "col", "lastMeter": 183105, "avg": 1694, "hist": [853, 4861, 1113, 1975, 1667, 1894, 1290, 1170, 1382, 1334, 1643, 3468]}], "uid": "m10"}, {"serial": "0A3HB1DH60003RK", "kind": "ขาว-ดำ", "model": "SL-K7500LX", "place": "อาคารเรียนและปฏิบัติการรวม ชั้น 10", "dept": "สำนักงานเลขานุการวิทยาลัยฯ", "lines": [{"pk": "bw", "lastMeter": 602576, "avg": 3126, "hist": [1361, 6055, 4050, 3155, 2457, 3836, 2514, 1829, 3351, 2158, 3627, 4288]}], "uid": "m11"}, {"serial": "0A3HB1DH60005EB", "kind": "ขาว-ดำ", "model": "SL-K7500LX", "place": "อาคารเรียนและปฏิบัติการรวม ชั้น 10", "dept": "สำนักงานเลขานุการวิทยาลัยฯ", "lines": [{"pk": "bw", "lastMeter": 598838, "avg": 5998, "hist": [4501, 12617, 6277, 6631, 6079, 7368, 4952, 4979, 5008, 4237, 6919, 7529]}], "uid": "m12"}, {"serial": "0A3HBJNJCO00029J", "kind": "ขาว-ดำ", "model": "SL-K7500LX", "place": "อาคารเรียนและปฏิบัติการรวม ชั้น 10", "dept": "สำนักงานเลขานุการวิทยาลัยฯ", "lines": [{"pk": "bw", "lastMeter": 502660, "avg": 8655, "hist": [4529, 13846, 10018, 10713, 9266, 5698, 4985, 5238, 9927, 9969, 10878, 9857]}], "uid": "m13"}, {"serial": "0A3HBJNJBOOONL", "kind": "ขาว-ดำ", "model": "SL-K7500LX", "place": "อาคารปิยชาติ ชั้น 2", "dept": "สำนักวิชาการแพทย์บูรณาการ", "lines": [{"pk": "bw", "lastMeter": 529181, "avg": 931, "hist": [1797, 1454, 733, 1500, 1348, 1733, 589, 582, 441, 675, 1705, 0]}], "uid": "m14"}];
+const KEY='copier-entry-v1', MKEY='copier-machines-v2';
+const SRC='machines.json', API='save.php';   // ใช้เมื่อวางไฟล์บนเว็บเซิร์ฟเวอร์ เช่น XAMPP
+let SERVER=false, REV=-1, saveTimer=null, saving=false;
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const f0=n=>Math.round(n).toLocaleString('en-US');
+const f2=n=>n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+const rnd=x=>Math.floor(Math.abs(x)+0.5)*(x<0?-1:1);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const TH=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+const label=k=>TH[+k.slice(5)-1]+' '+k.slice(0,4);
+const fyOf=k=>+k.slice(0,4)+(+k.slice(5)>=10?1:0);
+const clone=o=>JSON.parse(JSON.stringify(o));
+
+/* ---------- ข้อมูลเครื่อง ---------- */
+let MC;
+try{ const raw=localStorage.getItem(MKEY); MC = raw ? JSON.parse(raw) : clone(DEFAULTS); }
+catch(e){ MC = clone(DEFAULTS); }
+if(!Array.isArray(MC)||!MC.length) MC=clone(DEFAULTS);
+function saveMC(){
+  try{ localStorage.setItem(MKEY,JSON.stringify(MC)); }catch(e){}
+  if(SERVER) queuePush();
+}
+function setSync(state,txt,btn){
+  const d=$('#syncdot'), t=$('#synctxt');
+  d.className='dot'+(state?' '+state:'');
+  t.innerHTML=txt+(btn?' <button type="button" id="syncreload">โหลดข้อมูลล่าสุด</button>':'');
+  const r=$('#syncreload'); if(r) r.onclick=()=>location.reload();
+}
+function queuePush(){
+  clearTimeout(saveTimer);
+  setSync('','กำลังบันทึกขึ้นเซิร์ฟเวอร์…');
+  saveTimer=setTimeout(pushMC,700);
+}
+async function pushMC(){
+  if(saving){ queuePush(); return; }
+  saving=true;
+  try{
+    const res=await fetch(API,{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({base:REV,machines:MC})});
+    const j=await res.json().catch(()=>({}));
+    if(res.status===409){
+      setSync('err','<b>บันทึกไม่สำเร็จ</b> '+(j.error||'มีคนอื่นแก้ข้อมูลไปแล้ว'),true);
+      toast('มีคนอื่นแก้ข้อมูลเครื่องไปแล้ว กรุณาโหลดข้อมูลล่าสุดก่อนแก้ต่อ');
+    }else if(res.ok && j.ok){
+      REV=j.rev;
+      setSync('on',`ข้อมูลเครื่องใช้ร่วมกันจากเซิร์ฟเวอร์ · บันทึกแล้วเมื่อ ${j.updated.slice(11,16)} น. · ${j.count} เครื่อง`);
+    }else{
+      setSync('err','<b>บันทึกขึ้นเซิร์ฟเวอร์ไม่สำเร็จ</b> '+(j.error||('รหัส '+res.status))+' — ข้อมูลยังถูกเก็บไว้ในเบราว์เซอร์นี้');
+    }
+  }catch(e){
+    setSync('err','<b>ติดต่อเซิร์ฟเวอร์ไม่ได้</b> ข้อมูลยังถูกเก็บไว้ในเบราว์เซอร์นี้');
+  }
+  saving=false;
+}
+async function loadMC(){
+  try{
+    const res=await fetch(SRC+'?t='+Date.now(),{cache:'no-store'});
+    if(!res.ok) throw 0;
+    const j=await res.json();
+    const list=Array.isArray(j)?j:j.machines;
+    if(!Array.isArray(list)||!list.length) throw 0;
+    MC=list; REV=Array.isArray(j)?0:(j.rev|0); SERVER=true;
+    try{ localStorage.setItem(MKEY,JSON.stringify(MC)); }catch(e){}
+    const u=(j.updated||'').slice(11,16);
+    setSync('on','ข้อมูลเครื่องใช้ร่วมกันจากเซิร์ฟเวอร์'+(u?` · แก้ล่าสุด ${u} น.`:'')+` · ${MC.length} เครื่อง`);
+  }catch(e){
+    SERVER=false;
+    setSync('off','ข้อมูลเครื่องเก็บอยู่ในเบราว์เซอร์นี้เท่านั้น · ถ้าเปิดผ่านเว็บเซิร์ฟเวอร์ที่มี machines.json และ save.php อยู่ด้วย ทุกเครื่องจะเห็นชุดเดียวกัน');
+  }
+}
+function linesFor(kind){ return kind==='สี' ? ['bwc','col'] : ['bw']; }
+
+/* ---------- เดือน ---------- */
+const months=[]; let yy=2569, mm=8;
+for(let i=0;i<20;i++){ months.push(yy+'-'+String(mm).padStart(2,'0')); mm++; if(mm===13){mm=1;yy++;} }
+$('#mon').innerHTML=months.map(k=>`<option value="${k}">${label(k)}</option>`).join('');
+
+/* ---------- ค่าที่กรอกไว้ ---------- */
+let saved={}; try{ saved=JSON.parse(localStorage.getItem(KEY)||'{}'); }catch(e){}
+if(saved.month && months.includes(saved.month)) $('#mon').value=saved.month;
+if(saved.mmode) $('#mmode').checked=true;
+let VALS = (saved.vals && typeof saved.vals==='object') ? saved.vals : {};
+const hadDraft=Object.keys(VALS).length>0;
+
+function captureVals(){
+  const v={};
+  $$('#list input.qty').forEach(i=>{ if(i.value!=='') v[i.dataset.row]=i.value; });
+  VALS=v; return v;
+}
+
+/* ---------- สร้างรายการ ---------- */
+let rows=[];
+function buildList(){
+  const order=p=>{ const m=/ชั้น\s*(\d+)/.exec(p); return (p.includes('ปิยชาติ')?100:0)+(m?+m[1]:50); };
+  MC.sort((a,b)=>order(a.place)-order(b.place)||a.place.localeCompare(b.place,'th')||a.dept.localeCompare(b.dept,'th'));
+  rows=[]; let html='', lastPlace=null, no=0;
+  MC.forEach((m,mi)=>{
+    if(m.place!==lastPlace){ html+=`<h2 class="grp">${esc(m.place)||'ยังไม่ได้ระบุสถานที่'}</h2>`; lastPlace=m.place; }
+    html+=`<section class="card" aria-label="${esc(m.dept)} ${esc(m.serial)}">
+      <div class="card-h">
+        <span class="dept">${esc(m.dept)||'—'}</span>
+        <span class="mdl">${m.kind==='สี'?'เครื่องสี':'เครื่องขาว-ดำ'} · ${esc(m.model)}</span>
+        <span class="sn">${esc(m.serial)}</span>
+        ${m.isNew?'<span class="newbadge">เครื่องใหม่</span>':''}
+      </div>
+      <div class="mform">
+        <div class="mf"><label for="ed_sn_${m.uid}">รหัสเครื่อง</label>
+          <input id="ed_sn_${m.uid}" class="ed" data-uid="${m.uid}" data-f="serial" value="${esc(m.serial)}" autocomplete="off"></div>
+        <div class="mf"><label for="ed_md_${m.uid}">รุ่น</label>
+          <input id="ed_md_${m.uid}" class="ed" data-uid="${m.uid}" data-f="model" value="${esc(m.model)}" list="dl-model" autocomplete="off"></div>
+        <div class="mf"><label for="ed_kd_${m.uid}">ประเภทเครื่อง</label>
+          <select id="ed_kd_${m.uid}" class="ed" data-uid="${m.uid}" data-f="kind">
+            <option${m.kind==='ขาว-ดำ'?' selected':''}>ขาว-ดำ</option>
+            <option${m.kind==='สี'?' selected':''}>สี</option></select></div>
+        <div class="mf wide"><label for="ed_pl_${m.uid}">สถานที่</label>
+          <input id="ed_pl_${m.uid}" class="ed" data-uid="${m.uid}" data-f="place" value="${esc(m.place)}" list="dl-place" autocomplete="off"></div>
+        <div class="mf wide"><label for="ed_dp_${m.uid}">หน่วยงาน</label>
+          <input id="ed_dp_${m.uid}" class="ed" data-uid="${m.uid}" data-f="dept" value="${esc(m.dept)}" list="dl-dept" autocomplete="off"></div>
+      </div>`;
+    m.lines.forEach(ln=>{
+      const id=`${m.uid}_${ln.pk}`; no++;
+      rows.push({id,m,ln,no});
+      html+=`<div class="line" id="row_${id}">
+          <label class="ltag" for="in_${id}"><i class="${ln.pk==='col'?'i-col':'i-bw'}"></i>${SHORT[ln.pk]}
+            <span class="sr">ของ ${esc(m.dept)} เครื่อง ${esc(m.serial)}</span></label>
+          <input type="number" min="0" step="1" inputmode="numeric" class="qty" id="in_${id}" data-row="${id}"
+                 aria-describedby="out_${id}" enterkeyhint="next">
+          <span class="out" id="out_${id}"></span>
+          <span class="fix" id="fix_${id}"></span>
+          <div class="meters">
+            <div class="mf"><label for="mp_${id}">มิเตอร์ครั้งก่อน · ${SHORT[ln.pk]}</label>
+              <input type="number" step="1" id="mp_${id}" class="edm" data-uid="${m.uid}" data-pk="${ln.pk}" value="${ln.lastMeter}"></div>
+            <div class="mf"><label for="mn_${id}">มิเตอร์ครั้งหลัง · ${SHORT[ln.pk]}</label>
+              <input type="number" step="1" id="mn_${id}" class="edn" data-row="${id}" data-uid="${m.uid}" data-pk="${ln.pk}"></div>
+          </div>
+        </div>`;
+    });
+    html+=`<div class="mrow"><button type="button" class="del" data-del="${m.uid}">ลบเครื่องนี้</button></div></section>`;
+  });
+  $('#list').innerHTML=html;
+  rows.forEach(r=>{ const i=$('#in_'+r.id); if(VALS[r.id]!=null) i.value=VALS[r.id]; });
+  $('#s-fill').innerHTML=`0<small>/${rows.length}</small>`;
+  ['place','dept','model'].forEach(f=>{
+    const el=$('#dl-'+f), vals=[...new Set(MC.map(m=>m[f]).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'th'));
+    el.innerHTML=vals.map(v=>`<option value="${esc(v)}">`).join('');
+  });
+}
+
+/* ---------- คำนวณ ---------- */
+function readLine(r){
+  const raw=$('#in_'+r.id).value;
+  if(raw.trim()==='') return null;
+  const num=Number(raw);
+  if(!isFinite(num)) return {invalid:'พิมพ์เป็นตัวเลขเท่านั้น ไม่ต้องใส่เครื่องหมายจุลภาคหรือหน่วย'};
+  const v=Math.round(num), meterMode=$('#mmode').checked;
+  if(!meterMode && v<0) return {invalid:'จำนวนแผ่นติดลบไม่ได้ ถ้าเดือนนี้ไม่ได้ใช้เครื่องให้กรอก 0'};
+  const sheets = meterMode ? v - r.ln.lastMeter : v;
+  if(meterMode && sheets<0)
+    return {invalid:`เลขมิเตอร์ครั้งหลังต้องไม่น้อยกว่าครั้งก่อน (${f0(r.ln.lastMeter)}) ตรวจตัวเลขที่อ่านมาอีกครั้ง หรือแก้เลขครั้งก่อนในโหมดแก้ไขข้อมูลเครื่อง`};
+  return {sheets, newMeter: meterMode ? v : r.ln.lastMeter + v};
+}
+function render(){
+  const meterMode=$('#mmode').checked, month=$('#mon').value;
+  const FY=fyOf(month), fmo=(+month.slice(5)>=10 ? +month.slice(5)-9 : +month.slice(5)+3);
+  $('#fy').textContent=FY;
+  $('#fyspan').innerHTML=`ต.ค. ${FY-1} – ก.ย. ${FY} · เดือนที่ ${fmo} ของปีงบ`;
+  $('#hint').textContent = meterMode
+    ? 'กรอกเลขมิเตอร์ครั้งหลังที่อ่านได้จากหน้าเครื่อง ระบบจะหักลบกับเลขครั้งก่อนให้เอง · พิมพ์เฉพาะตัวเลข ไม่ต้องใส่จุลภาค'
+    : 'กรอกจำนวนแผ่นที่ใช้ในเดือนนั้น ถ้าเครื่องไหนไม่ได้ใช้เลยให้กรอก 0 อย่าเว้นว่าง · พิมพ์เฉพาะตัวเลข ไม่ต้องใส่จุลภาค';
+
+  let sheets=0, baht=0, filled=0, warn=0, errs=0, firstEmpty=null, firstErr=null;
+  const out=[];
+  rows.forEach(r=>{
+    const el=$('#out_'+r.id), fx=$('#fix_'+r.id), inp=$('#in_'+r.id), row=$('#row_'+r.id);
+    inp.placeholder = meterMode ? f0(r.ln.lastMeter) : '0';
+    const v=readLine(r);
+    row.classList.remove('bad'); inp.removeAttribute('aria-invalid'); fx.textContent='';
+    const nx=$('#mn_'+r.id);
+
+    if(v===null){
+      if(!firstEmpty) firstEmpty=inp;
+      if(nx) nx.value='';
+      const last=r.ln.hist.length?`เดือนก่อนใช้ ${f0(r.ln.hist[r.ln.hist.length-1])} แผ่น · `:'';
+      el.innerHTML=`<span class="meter">${last}มิเตอร์ครั้งก่อน ${f0(r.ln.lastMeter)}</span>`;
+      return;
+    }
+    if(v.invalid){
+      errs++; if(!firstErr) firstErr=inp;
+      row.classList.add('bad'); inp.setAttribute('aria-invalid','true');
+      el.innerHTML=`<span class="chip c-bad">⚠ ข้อมูลไม่ถูกต้อง</span>`;
+      fx.textContent=v.invalid;
+      return;
+    }
+    filled++;
+    const net=rnd(v.sheets*0.97), money=Math.round(net*PRICE[r.ln.pk]*100)/100;
+    sheets+=net; baht+=money;
+    if(nx) nx.value=v.newMeter;
+
+    let chip='';
+    if(r.ln.avg>=300 && v.sheets===0){ chip=`<span class="chip c-warn">⚠ ไม่มีการใช้เลย ปกติเดือนละราว ${f0(r.ln.avg)} แผ่น</span>`; warn++; }
+    else if(v.sheets>=200 && r.ln.avg>0 && v.sheets>Math.max(r.ln.avg*2.5,r.ln.avg+300)){
+      chip=`<span class="chip c-warn">⚠ สูงกว่าปกติมาก เฉลี่ยเดือนละราว ${f0(r.ln.avg)} แผ่น</span>`; warn++; }
+
+    const hist=r.ln.hist.concat([Math.max(v.sheets,0)]), hmax=Math.max(...hist,1);
+    const spark=hist.map((h,i)=>`<u class="${i===hist.length-1?'now':''}" style="height:${Math.max(2,h/hmax*22)}px"></u>`).join('');
+    el.innerHTML=`<span class="spark" aria-hidden="true">${spark}</span>`
+      +`<span>ใช้ <b>${f0(v.sheets)}</b> แผ่น · สุทธิ <b>${f0(net)}</b> แผ่น</span>`
+      +`<span>ยอดเบิก <b>${f2(money)}</b> บาท</span>`
+      +`<span class="meter">มิเตอร์ใหม่ ${f0(v.newMeter)}</span>${chip}`;
+
+    out.push([month,FY,r.m.serial,PNAME[r.ln.pk],r.m.place,r.m.dept,r.m.model,
+              r.ln.lastMeter,v.newMeter,v.sheets,rnd(v.sheets*0.03),net,PRICE[r.ln.pk],money.toFixed(2)]);
+  });
+
+  const done=filled===rows.length && errs===0;
+  $('#s-fill').innerHTML=`${filled}<small>/${rows.length}</small>`;
+  $('#s-fill-d').innerHTML = errs ? `<span style="color:var(--bad)">มี ${errs} ช่องต้องแก้ก่อน</span>`
+    : warn ? `<span style="color:var(--warn)">มี ${warn} รายการควรตรวจ</span>`
+    : done ? `<span style="color:var(--good)">ครบทุกเครื่องแล้ว</span>` : '&nbsp;';
+  $('#s-sheet').textContent=f0(sheets);
+  $('#s-sheet-d').innerHTML = done ? `เฉลี่ยเดือนละ ${f0(AVG_MONTH_SHEET)} แผ่น` : '&nbsp;';
+  $('#s-baht').innerHTML=`${f0(baht)}<small>บาท</small>`;
+  if(done){
+    const d=(baht-AVG_MONTH_BAHT)/AVG_MONTH_BAHT*100;
+    $('#s-baht-d').innerHTML=`<span style="color:${d>0?'var(--bad)':'var(--good)'}">${d>0?'▲ สูงกว่า':'▼ ต่ำกว่า'}ค่าเฉลี่ยเดือน ${Math.abs(d).toFixed(0)}%</span>`;
+  } else $('#s-baht-d').innerHTML = filled ? `<span style="color:var(--muted)">ยังกรอกไม่ครบ</span>` : '&nbsp;';
+
+  const jump=$('#jump');
+  jump.hidden = !(firstErr||firstEmpty) || filled===0 || document.body.classList.contains('edit');
+  jump.textContent = firstErr ? 'ไปช่องที่ต้องแก้' : 'ไปช่องที่ยังไม่ได้กรอก';
+  jump.onclick=()=>{ const t=firstErr||firstEmpty; if(t){ t.focus(); t.scrollIntoView({block:'center',behavior:'smooth'}); } };
+
+  $('#copy').disabled = filled===0 || errs>0;
+  $('#copy').textContent = errs ? 'แก้ข้อมูลที่ผิดก่อน'
+    : done ? 'คัดลอกข้อมูลสำหรับ Google Sheets' : `คัดลอก ${filled} รายการที่กรอกแล้ว`;
+
+  $('#st1').className = filled? (done?'done':'on') : 'on';
+  $('#st2').className = done ? 'on' : (filled?'on':'');
+  $('#st3').className = done && !errs ? 'on' : '';
+
+  $('#prevcnt').textContent = out.length ? `· ${out.length} แถว` : '';
+  const head=['เดือน','ปีงบ','รหัสเครื่อง','ประเภทงานพิมพ์','สถานที่','หน่วยงาน','รุ่น','มิเตอร์ก่อน','มิเตอร์หลัง','แผ่น','เสีย 3%','สุทธิ','ราคา','ยอดเบิก'];
+  $('#prev').innerHTML='<caption>คัดลอกเฉพาะรายการที่กรอกแล้ว เรียงคอลัมน์ตรงกับชีต บันทึกมิเตอร์ ช่อง A ถึง N</caption>'
+    +'<thead><tr>'+head.map(h=>`<th scope="col">${h}</th>`).join('')+'</tr></thead><tbody>'
+    +(out.length?out.map(r=>'<tr>'+r.map((c,i)=>`<td>${typeof c==='number'&&i>6?f0(c):esc(c)}</td>`).join('')+'</tr>').join('')
+      :`<tr><td colspan="14" style="text-align:center;color:var(--muted);padding:20px">ยังไม่ได้กรอกข้อมูล</td></tr>`)+'</tbody>';
+  window.__tsv=out.map(r=>r.join('\t')).join('\n');
+  window.__cnt=out.length;
+  persist(filled+errs);
+}
+function persist(count){
+  try{
+    captureVals();
+    localStorage.setItem(KEY,JSON.stringify({month:$('#mon').value,mmode:$('#mmode').checked,vals:VALS}));
+    const t=new Date();
+    $('#saved').textContent = count
+      ? `เก็บร่างไว้ในเบราว์เซอร์เครื่องนี้แล้ว · บันทึกล่าสุด ${String(t.getHours()).padStart(2,'0')}:${String(t.getMinutes()).padStart(2,'0')} น. · ปิดหน้านี้แล้วกลับมากรอกต่อได้`
+      : 'ยังไม่ได้กรอกข้อมูล · เมื่อเริ่มกรอก ระบบจะเก็บร่างไว้ในเบราว์เซอร์เครื่องนี้ให้อัตโนมัติ';
+  }catch(e){ $('#saved').textContent='เบราว์เซอร์นี้เก็บร่างอัตโนมัติไม่ได้ กรุณาคัดลอกข้อมูลก่อนปิดหน้า'; }
+}
+function rebuild(){ captureVals(); saveMC(); buildList(); render(); }
+
+/* ---------- events ---------- */
+$('#list').addEventListener('input',e=>{
+  const t=e.target;
+  if(t.classList.contains('ed')){
+    const m=MC.find(x=>x.uid===t.dataset.uid); if(!m) return;
+    const f=t.dataset.f;
+    if(f==='kind'){
+      if(m.kind===t.value) return;
+      m.kind=t.value;
+      const keep={}; m.lines.forEach(l=>keep[l.pk]=l);
+      m.lines=linesFor(m.kind).map(pk=>keep[pk]||{pk,lastMeter:0,avg:0,hist:[]});
+      m.model = m.kind==='สี' ? 'SL-X4300LX' : 'SL-K7500LX';
+      rebuild(); return;
+    }
+    m[f]=t.value;
+    if(f==='place'){ saveMC(); return; }   // เลี่ยงการจัดกลุ่มใหม่ระหว่างพิมพ์
+    saveMC(); render(); return;
+  }
+  if(t.classList.contains('edm')){
+    const m=MC.find(x=>x.uid===t.dataset.uid); if(!m) return;
+    const ln=m.lines.find(l=>l.pk===t.dataset.pk); if(!ln) return;
+    ln.lastMeter = Math.round(Number(t.value)||0);
+    saveMC(); render(); return;
+  }
+  if(t.classList.contains('edn')){
+    const r=rows.find(x=>x.id===t.dataset.row); if(!r) return;
+    const nv=Number(t.value);
+    const q=$('#in_'+r.id);
+    if(t.value===''){ q.value=''; }
+    else q.value = $('#mmode').checked ? Math.round(nv) : Math.max(0, Math.round(nv) - r.ln.lastMeter);
+    render(); return;
+  }
+  if(t.classList.contains('qty')) render();
+});
+$('#list').addEventListener('change',e=>{ if(e.target.dataset && e.target.dataset.f==='place') rebuild(); });
+$('#list').addEventListener('click',e=>{
+  const b=e.target.closest('[data-del]'); if(!b) return;
+  const m=MC.find(x=>x.uid===b.dataset.del); if(!m) return;
+  if(MC.length<=1){ toast('ต้องเหลืออย่างน้อยหนึ่งเครื่อง'); return; }
+  if(!confirm(`ลบเครื่อง ${m.serial} (${m.dept}) ออกจากรายการ?`)) return;
+  captureVals();
+  m.lines.forEach(l=>delete VALS[`${m.uid}_${l.pk}`]);
+  MC=MC.filter(x=>x.uid!==m.uid);
+  saveMC(); buildList(); render(); toast('ลบเครื่องแล้ว');
+});
+$('#mon').addEventListener('change',render);
+$('#mmode').addEventListener('change',render);
+$('#list').addEventListener('focusin',e=>{
+  const row=e.target.closest('.line'); if(!row) return;
+  $$('.line.focus').forEach(x=>x.classList.remove('focus')); row.classList.add('focus');
+});
+$('#list').addEventListener('focusout',e=>{ const row=e.target.closest('.line'); if(row) row.classList.remove('focus'); });
+$('#list').addEventListener('keydown',e=>{
+  if(e.key!=='Enter'||!e.target.classList.contains('qty')) return;
+  e.preventDefault();
+  const all=$$('#list input.qty'), i=all.indexOf(e.target);
+  if(i>-1&&all[i+1]){ all[i+1].focus(); all[i+1].scrollIntoView({block:'center',behavior:'smooth'}); }
+  else $('#copy').focus();
+});
+function toast(t){ const el=$('#toast'); el.textContent=t; el.classList.add('on'); clearTimeout(el._t); el._t=setTimeout(()=>el.classList.remove('on'),2600); }
+
+/* โหมดแก้ไข */
+function setEdit(on){
+  document.body.classList.toggle('edit',on);
+  $('#editbtn').setAttribute('aria-pressed',String(on));
+  $('#editbtn').textContent = on ? 'ปิดโหมดแก้ไข' : 'แก้ไขข้อมูลเครื่อง';
+  render();
+  if(on) $('#editbar').scrollIntoView({block:'nearest',behavior:'smooth'});
+}
+$('#editbtn').addEventListener('click',()=>setEdit(!document.body.classList.contains('edit')));
+$('#editdone').addEventListener('click',()=>{ setEdit(false); toast('บันทึกข้อมูลเครื่องแล้ว'); });
+$('#addmc').addEventListener('click',()=>{
+  captureVals();
+  const uid='m'+(Date.now().toString(36));
+  MC.push({uid,serial:'',kind:'ขาว-ดำ',model:'SL-K7500LX',place:MC[MC.length-1]?.place||'',dept:'',isNew:true,
+           lines:[{pk:'bw',lastMeter:0,avg:0,hist:[]}]});
+  saveMC(); buildList(); render();
+  const el=$('#ed_sn_'+uid); if(el){ el.focus(); el.scrollIntoView({block:'center',behavior:'smooth'}); }
+  toast('เพิ่มเครื่องแล้ว กรอกรหัสเครื่องและหน่วยงานให้ครบ');
+});
+const dlg2=$('#dlg2');
+$('#resetmc').addEventListener('click',()=>{ if(dlg2.showModal) dlg2.showModal(); else if(confirm('คืนค่าเริ่มต้น?')) doReset(); });
+$('#dlg2-cancel').addEventListener('click',()=>dlg2.close());
+$('#dlg2-ok').addEventListener('click',()=>{ dlg2.close(); doReset(); });
+function doReset(){
+  captureVals(); MC=clone(DEFAULTS); saveMC(); buildList(); render();
+  toast(SERVER?'คืนค่าเริ่มต้นแล้ว และบันทึกขึ้นเซิร์ฟเวอร์ให้ทุกเครื่อง':'คืนค่าเริ่มต้นของข้อมูลเครื่องแล้ว');
+}
+
+$('#copy').addEventListener('click',async()=>{
+  const t=window.__tsv||''; if(!t) return;
+  const msg=`คัดลอกข้อมูล ${window.__cnt} รายการแล้ว ไปคลิกช่อง A แถวว่างแรกของชีต บันทึกมิเตอร์ แล้ววาง`;
+  const btn=$('#copy');
+  const done=()=>{ toast(msg); btn.textContent='คัดลอกแล้ว ✓'; btn.classList.add('ok');
+    setTimeout(()=>{ btn.classList.remove('ok'); render(); },2200); };
+  try{ await navigator.clipboard.writeText(t); done(); }
+  catch(e){
+    const ta=document.createElement('textarea'); ta.value=t;
+    ta.style.cssText='position:fixed;opacity:0'; document.body.appendChild(ta); ta.select();
+    try{ document.execCommand('copy'); done(); }
+    catch(e2){ toast('คัดลอกอัตโนมัติไม่ได้ กรุณาเปิด "ดูตารางที่จะคัดลอก" แล้วคัดลอกเอง'); $('#prevbox').open=true; }
+    ta.remove();
+  }
+});
+
+const dlg=$('#dlg');
+$('#clear').addEventListener('click',()=>{
+  const any=$$('#list input.qty').some(i=>i.value!=='');
+  if(!any){ toast('ยังไม่มีข้อมูลให้ล้าง'); return; }
+  if(dlg.showModal) dlg.showModal(); else if(confirm('ล้างข้อมูลทั้งหมด?')) doClear();
+});
+$('#dlg-cancel').addEventListener('click',()=>dlg.close());
+$('#dlg-ok').addEventListener('click',()=>{ dlg.close(); doClear(); });
+function doClear(){
+  $$('#list input.qty').forEach(i=>i.value='');
+  VALS={};
+  try{ localStorage.removeItem(KEY); }catch(e){}
+  render(); toast('ล้างข้อมูลที่กรอกทั้งหมดแล้ว ข้อมูลเครื่องยังอยู่ครบ');
+  const first=$('#list input.qty'); if(first) first.focus();
+}
+
+buildList(); render();
+if(hadDraft) toast('พบร่างที่กรอกค้างไว้ ระบบเติมกลับให้แล้ว');
+loadMC().then(()=>{ captureVals(); buildList(); render(); });
+</script>
+</body>
+</html>
