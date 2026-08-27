@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ระบบจัดการครุภัณฑ์ CICM</title>
+
+<!-- ─── Fonts ────────────────────────────────────────────────
+     ลำดับที่ตั้งใจ:
+       1. Google Sans / Google Sans Display / Google Sans Text
+          → ใช้ทันทีถ้าเครื่องผู้ใช้มีติดตั้ง หรือถ้าใส่ไฟล์ woff2 เอง
+            (ไม่มีใน Google Fonts สาธารณะ — เป็นฟอนต์เฉพาะของ Google)
+       2. Archivo (หัวข้อ) / Inter (เนื้อความ)  → fallback จริงที่โหลดมาด้วย
+       3. Anuphan → ตัวไทยทั้งหมด (Google Sans/Archivo/Inter ไม่มี glyph ไทย)
+     JetBrains Mono → log, ตัวเลข, label
+
+     ถ้าไม่ทำข้อ 2 แล้วให้ตกไป Anuphan เลย ลำดับชั้นหัวข้อ/เนื้อความจะยุบ
+     เป็นฟอนต์เดียวกันทั้งหน้าโดยไม่มีอะไรเตือน
+------------------------------------------------------------- -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anuphan:wght@400;500;600;700&family=Archivo:wght@600;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<!-- SheetJS (xlsx) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+<style>
+/* ─── Google Sans (ทางเลือก) ────────────────────────────────
+   ไม่ต้องทำอะไรถ้าเครื่องผู้ใช้ติดตั้ง Google Sans อยู่แล้ว —
+   การประกาศชื่อใน font stack ด้านล่างก็หยิบมาใช้เองอัตโนมัติ
+
+   ปลดคอมเมนต์เฉพาะกรณีที่ "มีสิทธิ์ใช้ไฟล์ฟอนต์" และวาง .woff2
+   ไว้ที่ fonts/ แล้วเท่านั้น (Google Sans เป็นฟอนต์ลิขสิทธิ์ของ Google
+   ไม่ได้เปิดให้ self-host ทั่วไป)
+--------------------------------------------------------------
+@font-face{
+  font-family:'Google Sans';
+  src: local('Google Sans'), url('fonts/GoogleSans-Regular.woff2') format('woff2');
+  font-weight:400; font-style:normal; font-display:swap;
+}
+@font-face{
+  font-family:'Google Sans';
+  src: local('Google Sans Medium'), url('fonts/GoogleSans-Medium.woff2') format('woff2');
+  font-weight:500; font-style:normal; font-display:swap;
+}
+@font-face{
+  font-family:'Google Sans';
+  src: local('Google Sans Bold'), url('fonts/GoogleSans-Bold.woff2') format('woff2');
+  font-weight:700; font-style:normal; font-display:swap;
+}
+-------------------------------------------------------------- */
+
+/* ══════════════════════════════════════════════════════════
+   DESIGN TOKENS — Colony Bridge, dark
+   พื้นน้ำเงินเข้มเกือบดำ · accent ฟ้า/ไซยาน · อำพันสำหรับสิ่งที่ต้องตรวจ
+   ══════════════════════════════════════════════════════════ */
+:root{
+  color-scheme: dark;
+
+  --ground:  #07090F;   /* พื้นหน้า */
+  --surface: #0C1119;   /* การ์ด */
+  --raised:  #111827;   /* แผงซ้อนใน */
+  --line:    #1A2130;   /* เส้นคั่น */
+  --line-hi: #26314A;   /* เส้นตอน hover */
+
+  --ink:     #EEF3FA;   /* ตัวอักษรหลัก */
+  --muted:   #8E9AB0;   /* ตัวอักษรรอง */
+  --faint:   #5A6478;   /* ตัวอักษรจาง */
+
+  --signal:  #3D8BFF;   /* accent หลัก */
+  --pulse:   #2FE3D0;   /* accent รอง */
+  --forage:  #F0A93B;   /* ต้องตรวจ / เตือน */
+  --affirm:  #34D399;   /* สำเร็จ */
+  --deny:    #F87171;   /* ผิดพลาด */
+
+  /* Google Sans นำหน้า → Archivo/Inter เป็น fallback ที่โหลดมาจริง
+     → Anuphan ปิดท้ายสำหรับ glyph ไทย
+     ⚠️ ห้ามใส่ Google Sans ใน --font-mono: เป็นฟอนต์ proportional
+        ตัวเลขในตาราง log/stat จะไม่ตรงคอลัมน์ */
+  --font-display: 'Google Sans Display', 'Google Sans', 'Archivo', 'Anuphan', system-ui, -apple-system, sans-serif;
+  --font-sans:    'Google Sans Text', 'Google Sans', 'Inter', 'Anuphan', system-ui, -apple-system, sans-serif;
+  --font-mono:    'JetBrains Mono', ui-monospace, 'Anuphan', monospace;
+
+  --r-lg: 18px;
+  --r-md: 13px;
+  --r-sm: 9px;
+}
+
+*{ box-sizing:border-box; margin:0; padding:0 }
+html{ -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale }
+
+body{
+  font-family: var(--font-sans);
+  background: var(--ground);
+  color: var(--ink);
+  min-height: 100vh;
+  overflow-x: hidden;
+  font-size: 15px;
+  line-height: 1.6;
+  letter-spacing: -.01em;   /* ให้เข้ากับ Google Sans ที่ค่อนข้างกว้าง */
+}
+
+/* mono ต้องคงกริดตัวเลขไว้ ห้ามบีบ
+   (ห้ามใช้ :lang(th) รีเซ็ต — <html lang="th"> ทำให้แมตช์ทั้งหน้า
+    แล้ว letter-spacing ด้านบนจะถูกล้างทิ้งทั้งหมด) */
+.log, .zone-file, .zone-meta, .stat .k, .stat .v,
+.bar-label, .status, .brand-sub, .pipeline, .step-pill, .eyebrow .tag, footer{
+  letter-spacing: normal;
+}
+.step-pill, .eyebrow .tag{ letter-spacing: .1em }
+
+::selection{ background: var(--signal); color: var(--ground) }
+
+:focus-visible{
+  outline: 2px solid var(--pulse);
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+
+h1,h2,h3{ text-wrap: balance }
+code{ font-family: var(--font-mono); font-size: .92em }
+
+/* ── Ambient swarm canvas ───────────────────────────────── */
+#swarm{
+  position: fixed; inset: 0; width: 100%; height: 100%;
+  pointer-events: none; z-index: 0; opacity: .55;
+}
+
+.shell{ position: relative; z-index: 1; max-width: 1120px; margin: 0 auto; padding: 0 20px 96px }
+
+/* ══ Sticky header ═════════════════════════════════════════ */
+.topbar{
+  position: sticky; top: 0; z-index: 40;
+  background: rgba(7,9,15,.72);
+  backdrop-filter: blur(18px) saturate(150%);
+  -webkit-backdrop-filter: blur(18px) saturate(150%);
+  border-bottom: 1px solid var(--line);
+}
+.topbar-in{
+  max-width: 1120px; margin: 0 auto; padding: 12px 20px;
+  display: flex; align-items: center; gap: 12px;
+}
+.brand{ display: flex; align-items: center; gap: 10px }
+.brand-name{
+  font-family: var(--font-display); font-weight: 700; font-size: 15.5px;
+  letter-spacing: -.015em;
+}
+.brand-sub{
+  font-family: var(--font-mono); font-size: 11px; color: var(--faint);
+  padding-left: 12px; margin-left: 2px; border-left: 1px solid var(--line);
+}
+.status{
+  margin-left: auto; display: inline-flex; align-items: center; gap: 8px;
+  font-family: var(--font-mono); font-size: 11.5px; color: var(--muted);
+}
+
+/* pulsing dot */
+.ping{ position: relative; display: inline-block; width: 7px; height: 7px; border-radius: 999px; background: currentColor }
+.ping::after{
+  content:''; position: absolute; inset: 0; border-radius: 999px;
+  background: currentColor; animation: ping 2.4s cubic-bezier(0,0,.2,1) infinite;
+}
+@keyframes ping{ 75%,100%{ transform: scale(2.6); opacity: 0 } }
+
+/* ══ Hero ══════════════════════════════════════════════════ */
+.hero{ padding: 64px 0 44px; text-align: center }
+.eyebrow{
+  display: inline-flex; align-items: center; gap: 9px;
+  padding: 6px 14px 6px 8px; border-radius: 999px;
+  background: rgba(12,17,25,.8); border: 1px solid var(--line);
+  backdrop-filter: blur(12px);
+  font-size: 12.5px; color: var(--muted); margin-bottom: 22px;
+}
+.eyebrow .tag{
+  display: inline-flex; align-items: center; gap: 6px;
+  background: rgba(52,211,153,.1); color: var(--affirm);
+  border-radius: 999px; padding: 2px 9px;
+  font-family: var(--font-mono); font-size: 10.5px;
+  text-transform: uppercase; letter-spacing: .08em;
+}
+h1{
+  font-family: var(--font-display);
+  font-size: clamp(2.1rem, 5.4vw, 3.3rem);
+  font-weight: 800; line-height: 1.04; letter-spacing: -.032em;
+}
+h1 .grad{
+  background: linear-gradient(103deg, #FFFFFF 0%, #EEF3FA 32%, #9CC6FF 70%, #3FD6C6 100%);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.sub{
+  margin: 18px auto 0; max-width: 58ch;
+  font-size: 15.5px; color: var(--muted); line-height: 1.7;
+}
+.pipeline{
+  margin-top: 22px; display: inline-flex; flex-wrap: wrap; gap: 8px;
+  justify-content: center; align-items: center;
+  font-family: var(--font-mono); font-size: 11.5px; color: var(--faint);
+}
+.pipeline code{
+  background: var(--surface); border: 1px solid var(--line);
+  border-radius: var(--r-sm); padding: 4px 9px; color: var(--muted);
+}
+
+/* ══ Card ══════════════════════════════════════════════════ */
+.card{
+  position: relative;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  padding: 26px 26px 28px;
+  margin-bottom: 16px;
+}
+.card-head{ display: flex; align-items: center; gap: 11px; margin-bottom: 5px }
+.card-head h2{
+  font-family: var(--font-display); font-size: 17px; font-weight: 700;
+  letter-spacing: -.015em;
+}
+.step-pill{
+  font-family: var(--font-mono); font-size: 10.5px; font-weight: 500;
+  letter-spacing: .1em; text-transform: uppercase;
+  color: var(--signal); background: rgba(61,139,255,.1);
+  border: 1px solid rgba(61,139,255,.22);
+  padding: 3px 9px; border-radius: 999px;
+}
+.step-pill.running{ color: var(--pulse); background: rgba(47,227,208,.1); border-color: rgba(47,227,208,.24) }
+.step-pill.done   { color: var(--affirm); background: rgba(52,211,153,.1); border-color: rgba(52,211,153,.24) }
+.card-note{ color: var(--muted); font-size: 13.5px; line-height: 1.7; margin-bottom: 22px; max-width: 76ch }
+
+/* ══ Dropzones — bento + "processing" border ═══════════════ */
+.zones{ display: grid; grid-template-columns: repeat(auto-fit, minmax(268px, 1fr)); gap: 14px }
+
+.zone{
+  position: relative; isolation: isolate;
+  display: block; cursor: pointer;
+  padding: 20px 18px;
+  border: 1px dashed var(--line);
+  border-radius: var(--r-md);
+  background: var(--raised);
+  transition: border-color .2s ease, background .2s ease, transform .2s ease;
+}
+.zone:hover{ border-color: var(--line-hi); background: #131C2B; transform: translateY(-2px) }
+
+/* conic ring — เดินรอบการ์ดตอน hover เหมือนกำลังประมวลผล */
+.zone::before{
+  content:''; position: absolute; inset: -1px; border-radius: inherit;
+  padding: 1px; opacity: 0; transition: opacity .35s ease; z-index: -1;
+  background: conic-gradient(from var(--ang, 0deg),
+    transparent 0deg, var(--signal) 42deg, var(--pulse) 84deg, transparent 132deg,
+    transparent 180deg, var(--forage) 216deg, transparent 264deg, transparent 360deg);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor; mask-composite: exclude;
+  animation: spin 5s linear infinite;
+}
+.zone:hover::before, .zone:focus-within::before{ opacity: 1 }
+@property --ang{ syntax: '<angle>'; initial-value: 0deg; inherits: false }
+@keyframes spin{ to{ --ang: 360deg } }
+
+/* สถานะที่ app.js สลับ class ให้ — ห้ามเปลี่ยนชื่อ */
+.zone.dragover{ border-style: solid; border-color: var(--signal); background: rgba(61,139,255,.08) }
+.zone.filled  { border-style: solid; border-color: rgba(52,211,153,.35); background: rgba(52,211,153,.05) }
+
+.zone input[type=file]{ position: absolute; inset: 0; opacity: 0; cursor: pointer }
+
+.zone-top{ display: flex; align-items: center; gap: 10px; margin-bottom: 9px }
+.zone-ico{
+  width: 32px; height: 32px; flex: none; border-radius: var(--r-sm);
+  display: grid; place-items: center; font-size: 15px;
+  background: rgba(61,139,255,.1); border: 1px solid rgba(61,139,255,.2);
+}
+.zone.filled .zone-ico{ background: rgba(52,211,153,.1); border-color: rgba(52,211,153,.25) }
+.zone-title{ font-family: var(--font-display); font-size: 14px; font-weight: 700; letter-spacing: -.01em }
+.zone-req{ color: var(--deny); font-size: 11px; margin-left: 3px }
+.zone-hint{ font-size: 12.5px; color: var(--muted); line-height: 1.6 }
+.zone-file{
+  margin-top: 10px; font-family: var(--font-mono); font-size: 11.5px;
+  color: var(--affirm); word-break: break-all; line-height: 1.55; white-space: pre-line;
+}
+.zone-file:empty{ display: none }
+.zone-meta{ margin-top: 5px; font-family: var(--font-mono); font-size: 11px; color: var(--faint) }
+.zone-meta:empty{ display: none }
+
+/* ══ Options ═══════════════════════════════════════════════ */
+.opts{ display: grid; grid-template-columns: repeat(auto-fit, minmax(292px, 1fr)); gap: 10px; margin-top: 20px }
+.opt{
+  display: flex; gap: 11px; align-items: flex-start;
+  padding: 12px 14px; cursor: pointer;
+  background: var(--raised); border: 1px solid var(--line);
+  border-radius: var(--r-sm); transition: border-color .16s ease, background .16s ease;
+}
+.opt:hover{ border-color: var(--line-hi); background: #131C2B }
+.opt input{ margin-top: 3px; width: 15px; height: 15px; flex: none; accent-color: var(--signal); cursor: pointer }
+.opt-txt strong{ display: block; font-size: 13px; font-weight: 600; margin-bottom: 2px }
+.opt-txt span{ font-size: 12px; color: var(--muted); line-height: 1.55 }
+
+/* ══ Buttons ═══════════════════════════════════════════════ */
+.actions{ display: flex; gap: 10px; flex-wrap: wrap; margin-top: 24px }
+button{
+  font-family: var(--font-sans); font-size: 13.5px; font-weight: 500;
+  border: none; cursor: pointer; border-radius: var(--r-sm);
+  padding: 11px 20px; transition: all .16s ease; letter-spacing: -.005em;
+}
+button:disabled{ opacity: .38; cursor: not-allowed }
+.btn-primary{
+  background: var(--signal); color: var(--ground);
+  box-shadow: 0 0 28px -8px var(--signal);
+}
+.btn-primary:not(:disabled):hover{
+  background: #5C9DFF; box-shadow: 0 0 38px -6px var(--signal); transform: translateY(-1px);
+}
+.btn-ghost{ background: var(--raised); color: var(--ink); border: 1px solid var(--line) }
+.btn-ghost:not(:disabled):hover{ border-color: var(--line-hi); background: #131C2B }
+
+/* ══ Progress ══════════════════════════════════════════════
+   #progressCard / #resultCard ถูก app.js สั่ง style.display='block'
+   จึงต้องจัด layout ด้วย element ข้างในเท่านั้น ห้ามพึ่ง flex/grid
+   ที่ตัว section เอง                                         */
+#progressCard{ display: none }
+#resultCard  { display: none }
+
+.bar{ height: 6px; border-radius: 999px; background: rgba(255,255,255,.06); overflow: hidden; margin: 16px 0 10px }
+.bar-fill{
+  height: 100%; width: 0%; border-radius: 999px;
+  background: linear-gradient(90deg, var(--signal), var(--pulse));
+  box-shadow: 0 0 16px -2px var(--signal);
+  transition: width .25s ease;
+}
+.bar-label{ display: flex; justify-content: space-between; font-family: var(--font-mono); font-size: 12px; color: var(--muted) }
+.bar-label b{ color: var(--ink); font-weight: 500; font-variant-numeric: tabular-nums }
+
+/* ══ Stat tiles ════════════════════════════════════════════
+   app.js สร้าง <div class="stat ok|warn|err"><div class="k">…
+   ใช้แถบสีซ้ายบอกสถานะ ให้อ่านออกตั้งแต่ยังไม่อ่านตัวเลข     */
+.stats{ display: grid; grid-template-columns: repeat(auto-fit, minmax(148px, 1fr)); gap: 10px; margin: 6px 0 20px }
+.stat{
+  background: var(--raised); border: 1px solid var(--line);
+  border-left: 2px solid var(--faint);
+  border-radius: var(--r-sm); padding: 13px 15px;
+}
+.stat .k{ font-family: var(--font-mono); font-size: 10.5px; letter-spacing: .04em; color: var(--muted); margin-bottom: 5px; line-height: 1.4 }
+.stat .v{
+  font-family: var(--font-display); font-size: 23px; font-weight: 800;
+  letter-spacing: -.02em; font-variant-numeric: tabular-nums; line-height: 1.1;
+}
+.stat.ok  { border-left-color: var(--affirm) } .stat.ok   .v{ color: var(--affirm) }
+.stat.warn{ border-left-color: var(--forage) } .stat.warn .v{ color: var(--forage) }
+.stat.err { border-left-color: var(--deny)   } .stat.err  .v{ color: var(--deny) }
+
+/* ══ Log ═══════════════════════════════════════════════════
+   app.js ใส่ class 'i' | 's' | 'w' | 'e' ให้แต่ละบรรทัด       */
+.log{
+  max-height: 300px; overflow-y: auto;
+  background: #05070C; border: 1px solid var(--line);
+  border-radius: var(--r-md); padding: 14px 16px;
+  font-family: var(--font-mono); font-size: 12px; line-height: 1.8;
+  color: var(--muted);
+}
+.log div{
+  white-space: pre-wrap; word-break: break-word;
+  padding-left: 11px; border-left: 2px solid transparent;
+  transition: border-color .2s ease;
+}
+.log .i{ color: #8FC0FF;       border-left-color: rgba(143,192,255,.28) }
+.log .s{ color: var(--affirm); border-left-color: var(--affirm) }
+.log .w{ color: var(--forage); border-left-color: var(--forage) }
+.log .e{ color: var(--deny);   border-left-color: var(--deny) }
+.log::-webkit-scrollbar{ width: 8px }
+.log::-webkit-scrollbar-track{ background: transparent }
+.log::-webkit-scrollbar-thumb{ background: var(--line-hi); border-radius: 999px }
+
+/* ══ Footer ════════════════════════════════════════════════ */
+footer{
+  margin-top: 34px; padding-top: 22px; border-top: 1px solid var(--line);
+  display: flex; flex-wrap: wrap; gap: 10px 20px; align-items: center;
+  font-family: var(--font-mono); font-size: 11.5px; color: var(--faint);
+}
+footer .right{ margin-left: auto; display: inline-flex; align-items: center; gap: 8px; color: var(--muted) }
+
+@media (max-width: 640px){
+  .shell{ padding: 0 14px 72px }
+  .hero{ padding: 44px 0 32px }
+  .card{ padding: 20px 17px 22px }
+  .topbar-in{ padding: 11px 14px }
+  .brand-sub{ display: none }
+}
+
+@media (prefers-reduced-motion: reduce){
+  *, *::before, *::after{
+    animation-duration:.001ms !important; animation-iteration-count:1 !important;
+    transition-duration:.001ms !important;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<!-- Ambient colony mesh — โหนดลอยและเชื่อมกันเมื่ออยู่ใกล้
+     เป็นภาพแทนงานที่หลายชิ้นเชื่อมโยงกัน ไม่ใช่ blob ตกแต่ง -->
+<canvas id="swarm" aria-hidden="true"></canvas>
+
+<header class="topbar">
+  <div class="topbar-in">
+    <div class="brand">
+      <svg width="24" height="24" viewBox="0 0 26 26" fill="none" aria-hidden="true">
+        <circle cx="6"  cy="7"  r="3" stroke="#3D8BFF" stroke-width="1.6"/>
+        <circle cx="20" cy="7"  r="3" stroke="#2FE3D0" stroke-width="1.6"/>
+        <circle cx="13" cy="19" r="3" stroke="#F0A93B" stroke-width="1.6"/>
+        <path d="M8.6 8.6 11 16.6M17.4 8.6 15 16.6M9 7h8" stroke="#2A3550" stroke-width="1.3"/>
+      </svg>
+      <span class="brand-name">ครุภัณฑ์ CICM</span>
+      <span class="brand-sub">Web Edition 5.0</span>
+    </div>
+    <span class="status">
+      <span class="ping" style="color:#34D399"></span>
+      ประมวลผลในเครื่อง
+    </span>
+  </div>
+</header>
+
+<div class="shell">
+
+  <section class="hero">
+    <div class="eyebrow">
+      <span class="tag"><span class="ping" style="color:#34D399"></span>Client-side</span>
+      ไม่มีการอัปโหลดข้อมูลขึ้นเซิร์ฟเวอร์
+    </div>
+
+    <h1>ระบบจัดการ<span class="grad">ครุภัณฑ์ CICM</span></h1>
+
+    <p class="sub">
+      แปลงจาก Google Apps Script v4.1 → Vanilla JS + SheetJS
+      ทะเบียนสินทรัพย์ ERP รวมกับข้อมูลครุภัณฑ์ดิบ แล้วออกเป็นไฟล์ Excel 75 คอลัมน์
+    </p>
+
+    <div class="pipeline">
+      <code>data</code> <span>→</span> <code>information</code> <span>→</span>
+      <code>3.ทะเบียนรายการครุภัณฑ์ CICM</code>
+    </div>
+  </section>
+
+  <!-- ══ STEP 1 — ไฟล์ต้นทาง ══════════════════════════════ -->
+  <section class="card">
+    <div class="card-head">
+      <span class="step-pill">Step 1</span>
+      <h2>อัปโหลดไฟล์ต้นทาง</h2>
+    </div>
+    <p class="card-note">
+      รองรับ <code>.xlsx</code> <code>.xlsm</code> <code>.xls</code> <code>.csv</code> —
+      ไฟล์ทั้งหมดถูกอ่านในเบราว์เซอร์ด้วย <code>FileReader</code> + <code>SheetJS</code> เท่านั้น
+    </p>
+
+    <div class="zones">
+
+      <label class="zone" id="zone-data">
+        <input type="file" id="file-data" accept=".xlsx,.xlsm,.xls,.csv">
+        <div class="zone-top">
+          <div class="zone-ico">📄</div>
+          <div class="zone-title">1. data<span class="zone-req">*</span></div>
+        </div>
+        <div class="zone-hint">ข้อมูลครุภัณฑ์ดิบ 33 คอลัมน์ (id → istatus)</div>
+        <div class="zone-file" id="name-data"></div>
+        <div class="zone-meta" id="meta-data"></div>
+      </label>
+
+      <label class="zone" id="zone-image">
+        <input type="file" id="file-image" accept=".xlsx,.xlsm,.xls,.csv">
+        <div class="zone-top">
+          <div class="zone-ico">🖼️</div>
+          <div class="zone-title">2. รูปภาพ <span style="font-size:11px;font-weight:500;color:#5A6478">(ไม่บังคับ)</span></div>
+        </div>
+        <div class="zone-hint">คอลัมน์ B = ลำดับ (key) · คอลัมน์ G = URL หรือชื่อไฟล์</div>
+        <div class="zone-file" id="name-image"></div>
+        <div class="zone-meta" id="meta-image"></div>
+      </label>
+
+      <label class="zone" id="zone-erp">
+        <input type="file" id="file-erp" accept=".xlsx,.xlsm,.xls,.csv" multiple>
+        <div class="zone-top">
+          <div class="zone-ico">🏛️</div>
+          <div class="zone-title">3. ทะเบียนสินทรัพย์ (ERP)<span class="zone-req">*</span></div>
+        </div>
+        <div class="zone-hint">
+          เลือกได้ทั้ง <b>ไฟล์รวม 44 คอลัมน์</b> หรือ <b>RP023 + RP015 ดิบ</b> —
+          ระบบตรวจหัวตารางให้อัตโนมัติ (เลือกได้หลายไฟล์)
+        </div>
+        <div class="zone-file" id="name-erp"></div>
+        <div class="zone-meta" id="meta-erp"></div>
+      </label>
+
+    </div>
+
+    <div class="opts">
+      <label class="opt">
+        <input type="checkbox" id="opt-skip-header" checked>
+        <div class="opt-txt"><strong>ข้ามแถวหัวตารางของชีต data</strong>
+          <span>GAS เดิมไม่ข้าม ทำให้หัวตารางกลายเป็นข้อมูลแถวแรก</span></div>
+      </label>
+      <label class="opt">
+        <input type="checkbox" id="opt-drop-total" checked>
+        <div class="opt-txt"><strong>คัดแถวยอดรวมออกจาก ERP</strong>
+          <span>แถวที่ไม่มีรหัสสินทรัพย์ในรายงาน RP023/RP015 (ปกติ 15 แถว)</span></div>
+      </label>
+      <label class="opt">
+        <input type="checkbox" id="opt-calc-dep" checked>
+        <div class="opt-txt"><strong>คำนวณค่าเสื่อม (5)(6)(7) ให้ ERP</strong>
+          <span>ต้นฉบับเว้นว่างเพราะเป็นสูตรที่ไม่ถูกคำนวณ</span></div>
+      </label>
+      <label class="opt">
+        <input type="checkbox" id="opt-native-dates" checked>
+        <div class="opt-txt"><strong>เขียนวันที่ ค.ศ. เป็นวันที่จริงของ Excel</strong>
+          <span>Sort/Filter ตามเวลาได้ · คอลัมน์ที่เป็น พ.ศ. คงเป็นข้อความเสมอ กันเพี้ยน 543 ปี</span></div>
+      </label>
+      <label class="opt">
+        <input type="checkbox" id="opt-strip-quote" checked>
+        <div class="opt-txt"><strong>ตัด <code>'</code> นำหน้าค่าที่บังคับเป็นข้อความ</strong>
+          <span>xlsx เก็บ type ได้จริง ไม่ต้องใช้เครื่องหมายแบบ Google Sheets</span></div>
+      </label>
+    </div>
+
+    <div class="actions">
+      <button class="btn-primary" id="btn-run" disabled>🚀 รัน Pipeline ทั้งหมด</button>
+      <button class="btn-ghost"   id="btn-diag" disabled>🔍 ตรวจการแมตช์รูปภาพอย่างเดียว</button>
+      <button class="btn-ghost"   id="btn-reset">🗑️ ล้างทั้งหมด</button>
+    </div>
+  </section>
+
+  <!-- ══ STEP 2 — กำลังประมวลผล ═══════════════════════════ -->
+  <section class="card" id="progressCard">
+    <div class="card-head">
+      <span class="step-pill running">Step 2</span>
+      <h2 id="progressTitle">กำลังประมวลผล…</h2>
+    </div>
+    <div class="bar"><div class="bar-fill" id="barFill"></div></div>
+    <div class="bar-label"><span id="barText">เตรียมข้อมูล…</span><b id="barPct">0%</b></div>
+  </section>
+
+  <!-- ══ STEP 3 — ผลลัพธ์ ═════════════════════════════════ -->
+  <section class="card" id="resultCard">
+    <div class="card-head">
+      <span class="step-pill done">Step 3</span>
+      <h2>ผลการประมวลผล</h2>
+    </div>
+    <div class="stats" id="stats"></div>
+    <div class="actions" style="margin-top:0">
+      <button class="btn-primary" id="btn-download">⬇️ ดาวน์โหลดไฟล์ Excel ผลลัพธ์</button>
+    </div>
+  </section>
+
+  <!-- ══ Log ══════════════════════════════════════════════ -->
+  <section class="card">
+    <div class="card-head"><h2>Log</h2></div>
+    <div class="log" id="log"><div class="i">พร้อมทำงาน — เลือกไฟล์เพื่อเริ่มต้น</div></div>
+  </section>
+
+  <footer>
+    <span>CICM Asset Manager · Web Edition 5.0 — ported from Apps Script v4.1</span>
+    <span class="right">
+      <span class="ping" style="color:#34D399"></span>
+      ข้อมูลไม่ออกนอกเบราว์เซอร์
+    </span>
+  </footer>
+
+</div>
+
+<script>
+/* ─── Ambient colony mesh ───────────────────────────────────
+   โหนดลอยช้าๆ เชื่อมเส้นเมื่ออยู่ใกล้กัน และเอนเข้าหาเคอร์เซอร์
+   ถ้าผู้ใช้ตั้ง prefers-reduced-motion จะวาดเฟรมเดียวแล้วหยุด
+   แยกจาก app.js เพราะเป็นงานตกแต่งล้วน ไม่เกี่ยวกับ pipeline
+------------------------------------------------------------- */
+(() => {
+  const cv = document.getElementById('swarm');
+  if (!cv) return;
+  const ctx = cv.getContext('2d');
+  const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let w, h, nodes = [], pointer = { x: -9e9, y: -9e9 };
+  const LINK = 130;
+
+  function size() {
+    const dpr = Math.min(devicePixelRatio || 1, 2);
+    w = innerWidth; h = innerHeight;
+    cv.width = w * dpr; cv.height = h * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const count = Math.min(70, Math.round(w / 20));
+    nodes = Array.from({ length: count }, () => ({
+      x: Math.random() * w, y: Math.random() * h,
+      vx: (Math.random() - .5) * .2, vy: (Math.random() - .5) * .2,
+      r: Math.random() * 1.4 + .6
+    }));
+  }
+
+  function frame() {
+    ctx.clearRect(0, 0, w, h);
+    for (const n of nodes) {
+      if (!still) {
+        const dx = pointer.x - n.x, dy = pointer.y - n.y;
+        if (dx * dx + dy * dy < 26000) { n.vx += dx * 0.00005; n.vy += dy * 0.00005; }
+        n.vx *= .995; n.vy *= .995;
+        n.x += n.vx; n.y += n.vy;
+        if (n.x < 0 || n.x > w) n.vx *= -1;
+        if (n.y < 0 || n.y > h) n.vy *= -1;
+      }
+      ctx.beginPath();
+      ctx.arc(n.x, n.y, n.r, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(143,192,255,.45)';
+      ctx.fill();
+    }
+    for (let i = 0; i < nodes.length; i++) {
+      for (let j = i + 1; j < nodes.length; j++) {
+        const dx = nodes[i].x - nodes[j].x, dy = nodes[i].y - nodes[j].y;
+        const d = Math.hypot(dx, dy);
+        if (d > LINK) continue;
+        ctx.strokeStyle = `rgba(61,139,255,${(1 - d / LINK) * .26})`;
+        ctx.lineWidth = .7;
+        ctx.beginPath();
+        ctx.moveTo(nodes[i].x, nodes[i].y);
+        ctx.lineTo(nodes[j].x, nodes[j].y);
+        ctx.stroke();
+      }
+    }
+    if (!still) requestAnimationFrame(frame);
+  }
+
+  addEventListener('resize', () => { size(); if (still) frame(); });
+  addEventListener('pointermove', e => { pointer = { x: e.clientX, y: e.clientY }; });
+  addEventListener('pointerleave', () => { pointer = { x: -9e9, y: -9e9 }; });
+  size(); frame();
+})();
+</script>
+
+<script src="app.js"></script>
+</body>
+</html>
