@@ -5,1268 +5,735 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ระบบจัดการครุภัณฑ์ CICM</title>
 
+<!-- ─── Fonts ────────────────────────────────────────────────
+     Google Sans  → ตัวอักษรหลักทั้งไทยและอังกฤษ
+     Inter 900    → เฉพาะตัวอักษรยักษ์เป็นพื้นหลัง hero
+     JetBrains Mono → log, ตัวเลข, ชื่อไฟล์, label
+------------------------------------------------------------- -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Google+Sans:ital,opsz,wght@0,17..18,400..900;1,17..18,400..900&family=Inter:wght@700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Google+Sans:ital,opsz,wght@0,17..18,400..900;1,17..18,400..900&family=Inter:wght@800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+
+<!-- SheetJS (xlsx) — app.js เรียกใช้ -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
 <style>
-/* ==========================================================
-   🎨 TOKENS — Sunrise (โทนสว่างล้วน ตัวอักษรสีดำตามที่สั่ง)
-   แก้สีทั้งระบบได้จากตรงนี้ที่เดียว
-   ========================================================== */
-:root {
-    --hero-top:     #FF8233;
-    --hero-bottom:  #FDAC55;
-    --accent:       #F16524;
-    --accent-deep:  #C4470F;
-    --menu-top:     #FF6B1A;
-    --menu-bottom:  #FF9642;
+/* ══════════════════════════════════════════════════════════
+   DESIGN TOKENS — Sunrise
+   พื้นไล่สีส้ม · การ์ดขาว · ตัวอักษรสีดำล้วนตามที่สั่ง
+   สีส้มใช้เป็น "พื้น" เท่านั้น ไม่ใช้เป็นสีตัวอักษร
+   แก้สีทั้งระบบได้จากบล็อกนี้ที่เดียว
+   ══════════════════════════════════════════════════════════ */
+:root{
+  color-scheme: light;
 
-    --page-bg:      #FFF4EB;
-    --surface:      #FFFFFF;
-    --surface-2:    #FFF7F1;
-    --field-bg:     #FFFFFF;
+  --hero-top:    #FF8233;
+  --hero-bottom: #FDAC55;
+  --accent:      #F16524;
+  --accent-soft: rgba(241, 101, 36, 0.12);
+  --menu-top:    #FF6B1A;
+  --menu-bottom: #FF9642;
 
-    --text:         #000000;   /* ตัวอักษรหลัก — ดำสนิท */
-    --text-muted:   #4A3A30;   /* ข้อความรอง ยังคงเข้มอ่านง่าย */
-    --border:       rgba(0, 0, 0, 0.14);
-    --shadow:       0 12px 34px rgba(140, 70, 25, 0.10);
+  --ground:  #FFF4EB;   /* พื้นหน้า */
+  --surface: #FFFFFF;   /* การ์ด */
+  --raised:  #FFF7F1;   /* แผงซ้อนใน */
+  --line:    rgba(0, 0, 0, 0.14);
+  --line-hi: rgba(241, 101, 36, 0.55);
 
-    --success:      #17683C;
-    --warn:         #8A5200;
-    --danger:       #A32014;
-}
+  --ink:     #000000;   /* ตัวอักษรหลัก — ดำสนิท */
+  --muted:   #4A3A30;   /* ตัวอักษรรอง */
+  --faint:   #6B594C;   /* ตัวอักษรจาง */
 
-* { margin: 0; padding: 0; box-sizing: border-box; }
-html { font-size: 16px; scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
-@media (max-width: 768px) { html { font-size: 15px; } }
+  --affirm:  #17683C;   /* สำเร็จ */
+  --forage:  #8A5200;   /* ต้องตรวจ / เตือน */
+  --deny:    #A32014;   /* ผิดพลาด */
 
-body {
-    font-family: "Google Sans", Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-    background: var(--page-bg);
-    color: var(--text);
-}
+  --font-display: 'Google Sans', 'Inter', system-ui, -apple-system, sans-serif;
+  --font-sans:    'Google Sans', 'Inter', system-ui, -apple-system, sans-serif;
+  --font-mono:    'JetBrains Mono', ui-monospace, 'Google Sans', monospace;
 
-/* ==========================================================
-   🧭 NAV
-   ========================================================== */
-.nav {
-    position: fixed;
-    top: 0; left: 0; right: 0;
-    z-index: 40;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    padding: 14px 16px;
-    transition: background 0.35s ease, box-shadow 0.35s ease;
-}
-@media (min-width: 768px) { .nav { padding: 16px 40px; } }
-.nav.scrolled {
-    background: linear-gradient(120deg, var(--menu-top) 0%, var(--menu-bottom) 100%);
-    box-shadow: 0 6px 22px rgba(140, 70, 25, 0.22);
+  --r-lg: 28px;
+  --r-md: 18px;
+  --r-sm: 14px;
 }
 
-.logo { display: flex; align-items: center; text-decoration: none; color: var(--text); }
-.logo-dots { display: grid; grid-template-columns: repeat(2, 1fr); gap: 2px; }
-.logo-dots span { display: block; width: 11px; height: 11px; background: #000; border-radius: 9999px; }
-.logo-text { font-weight: 700; font-size: 1.05rem; margin-left: 9px; letter-spacing: -0.01em; }
+*{ box-sizing: border-box; margin: 0; padding: 0 }
+html{ -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; scroll-behavior: smooth }
 
-.nav-links { display: none; gap: 4px; }
-@media (min-width: 1024px) { .nav-links { display: flex; } }
-.nav-links a {
-    padding: 7px 15px;
-    font-size: 0.85rem;
-    font-weight: 500;
-    border-radius: 9999px;
-    background: #fff;
-    color: var(--text);
-    text-decoration: none;
-    transition: opacity 0.2s ease, transform 0.2s ease;
-}
-.nav-links a:hover { opacity: 0.88; transform: translateY(-1px); }
-
-.nav-actions { display: flex; align-items: center; gap: 8px; }
-.pill-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 9px 16px;
-    border: none;
-    border-radius: 9999px;
-    color: #000;
-    background: var(--accent);
-    font-family: inherit;
-    font-size: 0.85rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: opacity 0.2s ease, transform 0.2s ease;
-}
-.pill-btn:hover { opacity: 0.92; transform: translateY(-1px); }
-.pill-btn.ghost { background: #fff; color: var(--text); }
-.pill-btn .label { display: none; }
-@media (min-width: 640px) { .pill-btn .label { display: inline; } }
-.icon-16 { width: 16px; height: 16px; flex: none; }
-.icon-20 { width: 20px; height: 20px; flex: none; }
-
-/* ==========================================================
-   🍔 MENU OVERLAY
-   ========================================================== */
-.overlay { position: fixed; inset: 0; z-index: 60; visibility: hidden; }
-.overlay.open { visibility: visible; }
-.backdrop {
-    position: absolute; inset: 0;
-    background: rgba(0, 0, 0, 0.4);
-    backdrop-filter: blur(4px);
-    -webkit-backdrop-filter: blur(4px);
-    opacity: 0;
-    transition: opacity 500ms ease;
-}
-.overlay.open .backdrop { opacity: 1; }
-.panel {
-    position: absolute; top: 0; right: 0;
-    height: 100%; width: 100%;
-    background: linear-gradient(135deg, var(--menu-top) 0%, var(--menu-bottom) 100%);
-    transform: translateX(100%);
-    transition: transform 500ms cubic-bezier(0.16, 1, 0.3, 1);
-    display: flex; flex-direction: column;
-}
-@media (min-width: 640px) { .panel { width: 380px; } }
-.overlay.open .panel { transform: translateX(0); }
-.panel-head { display: flex; align-items: center; justify-content: space-between; padding: 20px 24px; }
-.close-btn {
-    width: 40px; height: 40px;
-    display: inline-flex; align-items: center; justify-content: center;
-    border: none; border-radius: 9999px;
-    background: rgba(255, 255, 255, 0.35);
-    color: var(--text); cursor: pointer;
-    transition: background 0.2s ease;
-}
-.close-btn:hover { background: rgba(255, 255, 255, 0.55); }
-.panel-items { display: flex; flex-direction: column; gap: 10px; padding: 8px 24px; overflow-y: auto; }
-.panel-items a {
-    display: block;
-    padding: 15px 22px;
-    font-size: 1.05rem;
-    font-weight: 600;
-    color: var(--text);
-    text-decoration: none;
-    border-radius: 18px;
-    background: rgba(255, 255, 255, 0.35);
-    opacity: 0;
-    transform: translateY(16px);
-    transition: opacity 300ms ease, transform 300ms ease, background 300ms ease;
-    transition-delay: 0ms;
-}
-.panel-items a:hover { background: rgba(255, 255, 255, 0.6); }
-.overlay.open .panel-items a { opacity: 1; transform: translateY(0); }
-.panel-cta { position: absolute; bottom: 0; left: 0; right: 0; padding: 24px; opacity: 0; transition: opacity 300ms ease; }
-.overlay.open .panel-cta { opacity: 1; transition-delay: 450ms; }
-.panel-cta button {
-    display: flex; align-items: center; justify-content: center; gap: 8px;
-    width: 100%; padding: 16px 0;
-    border: none; border-radius: 9999px;
-    background: #fff; color: var(--text);
-    font-family: inherit; font-weight: 600; font-size: 1rem;
-    cursor: pointer;
-    transition: transform 0.2s ease;
-}
-.panel-cta button:hover { transform: scale(1.02); }
-
-/* ==========================================================
-   🏔️ HERO (แบบย่อ — เป็นเครื่องมือ ไม่ใช่หน้าโปรโมต)
-   ========================================================== */
-.hero {
-    position: relative;
-    min-height: 460px;
-    height: 72vh;
-    max-height: 660px;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-    background: linear-gradient(to bottom, var(--hero-top) 0%, var(--hero-bottom) 100%);
-}
-.bg-layer {
-    position: absolute; inset: 0;
-    pointer-events: none;
-    opacity: 0.8;
-    -webkit-mask-image: linear-gradient(to bottom, black 45%, transparent 94%);
-            mask-image: linear-gradient(to bottom, black 45%, transparent 94%);
-}
-.bg-center { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
-#bgWord {
-    font-family: Inter, "Google Sans", sans-serif;
-    color: #FFFFFF;
-    font-weight: 900;
-    line-height: 1;
-    letter-spacing: -0.06em;
-    white-space: nowrap;
-    font-size: clamp(120px, 26vw, 460px);
-    transform: scale(1.15, 1);
-    transform-origin: center;
-}
-#bgOval {
-    background: #FFFFFF;
-    border-radius: 9999px;
-    height: 58%;
-    width: clamp(140px, 21vw, 380px);
-    transform-origin: center;
-}
-.hero-visual {
-    position: absolute; inset: 0;
-    display: flex; align-items: center; justify-content: center;
-    pointer-events: none;
-    margin-top: -6vh;
-}
-#heroArt { width: min(30vh, 58vw); height: auto; animation: floaty 6s ease-in-out infinite; }
-@keyframes floaty {
-    0%, 100% { transform: translateY(-8px) rotate(-1deg); }
-    50%      { transform: translateY(8px) rotate(1deg); }
+body{
+  font-family: var(--font-sans);
+  background: var(--ground);
+  color: var(--ink);
+  min-height: 100vh;
+  overflow-x: hidden;
+  font-size: 15px;
+  line-height: 1.65;
 }
 
-.hero-bottom {
-    position: relative;
-    z-index: 30;
-    margin-top: auto;
-    padding: 0 20px 30px;
-    display: flex; flex-direction: column; align-items: center; text-align: center;
+/* ตัวเลขในตาราง log/stat ต้องตรงคอลัมน์ */
+.log, .zone-file, .zone-meta, .stat .k, .stat .v,
+.bar-label, .status, .brand-sub, .pipeline, .step-pill, .eyebrow .tag, footer{
+  letter-spacing: normal;
 }
-.hero-bottom h1 {
-    font-size: clamp(1.4rem, 3.6vw, 2.3rem);
-    font-weight: 700;
-    line-height: 1.3;
-    letter-spacing: -0.01em;
-    color: var(--text);
-    text-wrap: balance;
+.step-pill, .eyebrow .tag{ letter-spacing: .08em }
+
+::selection{ background: var(--accent); color: #fff }
+:focus-visible{ outline: 3px solid var(--accent); outline-offset: 3px; border-radius: 8px }
+
+h1, h2, h3{ text-wrap: balance }
+code{ font-family: var(--font-mono); font-size: .92em }
+
+/* ══ NAV — ลอยบนสุด เปลี่ยนพื้นหลังเมื่อเลื่อนพ้น hero ═════ */
+.topbar{
+  position: fixed; top: 0; left: 0; right: 0; z-index: 40;
+  transition: background .35s ease, box-shadow .35s ease;
 }
-.hero-bottom .sub {
-    margin-top: 8px;
-    font-size: clamp(0.82rem, 1.5vw, 0.98rem);
-    font-weight: 500;
-    color: var(--text);
+.topbar.scrolled{
+  background: linear-gradient(120deg, var(--menu-top) 0%, var(--menu-bottom) 100%);
+  box-shadow: 0 6px 22px rgba(140, 70, 25, .22);
+}
+.topbar-in{
+  max-width: 1180px; margin: 0 auto; padding: 14px 20px;
+  display: flex; align-items: center; gap: 12px;
+}
+@media (min-width: 768px){ .topbar-in{ padding: 16px 40px } }
+
+.brand{ display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--ink) }
+.logo-dots{ display: grid; grid-template-columns: repeat(2, 1fr); gap: 2px }
+.logo-dots span{ display: block; width: 11px; height: 11px; background: #000; border-radius: 999px }
+.brand-name{ font-family: var(--font-display); font-weight: 700; font-size: 16px; letter-spacing: -.015em }
+.brand-sub{
+  font-family: var(--font-mono); font-size: 11px; color: var(--faint);
+  padding-left: 12px; border-left: 1px solid var(--line);
 }
 
-/* เส้นทางข้อมูล — data → information → ชีตปลายทาง */
-.flowpath {
-    margin-top: 16px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-wrap: wrap;
-    gap: 8px;
-    font-size: 0.82rem;
-    color: var(--text);
+.nav-links{ display: none; gap: 4px; margin-left: 18px }
+@media (min-width: 1080px){ .nav-links{ display: flex } }
+.nav-links a{
+  padding: 7px 15px; font-size: 13px; font-weight: 500;
+  border-radius: 999px; background: #fff; color: var(--ink); text-decoration: none;
+  transition: opacity .2s ease, transform .2s ease;
 }
-.flowpath .chip {
-    display: inline-flex;
-    align-items: center;
-    padding: 6px 14px;
-    border-radius: 9999px;
-    background: #fff;
-    font-weight: 600;
-    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
-    font-size: 0.78rem;
-}
-.flowpath .chip.final { background: var(--accent); color: #000; font-family: inherit; font-size: 0.8rem; }
-.flowpath .arrow { font-weight: 700; }
+.nav-links a:hover{ opacity: .88; transform: translateY(-1px) }
 
-.cta {
-    margin-top: 20px;
-    display: inline-flex; align-items: center; gap: 10px;
-    padding: 13px 28px;
-    border: none; border-radius: 9999px;
-    background: var(--accent); color: #000;
-    font-family: inherit; font-weight: 600; font-size: 0.95rem;
-    text-decoration: none; cursor: pointer;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+.status{
+  margin-left: auto; display: inline-flex; align-items: center; gap: 8px;
+  font-family: var(--font-mono); font-size: 11.5px; color: var(--ink);
+  background: #fff; border-radius: 999px; padding: 7px 14px;
 }
-.cta:hover { transform: scale(1.05); box-shadow: 0 12px 26px rgba(0, 0, 0, 0.2); }
+.ping{ position: relative; display: inline-block; width: 7px; height: 7px; border-radius: 999px; background: currentColor }
+.ping::after{
+  content: ''; position: absolute; inset: 0; border-radius: 999px;
+  background: currentColor; animation: ping 2.4s cubic-bezier(0,0,.2,1) infinite;
+}
+@keyframes ping{ 75%, 100%{ transform: scale(2.6); opacity: 0 } }
 
-/* ==========================================================
-   📄 CONTENT
-   ========================================================== */
-.content {
-    max-width: 1280px;
-    margin: 0 auto;
-    padding: 48px 16px 80px;
-    display: flex; flex-direction: column; gap: 24px;
+.pill-btn{
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 9px 16px; border: none; border-radius: 999px;
+  background: var(--accent); color: #000;
+  font-family: inherit; font-size: 13px; font-weight: 600; cursor: pointer;
+  transition: opacity .2s ease, transform .2s ease;
 }
-@media (min-width: 768px) { .content { padding: 64px 28px 100px; gap: 30px; } }
+.pill-btn:hover{ opacity: .92; transform: translateY(-1px) }
+.icon-16{ width: 16px; height: 16px; flex: none }
+.icon-20{ width: 20px; height: 20px; flex: none }
 
-.card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 28px;
-    padding: 22px;
-    box-shadow: var(--shadow);
-    scroll-margin-top: 84px;
+/* ══ MENU OVERLAY ══════════════════════════════════════════ */
+.overlay{ position: fixed; inset: 0; z-index: 60; visibility: hidden }
+.overlay.open{ visibility: visible }
+.backdrop{
+  position: absolute; inset: 0; background: rgba(0,0,0,.4);
+  backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+  opacity: 0; transition: opacity 500ms ease;
 }
-@media (min-width: 768px) { .card { padding: 32px; } }
+.overlay.open .backdrop{ opacity: 1 }
+.panel{
+  position: absolute; top: 0; right: 0; height: 100%; width: 100%;
+  background: linear-gradient(135deg, var(--menu-top) 0%, var(--menu-bottom) 100%);
+  transform: translateX(100%);
+  transition: transform 500ms cubic-bezier(.16, 1, .3, 1);
+  display: flex; flex-direction: column;
+}
+@media (min-width: 640px){ .panel{ width: 380px } }
+.overlay.open .panel{ transform: translateX(0) }
+.panel-head{ display: flex; align-items: center; justify-content: space-between; padding: 20px 24px }
+.close-btn{
+  width: 40px; height: 40px; display: inline-flex; align-items: center; justify-content: center;
+  border: none; border-radius: 999px; background: rgba(255,255,255,.35);
+  color: var(--ink); cursor: pointer; transition: background .2s ease;
+}
+.close-btn:hover{ background: rgba(255,255,255,.6) }
+.panel-items{ display: flex; flex-direction: column; gap: 10px; padding: 8px 24px; overflow-y: auto }
+.panel-items a{
+  display: block; padding: 15px 22px; font-size: 16px; font-weight: 600;
+  color: var(--ink); text-decoration: none; border-radius: var(--r-md);
+  background: rgba(255,255,255,.35);
+  opacity: 0; transform: translateY(16px);
+  transition: opacity 300ms ease, transform 300ms ease, background 300ms ease;
+  transition-delay: 0ms;
+}
+.panel-items a:hover{ background: rgba(255,255,255,.6) }
+.overlay.open .panel-items a{ opacity: 1; transform: translateY(0) }
+.panel-cta{ position: absolute; bottom: 0; left: 0; right: 0; padding: 24px; opacity: 0; transition: opacity 300ms ease }
+.overlay.open .panel-cta{ opacity: 1; transition-delay: 450ms }
+.panel-cta button{
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  width: 100%; padding: 16px 0; border: none; border-radius: 999px;
+  background: #fff; color: var(--ink);
+  font-family: inherit; font-weight: 600; font-size: 16px; cursor: pointer;
+  transition: transform .2s ease;
+}
+.panel-cta button:hover{ transform: scale(1.02) }
 
-.card h2 {
-    font-size: 1.2rem; font-weight: 700; letter-spacing: -0.01em;
-    margin-bottom: 6px; display: flex; align-items: center; gap: 10px;
+/* ══ HERO ══════════════════════════════════════════════════ */
+.hero{
+  position: relative;
+  min-height: 470px; height: 74vh; max-height: 680px;
+  overflow: hidden;
+  display: flex; flex-direction: column;
+  background: linear-gradient(to bottom, var(--hero-top) 0%, var(--hero-bottom) 100%);
 }
-@media (min-width: 768px) { .card h2 { font-size: 1.32rem; } }
-.card h2 .step {
-    display: inline-flex; align-items: center; justify-content: center;
-    width: 30px; height: 30px; flex: none;
-    border-radius: 9999px;
-    background: var(--accent); color: #000;
-    font-size: 0.9rem; font-weight: 700;
-    font-variant-numeric: tabular-nums;
+.bg-layer{
+  position: absolute; inset: 0; pointer-events: none; opacity: .8;
+  -webkit-mask-image: linear-gradient(to bottom, black 45%, transparent 94%);
+          mask-image: linear-gradient(to bottom, black 45%, transparent 94%);
 }
-.card .card-sub { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 22px; }
-
-/* ---- Dropzone ---- */
-.dropzone {
-    border: 2px dashed var(--accent);
-    border-radius: 22px;
-    background: var(--surface-2);
-    padding: 34px 20px;
-    text-align: center;
-    cursor: pointer;
-    transition: background 0.2s ease, transform 0.2s ease;
+.bg-center{ position: absolute; inset: 0; display: flex; align-items: center; justify-content: center }
+#bgWord{
+  font-family: Inter, var(--font-display); color: #fff; font-weight: 900;
+  line-height: 1; letter-spacing: -.06em; white-space: nowrap;
+  font-size: clamp(120px, 26vw, 460px);
+  transform: scale(1.15, 1); transform-origin: center;
 }
-.dropzone:hover, .dropzone.dragover { background: rgba(241, 101, 36, 0.10); transform: translateY(-2px); }
-.dropzone .big { font-size: 1.05rem; font-weight: 600; margin: 12px 0 6px; }
-.dropzone .small { font-size: 0.82rem; color: var(--text-muted); }
-.dropzone svg { color: var(--accent); }
-
-.filecard {
-    margin-top: 18px;
-    display: none;
-    gap: 14px;
-    align-items: center;
-    padding: 16px 18px;
-    border: 1px solid var(--border);
-    border-radius: 18px;
-    background: var(--surface-2);
+#bgOval{
+  background: #fff; border-radius: 999px;
+  height: 58%; width: clamp(140px, 21vw, 380px); transform-origin: center;
 }
-.filecard.show { display: flex; }
-.filecard .meta { flex: 1; min-width: 0; }
-.filecard .fname { font-weight: 600; word-break: break-all; }
-.filecard .fsize { font-size: 0.8rem; color: var(--text-muted); margin-top: 2px; }
-
-/* ---- ฟอร์ม ---- */
-.grid-opts { display: grid; grid-template-columns: 1fr; gap: 16px; }
-@media (min-width: 700px) { .grid-opts { grid-template-columns: repeat(2, 1fr); } }
-@media (min-width: 1024px) { .grid-opts { grid-template-columns: repeat(4, 1fr); } }
-
-.field-label { display: block; font-size: 0.8rem; font-weight: 600; color: var(--text-muted); margin-bottom: 7px; }
-input[type="text"], input[type="number"], select {
-    width: 100%;
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    padding: 11px 14px;
-    font-family: inherit;
-    font-size: 0.95rem;
-    background-color: var(--field-bg);
-    color: var(--text);
-    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+.hero-visual{
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  pointer-events: none; margin-top: -7vh;
 }
-select {
-    cursor: pointer;
-    appearance: none; -webkit-appearance: none;
-    background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23000000' d='M1 1l5 5 5-5'/%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: right 16px center;
-    padding-right: 40px;
-}
-input:focus, select:focus {
-    outline: none;
-    border-color: var(--accent);
-    box-shadow: 0 0 0 3px rgba(241, 101, 36, 0.22);
-}
-input::placeholder { color: var(--text-muted); opacity: 0.7; }
-
-.checks { margin-top: 22px; display: grid; grid-template-columns: 1fr; gap: 10px; }
-@media (min-width: 700px) { .checks { grid-template-columns: repeat(2, 1fr); } }
-.check {
-    display: flex; align-items: flex-start; gap: 12px;
-    padding: 13px 16px;
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    background: var(--surface-2);
-    cursor: pointer;
-    transition: background 0.2s ease;
-}
-.check:hover { background: rgba(241, 101, 36, 0.08); }
-.check input { flex: none; margin-top: 2px; }
-input[type="checkbox"] {
-    appearance: none; -webkit-appearance: none;
-    width: 20px; height: 20px;
-    border: 2px solid rgba(0, 0, 0, 0.3);
-    border-radius: 6px;
-    background: #fff;
-    display: grid; place-content: center;
-    cursor: pointer;
-    transition: background 0.15s ease, border-color 0.15s ease;
-}
-input[type="checkbox"]::before {
-    content: "";
-    width: 11px; height: 11px;
-    transform: scale(0);
-    transition: transform 0.15s cubic-bezier(0.2, 0.8, 0.2, 1);
-    box-shadow: inset 1em 1em #000;
-    clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%);
-}
-input[type="checkbox"]:checked { background: var(--accent); border-color: var(--accent); }
-input[type="checkbox"]:checked::before { transform: scale(1); }
-.check .txt { font-size: 0.9rem; font-weight: 500; }
-.check .hint { display: block; font-size: 0.78rem; color: var(--text-muted); font-weight: 400; margin-top: 2px; }
-
-button.action {
-    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-    background: var(--accent);
-    border: none; border-radius: 9999px;
-    color: #000;
-    font-family: inherit; font-weight: 600; font-size: 0.95rem;
-    padding: 14px 28px;
-    cursor: pointer;
-    transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
-}
-button.action:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 8px 18px rgba(241, 101, 36, 0.3); }
-button.action:disabled { opacity: 0.45; cursor: not-allowed; }
-button.action.outline { background: #fff; color: var(--text); border: 1px solid var(--border); }
-button.action.outline:hover:not(:disabled) { box-shadow: 0 8px 18px rgba(0, 0, 0, 0.1); }
-.btn-row { margin-top: 24px; display: flex; flex-wrap: wrap; gap: 12px; }
-
-/* ---- สรุปผล ---- */
-.stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 22px; }
-@media (min-width: 700px) { .stats { grid-template-columns: repeat(5, 1fr); } }
-.stat {
-    padding: 16px 18px;
-    border: 1px solid var(--border);
-    border-radius: 18px;
-    background: var(--surface-2);
-}
-.stat .n { font-size: 1.5rem; font-weight: 800; font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
-.stat .l { font-size: 0.78rem; color: var(--text-muted); margin-top: 3px; }
-.stat.ok { border-color: rgba(23, 104, 60, 0.5); }
-.stat.cut { border-color: rgba(163, 32, 20, 0.45); }
-.stat.dup { border-color: rgba(138, 82, 0, 0.5); }
-
-.table-wrapper {
-    max-height: 460px;
-    overflow: auto;
-    border-radius: 20px;
-    border: 1px solid var(--border);
-    background: var(--surface-2);
-}
-.table-wrapper::-webkit-scrollbar { width: 9px; height: 9px; }
-.table-wrapper::-webkit-scrollbar-track { background: transparent; }
-.table-wrapper::-webkit-scrollbar-thumb { background: rgba(241, 101, 36, 0.4); border-radius: 10px; }
-table { border-collapse: collapse; font-size: 0.82rem; text-align: left; white-space: nowrap; }
-th, td { padding: 9px 14px; border-bottom: 1px solid var(--border); }
-th {
-    position: sticky; top: 0;
-    background: #FFEEE2;
-    font-weight: 700;
-    font-size: 0.76rem;
-    z-index: 10;
-}
-td { font-variant-numeric: tabular-nums; }
-tbody tr:nth-child(even) { background: rgba(0, 0, 0, 0.025); }
-tbody tr:hover { background: rgba(241, 101, 36, 0.10); }
-.rowno { color: var(--text-muted); font-variant-numeric: tabular-nums; }
-
-.empty {
-    padding: 40px 20px;
-    text-align: center;
-    color: var(--text-muted);
-    font-size: 0.9rem;
+#heroArt{ width: min(29vh, 56vw); height: auto; animation: floaty 6s ease-in-out infinite }
+@keyframes floaty{
+  0%, 100%{ transform: translateY(-8px) rotate(-1deg) }
+  50%     { transform: translateY(8px) rotate(1deg) }
 }
 
-/* ---- Log ---- */
-.log {
-    max-height: 300px;
-    overflow: auto;
-    border: 1px solid var(--border);
-    border-radius: 18px;
-    background: var(--surface-2);
-    padding: 14px 16px;
-    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
-    font-size: 0.78rem;
-    line-height: 1.75;
+.hero-bottom{
+  position: relative; z-index: 30; margin-top: auto;
+  padding: 0 20px 30px;
+  display: flex; flex-direction: column; align-items: center; text-align: center;
 }
-.log .t { color: var(--text-muted); }
-.log .ok { color: var(--success); font-weight: 600; }
-.log .warn { color: var(--warn); font-weight: 600; }
-.log .err { color: var(--danger); font-weight: 600; }
+.eyebrow{
+  display: inline-flex; align-items: center; gap: 9px;
+  padding: 6px 14px 6px 8px; border-radius: 999px;
+  background: #fff; font-size: 12.5px; color: var(--ink); margin-bottom: 18px;
+}
+.eyebrow .tag{
+  display: inline-flex; align-items: center; gap: 6px;
+  background: var(--accent-soft); color: var(--ink);
+  border-radius: 999px; padding: 2px 9px;
+  font-family: var(--font-mono); font-size: 10.5px; text-transform: uppercase;
+}
+h1{
+  font-family: var(--font-display);
+  font-size: clamp(1.5rem, 4vw, 2.5rem);
+  font-weight: 700; line-height: 1.25; letter-spacing: -.02em; color: var(--ink);
+}
+.sub{
+  margin: 10px auto 0; max-width: 62ch;
+  font-size: 14.5px; color: var(--ink); line-height: 1.65;
+}
+.pipeline{
+  margin-top: 16px; display: inline-flex; flex-wrap: wrap; gap: 8px;
+  justify-content: center; align-items: center;
+  font-family: var(--font-mono); font-size: 11.5px; color: var(--ink);
+}
+.pipeline code{ background: #fff; border-radius: 999px; padding: 5px 13px; color: var(--ink); font-weight: 500 }
+.pipeline code.final{ background: var(--accent); font-family: var(--font-sans); font-weight: 600; font-size: 12px }
 
-.note {
-    margin-top: 16px;
-    padding: 14px 16px;
-    border-radius: 16px;
-    background: rgba(241, 101, 36, 0.10);
-    border: 1px solid rgba(241, 101, 36, 0.28);
-    font-size: 0.84rem;
+.cta{
+  margin-top: 20px; display: inline-flex; align-items: center; gap: 10px;
+  padding: 13px 28px; border: none; border-radius: 999px;
+  background: var(--accent); color: #000;
+  font-family: inherit; font-weight: 600; font-size: 15px;
+  text-decoration: none; cursor: pointer;
+  transition: transform .2s ease, box-shadow .2s ease;
 }
+.cta:hover{ transform: scale(1.05); box-shadow: 0 12px 26px rgba(0,0,0,.2) }
 
-.foot { text-align: center; padding: 0 20px 44px; font-size: 0.8rem; color: var(--text-muted); }
+/* ══ SHELL / CARD ══════════════════════════════════════════ */
+.shell{ position: relative; z-index: 1; max-width: 1180px; margin: 0 auto; padding: 48px 16px 80px }
+@media (min-width: 768px){ .shell{ padding: 64px 28px 100px } }
 
-a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible {
-    outline: 3px solid var(--accent);
-    outline-offset: 2px;
+.card{
+  position: relative;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  padding: 24px 22px 26px;
+  margin-bottom: 22px;
+  box-shadow: 0 12px 34px rgba(140, 70, 25, .10);
+  scroll-margin-top: 88px;
 }
-@media (prefers-reduced-motion: reduce) {
-    html { scroll-behavior: auto; }
-    *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+@media (min-width: 768px){ .card{ padding: 30px 32px 32px } }
+
+.card-head{ display: flex; align-items: center; gap: 11px; margin-bottom: 6px; flex-wrap: wrap }
+.card-head h2{ font-family: var(--font-display); font-size: 19px; font-weight: 700; letter-spacing: -.015em }
+.step-pill{
+  font-family: var(--font-mono); font-size: 10.5px; font-weight: 700;
+  text-transform: uppercase; color: var(--ink);
+  background: var(--accent-soft); border: 1px solid rgba(241,101,36,.4);
+  padding: 3px 10px; border-radius: 999px;
 }
-@keyframes slideIn {
-    from { transform: translateX(120%); opacity: 0; }
-    to   { transform: translateX(0); opacity: 1; }
+.step-pill.running{ background: rgba(241,101,36,.24); border-color: var(--accent) }
+.step-pill.done{ background: rgba(23,104,60,.14); border-color: rgba(23,104,60,.45) }
+.card-note{ color: var(--muted); font-size: 13.5px; line-height: 1.7; margin-bottom: 22px; max-width: 78ch }
+
+/* ══ DROPZONES ═════════════════════════════════════════════
+   ⚠️ class .dragover / .filled และ id ทั้งหมดในบล็อกนี้
+      ถูก app.js เรียกใช้ — ห้ามเปลี่ยนชื่อ
+   ═════════════════════════════════════════════════════════ */
+.zones{ display: grid; grid-template-columns: repeat(auto-fit, minmax(272px, 1fr)); gap: 14px }
+
+.zone{
+  position: relative; display: block; cursor: pointer;
+  padding: 20px 18px;
+  border: 2px dashed rgba(241,101,36,.55);
+  border-radius: var(--r-md);
+  background: var(--raised);
+  transition: border-color .2s ease, background .2s ease, transform .2s ease;
+}
+.zone:hover{ border-color: var(--line-hi); background: rgba(241,101,36,.09); transform: translateY(-2px) }
+.zone.dragover{ border-style: solid; border-color: var(--accent); background: rgba(241,101,36,.14) }
+.zone.filled{ border-style: solid; border-color: rgba(23,104,60,.5); background: rgba(23,104,60,.06) }
+
+.zone input[type=file]{ position: absolute; inset: 0; opacity: 0; cursor: pointer }
+
+.zone-top{ display: flex; align-items: center; gap: 10px; margin-bottom: 9px }
+.zone-ico{
+  width: 34px; height: 34px; flex: none; border-radius: var(--r-sm);
+  display: grid; place-items: center; font-size: 16px;
+  background: var(--accent-soft); border: 1px solid rgba(241,101,36,.35);
+}
+.zone.filled .zone-ico{ background: rgba(23,104,60,.12); border-color: rgba(23,104,60,.35) }
+.zone-title{ font-family: var(--font-display); font-size: 14.5px; font-weight: 700; letter-spacing: -.01em }
+.zone-req{ color: var(--deny); font-size: 11px; margin-left: 3px }
+.zone-hint{ font-size: 12.5px; color: var(--muted); line-height: 1.6 }
+.zone-file{
+  margin-top: 10px; font-family: var(--font-mono); font-size: 11.5px;
+  color: var(--affirm); font-weight: 500; word-break: break-all; line-height: 1.55; white-space: pre-line;
+}
+.zone-file:empty{ display: none }
+.zone-meta{ margin-top: 5px; font-family: var(--font-mono); font-size: 11px; color: var(--faint) }
+.zone-meta:empty{ display: none }
+
+/* ══ OPTIONS ═══════════════════════════════════════════════ */
+.opts{ display: grid; grid-template-columns: repeat(auto-fit, minmax(296px, 1fr)); gap: 10px; margin-top: 22px }
+.opt{
+  display: flex; gap: 12px; align-items: flex-start;
+  padding: 13px 15px; cursor: pointer;
+  background: var(--raised); border: 1px solid var(--line);
+  border-radius: var(--r-sm); transition: border-color .16s ease, background .16s ease;
+}
+.opt:hover{ border-color: var(--line-hi); background: rgba(241,101,36,.08) }
+.opt input{ margin-top: 3px; width: 18px; height: 18px; flex: none; accent-color: var(--accent); cursor: pointer }
+.opt-txt strong{ display: block; font-size: 13.5px; font-weight: 600; margin-bottom: 2px }
+.opt-txt span{ font-size: 12px; color: var(--muted); line-height: 1.55 }
+
+/* ══ BUTTONS ═══════════════════════════════════════════════ */
+.actions{ display: flex; gap: 10px; flex-wrap: wrap; margin-top: 24px }
+button{
+  font-family: var(--font-sans); font-size: 14px; font-weight: 600;
+  border: none; cursor: pointer; border-radius: 999px;
+  padding: 12px 22px; transition: all .16s ease;
+}
+button:disabled{ opacity: .38; cursor: not-allowed }
+.btn-primary{ background: var(--accent); color: #000 }
+.btn-primary:not(:disabled):hover{ transform: translateY(-1px); box-shadow: 0 8px 20px rgba(241,101,36,.36) }
+.btn-ghost{ background: #fff; color: var(--ink); border: 1px solid var(--line) }
+.btn-ghost:not(:disabled):hover{ border-color: var(--line-hi); box-shadow: 0 8px 18px rgba(0,0,0,.10) }
+
+/* ══ PROGRESS ══════════════════════════════════════════════
+   #progressCard / #resultCard ถูก app.js สั่ง style.display='block'
+   จึงต้องจัด layout ด้วย element ข้างในเท่านั้น
+   ห้ามพึ่ง flex/grid ที่ตัว section เอง                        */
+#progressCard{ display: none }
+#resultCard  { display: none }
+
+.bar{ height: 8px; border-radius: 999px; background: rgba(0,0,0,.08); overflow: hidden; margin: 16px 0 10px }
+.bar-fill{
+  height: 100%; width: 0%; border-radius: 999px;
+  background: linear-gradient(90deg, var(--accent), var(--hero-bottom));
+  transition: width .25s ease;
+}
+.bar-label{ display: flex; justify-content: space-between; font-family: var(--font-mono); font-size: 12px; color: var(--muted) }
+.bar-label b{ color: var(--ink); font-weight: 700; font-variant-numeric: tabular-nums }
+
+/* ══ STAT TILES ════════════════════════════════════════════
+   app.js สร้าง <div class="stat ok|warn|err"><div class="k">…<div class="v">…
+   ใช้แถบสีซ้ายบอกสถานะ ตัวเลขคงเป็นสีดำเพื่อให้อ่านง่ายที่สุด   */
+.stats{ display: grid; grid-template-columns: repeat(auto-fit, minmax(152px, 1fr)); gap: 10px; margin: 8px 0 22px }
+.stat{
+  background: var(--raised); border: 1px solid var(--line);
+  border-left: 4px solid var(--faint);
+  border-radius: var(--r-sm); padding: 14px 16px;
+}
+.stat .k{ font-family: var(--font-mono); font-size: 10.5px; color: var(--muted); margin-bottom: 5px; line-height: 1.4 }
+.stat .v{
+  font-family: var(--font-display); font-size: 24px; font-weight: 800;
+  letter-spacing: -.02em; font-variant-numeric: tabular-nums; line-height: 1.1; color: var(--ink);
+}
+.stat.ok  { border-left-color: var(--affirm) }
+.stat.warn{ border-left-color: var(--forage) }
+.stat.err { border-left-color: var(--deny) }
+
+/* ══ LOG ═══════════════════════════════════════════════════
+   app.js ใส่ class 'i' | 's' | 'w' | 'e' ให้แต่ละบรรทัด       */
+.log{
+  max-height: 320px; overflow-y: auto;
+  background: var(--raised); border: 1px solid var(--line);
+  border-radius: var(--r-md); padding: 14px 16px;
+  font-family: var(--font-mono); font-size: 12px; line-height: 1.85;
+  color: var(--ink);
+}
+.log div{
+  white-space: pre-wrap; word-break: break-word;
+  padding-left: 11px; border-left: 3px solid transparent;
+}
+.log .i{ border-left-color: rgba(0,0,0,.28) }
+.log .s{ color: var(--affirm); border-left-color: var(--affirm); font-weight: 500 }
+.log .w{ color: var(--forage); border-left-color: var(--forage); font-weight: 500 }
+.log .e{ color: var(--deny);   border-left-color: var(--deny);   font-weight: 500 }
+.log::-webkit-scrollbar{ width: 9px }
+.log::-webkit-scrollbar-track{ background: transparent }
+.log::-webkit-scrollbar-thumb{ background: rgba(241,101,36,.4); border-radius: 999px }
+
+/* ══ FOOTER ════════════════════════════════════════════════ */
+footer{
+  margin-top: 10px; padding-top: 22px; border-top: 1px solid var(--line);
+  display: flex; flex-wrap: wrap; gap: 10px 20px; align-items: center;
+  font-family: var(--font-mono); font-size: 11.5px; color: var(--muted);
+}
+footer .right{ margin-left: auto; display: inline-flex; align-items: center; gap: 8px }
+
+@media (prefers-reduced-motion: reduce){
+  html{ scroll-behavior: auto }
+  *, *::before, *::after{
+    animation-duration: .001ms !important; animation-iteration-count: 1 !important;
+    transition-duration: .001ms !important;
+  }
 }
 </style>
 </head>
 
 <body>
 
-<!-- ===================== NAV ===================== -->
-<nav class="nav" id="mainNav">
-    <a class="logo" href="#top">
-        <div class="logo-dots"><span></span><span></span><span></span><span></span></div>
-        <span class="logo-text">CICM Asset</span>
+<!-- ══ NAV ══════════════════════════════════════════════════ -->
+<header class="topbar" id="mainNav">
+  <div class="topbar-in">
+    <a class="brand" href="#top">
+      <div class="logo-dots"><span></span><span></span><span></span><span></span></div>
+      <span class="brand-name">ครุภัณฑ์ CICM</span>
+      <span class="brand-sub">Web Edition 5.0</span>
     </a>
 
-    <div class="nav-links">
-        <a href="#sec-upload">อัปโหลดไฟล์</a>
-        <a href="#sec-options">ตั้งค่าการแปลง</a>
-        <a href="#sec-result">ผลลัพธ์</a>
-        <a href="#sec-log">บันทึกการทำงาน</a>
-    </div>
+    <nav class="nav-links">
+      <a href="#sec-upload">ไฟล์ต้นทาง</a>
+      <a href="#sec-result">ผลลัพธ์</a>
+      <a href="#sec-log">Log</a>
+    </nav>
 
-    <div class="nav-actions">
-        <button class="pill-btn ghost" onclick="resetAll()" title="ล้างข้อมูลทั้งหมด">
-            <svg class="icon-16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>
-            <span class="label">เริ่มใหม่</span>
-        </button>
-        <button class="pill-btn" id="menuBtn" aria-label="เปิดเมนู" aria-expanded="false" aria-controls="menuOverlay">
-            <svg class="icon-16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></svg>
-            <span class="label">เมนู</span>
-        </button>
-    </div>
-</nav>
+    <span class="status">
+      <span class="ping" style="color:#17683C"></span>
+      ประมวลผลในเครื่อง
+    </span>
 
-<!-- ===================== HERO ===================== -->
-<header class="hero" id="top">
-    <div class="bg-layer">
-        <div class="bg-center"><div id="bgWord">ASSET</div></div>
-        <div class="bg-center"><div id="bgOval"></div></div>
-    </div>
-
-    <div class="hero-visual">
-        <svg id="heroArt" viewBox="0 0 320 320" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="ภาพประกอบการแปลงไฟล์ทะเบียนครุภัณฑ์">
-            <ellipse cx="160" cy="290" rx="86" ry="12" fill="#000" opacity="0.10"/>
-            <rect x="42" y="70" width="118" height="156" rx="14" fill="#fff"/>
-            <rect x="62" y="104" width="72" height="9" rx="4.5" fill="#FFC9A3"/>
-            <rect x="62" y="126" width="60" height="9" rx="4.5" fill="#FFE3CF"/>
-            <rect x="62" y="148" width="78" height="9" rx="4.5" fill="#FFE3CF"/>
-            <rect x="62" y="170" width="54" height="9" rx="4.5" fill="#FFE3CF"/>
-            <rect x="160" y="94" width="118" height="156" rx="14" fill="#fff"/>
-            <rect x="180" y="128" width="72" height="9" rx="4.5" fill="#FFC9A3"/>
-            <rect x="180" y="150" width="60" height="9" rx="4.5" fill="#FFE3CF"/>
-            <rect x="180" y="172" width="78" height="9" rx="4.5" fill="#FFE3CF"/>
-            <circle cx="160" cy="160" r="42" fill="#fff"/>
-            <circle cx="160" cy="160" r="42" stroke="#F16524" stroke-width="10" fill="none"/>
-            <path d="M142 160h34m0 0-12-12m12 12-12 12" stroke="#F16524" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-    </div>
-
-    <div class="hero-bottom">
-        <h1>ระบบจัดการครุภัณฑ์ CICM</h1>
-        <p class="sub">แปลงจาก Google Apps Script v4.1 → Vanilla JS + SheetJS</p>
-
-        <div class="flowpath">
-            <span class="chip">data</span>
-            <span class="arrow">→</span>
-            <span class="chip">information</span>
-            <span class="arrow">→</span>
-            <span class="chip final">3.ทะเบียนรายการครุภัณฑ์ CICM</span>
-        </div>
-
-        <a class="cta" href="#sec-upload">
-            เริ่มแปลงไฟล์
-            <svg class="icon-16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14"/><path d="m19 12-7 7-7-7"/></svg>
-        </a>
-    </div>
+    <button class="pill-btn" id="menuBtn" aria-label="เปิดเมนู" aria-expanded="false" aria-controls="menuOverlay">
+      <svg class="icon-16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></svg>
+    </button>
+  </div>
 </header>
 
-<!-- ===================== CONTENT ===================== -->
-<main class="content">
+<!-- ══ HERO ═════════════════════════════════════════════════ -->
+<section class="hero" id="top">
+  <div class="bg-layer">
+    <div class="bg-center"><div id="bgWord">ASSET</div></div>
+    <div class="bg-center"><div id="bgOval"></div></div>
+  </div>
 
-    <!-- 1. อัปโหลด -->
-    <section id="sec-upload" class="card">
-        <h2><span class="step">1</span> อัปโหลดไฟล์ต้นทาง</h2>
-        <p class="card-sub">ประมวลผลในเครื่องคุณทั้งหมด ไฟล์ไม่ถูกส่งขึ้นเซิร์ฟเวอร์ใด ๆ · รองรับ .xlsx .xlsm .xls .csv</p>
+  <div class="hero-visual">
+    <svg id="heroArt" viewBox="0 0 320 320" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="ภาพประกอบการรวมไฟล์เป็นทะเบียนครุภัณฑ์">
+      <ellipse cx="160" cy="292" rx="88" ry="12" fill="#000" opacity=".10"/>
+      <rect x="30" y="52" width="96" height="66" rx="12" fill="#fff"/>
+      <rect x="46" y="74" width="52" height="8" rx="4" fill="#FFC9A3"/>
+      <rect x="46" y="92" width="40" height="8" rx="4" fill="#FFE3CF"/>
+      <rect x="30" y="130" width="96" height="66" rx="12" fill="#fff"/>
+      <rect x="46" y="152" width="52" height="8" rx="4" fill="#FFC9A3"/>
+      <rect x="46" y="170" width="40" height="8" rx="4" fill="#FFE3CF"/>
+      <rect x="30" y="208" width="96" height="66" rx="12" fill="#fff"/>
+      <rect x="46" y="230" width="52" height="8" rx="4" fill="#FFC9A3"/>
+      <rect x="46" y="248" width="40" height="8" rx="4" fill="#FFE3CF"/>
+      <path d="M136 85h28a12 12 0 0 1 12 12v54M136 163h40M136 241h28a12 12 0 0 0 12-12v-54" stroke="#F16524" stroke-width="7" stroke-linecap="round" fill="none"/>
+      <rect x="196" y="96" width="98" height="128" rx="14" fill="#fff"/>
+      <rect x="214" y="126" width="62" height="9" rx="4.5" fill="#FFC9A3"/>
+      <rect x="214" y="148" width="50" height="9" rx="4.5" fill="#FFE3CF"/>
+      <rect x="214" y="170" width="58" height="9" rx="4.5" fill="#FFE3CF"/>
+      <circle cx="266" cy="200" r="24" fill="#fff"/>
+      <circle cx="266" cy="200" r="24" stroke="#F16524" stroke-width="7" fill="none"/>
+      <path d="M256 200l7 8 14-16" stroke="#F16524" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </div>
 
-        <div class="dropzone" id="dropzone" tabindex="0" role="button" aria-label="เลือกไฟล์หรือลากไฟล์มาวาง">
-            <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5-5 5 5"/><path d="M12 5v12"/></svg>
-            <div class="big">ลากไฟล์มาวาง หรือคลิกเพื่อเลือก</div>
-            <div class="small">ไฟล์ทะเบียนครุภัณฑ์จากระบบ ERP / Google Sheets</div>
-        </div>
-        <input type="file" id="fileInput" accept=".xlsx,.xlsm,.xls,.csv" style="display:none">
-
-        <div class="filecard" id="fileCard">
-            <svg class="icon-20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7z"/><path d="M14 2v6h6"/></svg>
-            <div class="meta">
-                <div class="fname" id="fileName"></div>
-                <div class="fsize" id="fileMeta"></div>
-            </div>
-        </div>
-    </section>
-
-    <!-- 2. ตั้งค่า -->
-    <section id="sec-options" class="card">
-        <h2><span class="step">2</span> ตั้งค่าการแปลง</h2>
-        <p class="card-sub">ค่าตั้งต้นตามสคริปต์เดิม — ชีต 2.1 อ่าน 44 คอลัมน์เริ่มแถว 6 · ชีต 2.2 อ่าน 36 คอลัมน์เริ่มแถว 4</p>
-
-        <div class="grid-opts">
-            <div>
-                <label class="field-label" for="presetSelect">รูปแบบต้นทาง</label>
-                <select id="presetSelect">
-                    <option value="21">ชีต 2.1 — 44 คอลัมน์ เริ่มแถว 6</option>
-                    <option value="22">ชีต 2.2 — 36 คอลัมน์ เริ่มแถว 4</option>
-                    <option value="auto">ตรวจหัวตารางอัตโนมัติ</option>
-                    <option value="custom">กำหนดเอง</option>
-                </select>
-            </div>
-            <div>
-                <label class="field-label" for="sheetSelect">ชีตต้นทาง</label>
-                <select id="sheetSelect"><option value="">— ยังไม่ได้เลือกไฟล์ —</option></select>
-            </div>
-            <div>
-                <label class="field-label" for="headerRow">แถวหัวตาราง</label>
-                <input type="number" id="headerRow" min="1" value="6">
-            </div>
-            <div>
-                <label class="field-label" for="colCount">จำนวนคอลัมน์</label>
-                <input type="number" id="colCount" min="1" value="44">
-            </div>
-        </div>
-
-        <div class="grid-opts" style="margin-top:16px;">
-            <div style="grid-column: 1 / -1;">
-                <label class="field-label" for="targetSheet">ชื่อชีตปลายทาง</label>
-                <input type="text" id="targetSheet" value="3.ทะเบียนรายการครุภัณฑ์ CICM">
-            </div>
-        </div>
-
-        <div class="checks">
-            <label class="check"><input type="checkbox" id="optEmpty" checked>
-                <span class="txt">ตัดแถวว่าง<span class="hint">แถวที่ไม่มีข้อมูลเลยสักคอลัมน์</span></span></label>
-
-            <label class="check"><input type="checkbox" id="optDupHeader" checked>
-                <span class="txt">ตัดหัวตารางซ้ำที่ปนมาในข้อมูล<span class="hint">ปัญหาที่พบบ่อยในไฟล์ส่งออกจาก ERP</span></span></label>
-
-            <label class="check"><input type="checkbox" id="optTrim" checked>
-                <span class="txt">ตัดช่องว่างหัว-ท้ายทุกช่อง<span class="hint">แก้ปัญหาคอลัมน์เลื่อนและค่าที่มีเว้นวรรคเกิน</span></span></label>
-
-            <label class="check"><input type="checkbox" id="optDedup" checked>
-                <span class="txt">ตัดรายการซ้ำตามเลขครุภัณฑ์<span class="hint">เก็บรายการแรกที่พบ</span></span></label>
-
-            <label class="check"><input type="checkbox" id="optBE" checked>
-                <span class="txt">แปลงปีเป็น พ.ศ.<span class="hint">ค่าวันที่ที่เป็น ค.ศ. จะบวก 543 ให้อัตโนมัติ</span></span></label>
-
-            <label class="check"><input type="checkbox" id="optNum" checked>
-                <span class="txt">จัดรูปแบบตัวเลขเป็น #,##0.00<span class="hint">ใช้กับคอลัมน์ที่เป็นตัวเลขล้วนตอนส่งออก .xlsx</span></span></label>
-        </div>
-
-        <div class="btn-row">
-            <button class="action" id="runBtn" disabled>
-                <svg class="icon-20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
-                แปลงข้อมูล
-            </button>
-            <button class="action outline" onclick="resetAll()">ล้างค่าทั้งหมด</button>
-        </div>
-    </section>
-
-    <!-- 3. ผลลัพธ์ -->
-    <section id="sec-result" class="card">
-        <h2><span class="step">3</span> ผลลัพธ์</h2>
-        <p class="card-sub">ตรวจข้อมูลก่อนดาวน์โหลด — ตารางแสดงตัวอย่าง 200 แถวแรก</p>
-
-        <div class="stats">
-            <div class="stat"><div class="n" id="statRead">0</div><div class="l">แถวที่อ่านมา</div></div>
-            <div class="stat ok"><div class="n" id="statPass">0</div><div class="l">แถวที่ผ่าน</div></div>
-            <div class="stat cut"><div class="n" id="statEmpty">0</div><div class="l">แถวว่าง/หัวซ้ำ</div></div>
-            <div class="stat dup"><div class="n" id="statDup">0</div><div class="l">รายการซ้ำ</div></div>
-            <div class="stat"><div class="n" id="statCols">0</div><div class="l">คอลัมน์</div></div>
-        </div>
-
-        <div class="grid-opts" style="margin-bottom:16px;">
-            <div style="grid-column: 1 / -1;">
-                <label class="field-label" for="previewSearch">ค้นหาในผลลัพธ์</label>
-                <input type="text" id="previewSearch" placeholder="พิมพ์เลขครุภัณฑ์ ชื่อรายการ หรือหน่วยงาน..." oninput="renderPreview()">
-            </div>
-        </div>
-
-        <div class="table-wrapper">
-            <table id="previewTable">
-                <thead id="previewHead"></thead>
-                <tbody id="previewBody"></tbody>
-            </table>
-            <div class="empty" id="previewEmpty">ยังไม่มีผลลัพธ์ — อัปโหลดไฟล์แล้วกด "แปลงข้อมูล"</div>
-        </div>
-
-        <div class="btn-row">
-            <button class="action" id="dlXlsx" disabled>
-                <svg class="icon-20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>
-                ดาวน์โหลด .xlsx
-            </button>
-            <button class="action outline" id="dlCsv" disabled>ดาวน์โหลด .csv</button>
-            <button class="action outline" id="copyTsv" disabled>คัดลอกไปวางใน Google Sheets</button>
-        </div>
-
-        <div class="note" id="dlNote" style="display:none;">
-            หมายเหตุ: หน้านี้เปิดผ่านตัวอย่างในแชต การดาวน์โหลดจะถูกบล็อก — ให้ใช้ปุ่ม "คัดลอกไปวางใน Google Sheets" แทน
-            หรือเปิดจากไฟล์จริง/GitHub Pages แล้วปุ่มดาวน์โหลดจะทำงานตามปกติ
-        </div>
-    </section>
-
-    <!-- 4. บันทึกการทำงาน -->
-    <section id="sec-log" class="card">
-        <h2><span class="step">4</span> บันทึกการทำงาน</h2>
-        <p class="card-sub">ไล่ดูได้ว่าแต่ละขั้นตอนตัดอะไรออกไปบ้าง</p>
-        <div class="log" id="logBox"><span class="t">[พร้อมใช้งาน]</span> รอเลือกไฟล์</div>
-        <div class="btn-row">
-            <button class="action outline" onclick="copyLog()">คัดลอกบันทึก</button>
-            <button class="action outline" onclick="clearLog()">ล้างบันทึก</button>
-        </div>
-    </section>
-</main>
-
-<p class="foot">งานคลังและพัสดุ · วิทยาลัยแพทยศาสตร์นานาชาติจุฬาภรณ์</p>
-
-<!-- ===================== MENU OVERLAY ===================== -->
-<div class="overlay" id="menuOverlay" role="dialog" aria-modal="true" aria-label="เมนูหลัก">
-    <div class="backdrop" id="backdrop"></div>
-    <div class="panel">
-        <div class="panel-head">
-            <div class="logo">
-                <div class="logo-dots"><span></span><span></span><span></span><span></span></div>
-                <span class="logo-text">CICM Asset</span>
-            </div>
-            <button class="close-btn" id="closeBtn" aria-label="ปิดเมนู">
-                <svg class="icon-20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-            </button>
-        </div>
-
-        <div class="panel-items" id="panelItems">
-            <a href="#sec-upload">1 · อัปโหลดไฟล์ต้นทาง</a>
-            <a href="#sec-options">2 · ตั้งค่าการแปลง</a>
-            <a href="#sec-result">3 · ผลลัพธ์</a>
-            <a href="#sec-log">4 · บันทึกการทำงาน</a>
-        </div>
-
-        <div class="panel-cta">
-            <button onclick="resetAll(); setMenu(false);">
-                <svg class="icon-20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>
-                เริ่มใหม่ทั้งหมด
-            </button>
-        </div>
+  <div class="hero-bottom">
+    <div class="eyebrow">
+      <span class="tag"><span class="ping" style="color:#17683C"></span>Client-side</span>
+      ไม่มีการอัปโหลดข้อมูลขึ้นเซิร์ฟเวอร์
     </div>
+
+    <h1>ระบบจัดการครุภัณฑ์ CICM</h1>
+
+    <p class="sub">
+      แปลงจาก Google Apps Script v4.1 → Vanilla JS + SheetJS
+      ทะเบียนสินทรัพย์ ERP รวมกับข้อมูลครุภัณฑ์ดิบ แล้วออกเป็นไฟล์ Excel 75 คอลัมน์
+    </p>
+
+    <div class="pipeline">
+      <code>data</code> <span>→</span> <code>information</code> <span>→</span>
+      <code class="final">3.ทะเบียนรายการครุภัณฑ์ CICM</code>
+    </div>
+
+    <a class="cta" href="#sec-upload">
+      เริ่มอัปโหลดไฟล์
+      <svg class="icon-16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14"/><path d="m19 12-7 7-7-7"/></svg>
+    </a>
+  </div>
+</section>
+
+<div class="shell">
+
+  <!-- ══ STEP 1 — ไฟล์ต้นทาง ══════════════════════════════ -->
+  <section class="card" id="sec-upload">
+    <div class="card-head">
+      <span class="step-pill">Step 1</span>
+      <h2>อัปโหลดไฟล์ต้นทาง</h2>
+    </div>
+    <p class="card-note">
+      รองรับ <code>.xlsx</code> <code>.xlsm</code> <code>.xls</code> <code>.csv</code> —
+      ไฟล์ทั้งหมดถูกอ่านในเบราว์เซอร์ด้วย <code>FileReader</code> + <code>SheetJS</code> เท่านั้น
+    </p>
+
+    <div class="zones">
+
+      <label class="zone" id="zone-data">
+        <input type="file" id="file-data" accept=".xlsx,.xlsm,.xls,.csv">
+        <div class="zone-top">
+          <div class="zone-ico">📄</div>
+          <div class="zone-title">1. data<span class="zone-req">*</span></div>
+        </div>
+        <div class="zone-hint">ข้อมูลครุภัณฑ์ดิบ 33 คอลัมน์ (id → istatus)</div>
+        <div class="zone-file" id="name-data"></div>
+        <div class="zone-meta" id="meta-data"></div>
+      </label>
+
+      <label class="zone" id="zone-image">
+        <input type="file" id="file-image" accept=".xlsx,.xlsm,.xls,.csv">
+        <div class="zone-top">
+          <div class="zone-ico">🖼️</div>
+          <div class="zone-title">2. รูปภาพ <span style="font-size:11px;font-weight:500;color:#6B594C">(ไม่บังคับ)</span></div>
+        </div>
+        <div class="zone-hint">คอลัมน์ B = ลำดับ (key) · คอลัมน์ G = URL หรือชื่อไฟล์</div>
+        <div class="zone-file" id="name-image"></div>
+        <div class="zone-meta" id="meta-image"></div>
+      </label>
+
+      <label class="zone" id="zone-erp">
+        <input type="file" id="file-erp" accept=".xlsx,.xlsm,.xls,.csv" multiple>
+        <div class="zone-top">
+          <div class="zone-ico">🏛️</div>
+          <div class="zone-title">3. ทะเบียนสินทรัพย์ (ERP)<span class="zone-req">*</span></div>
+        </div>
+        <div class="zone-hint">
+          เลือกได้ทั้ง <b>ไฟล์รวม 44 คอลัมน์</b> หรือ <b>RP023 + RP015 ดิบ</b> —
+          ระบบตรวจหัวตารางให้อัตโนมัติ (เลือกได้หลายไฟล์)
+        </div>
+        <div class="zone-file" id="name-erp"></div>
+        <div class="zone-meta" id="meta-erp"></div>
+      </label>
+
+    </div>
+
+    <div class="opts">
+      <label class="opt">
+        <input type="checkbox" id="opt-skip-header" checked>
+        <div class="opt-txt"><strong>ข้ามแถวหัวตารางของชีต data</strong>
+          <span>GAS เดิมไม่ข้าม ทำให้หัวตารางกลายเป็นข้อมูลแถวแรก</span></div>
+      </label>
+      <label class="opt">
+        <input type="checkbox" id="opt-drop-total" checked>
+        <div class="opt-txt"><strong>คัดแถวยอดรวมออกจาก ERP</strong>
+          <span>แถวที่ไม่มีรหัสสินทรัพย์ในรายงาน RP023/RP015 (ปกติ 15 แถว)</span></div>
+      </label>
+      <label class="opt">
+        <input type="checkbox" id="opt-calc-dep" checked>
+        <div class="opt-txt"><strong>คำนวณค่าเสื่อม (5)(6)(7) ให้ ERP</strong>
+          <span>ต้นฉบับเว้นว่างเพราะเป็นสูตรที่ไม่ถูกคำนวณ</span></div>
+      </label>
+      <label class="opt">
+        <input type="checkbox" id="opt-native-dates" checked>
+        <div class="opt-txt"><strong>เขียนวันที่ ค.ศ. เป็นวันที่จริงของ Excel</strong>
+          <span>Sort/Filter ตามเวลาได้ · คอลัมน์ที่เป็น พ.ศ. คงเป็นข้อความเสมอ กันเพี้ยน 543 ปี</span></div>
+      </label>
+      <label class="opt">
+        <input type="checkbox" id="opt-strip-quote" checked>
+        <div class="opt-txt"><strong>ตัด <code>'</code> นำหน้าค่าที่บังคับเป็นข้อความ</strong>
+          <span>xlsx เก็บ type ได้จริง ไม่ต้องใช้เครื่องหมายแบบ Google Sheets</span></div>
+      </label>
+    </div>
+
+    <div class="actions">
+      <button class="btn-primary" id="btn-run" disabled>🚀 รัน Pipeline ทั้งหมด</button>
+      <button class="btn-ghost"   id="btn-diag" disabled>🔍 ตรวจการแมตช์รูปภาพอย่างเดียว</button>
+      <button class="btn-ghost"   id="btn-reset">🗑️ ล้างทั้งหมด</button>
+    </div>
+  </section>
+
+  <!-- ══ STEP 2 — กำลังประมวลผล ═══════════════════════════ -->
+  <section class="card" id="progressCard">
+    <div class="card-head">
+      <span class="step-pill running">Step 2</span>
+      <h2 id="progressTitle">กำลังประมวลผล…</h2>
+    </div>
+    <div class="bar"><div class="bar-fill" id="barFill"></div></div>
+    <div class="bar-label"><span id="barText">เตรียมข้อมูล…</span><b id="barPct">0%</b></div>
+  </section>
+
+  <!-- ══ STEP 3 — ผลลัพธ์ ═════════════════════════════════ -->
+  <section class="card" id="resultCard">
+    <div class="card-head">
+      <span class="step-pill done">Step 3</span>
+      <h2>ผลการประมวลผล</h2>
+    </div>
+    <div class="stats" id="stats"></div>
+    <div class="actions" style="margin-top:0">
+      <button class="btn-primary" id="btn-download">⬇️ ดาวน์โหลดไฟล์ Excel ผลลัพธ์</button>
+    </div>
+  </section>
+
+  <!-- ══ ตัวยึดตำแหน่งสำหรับลิงก์ "ผลลัพธ์" บนเมนู ══════════ -->
+  <div id="sec-result" style="position:relative;top:-88px;height:0"></div>
+
+  <!-- ══ Log ══════════════════════════════════════════════ -->
+  <section class="card" id="sec-log">
+    <div class="card-head"><h2>Log</h2></div>
+    <div class="log" id="log"><div class="i">พร้อมทำงาน — เลือกไฟล์เพื่อเริ่มต้น</div></div>
+  </section>
+
+  <footer>
+    <span>CICM Asset Manager · Web Edition 5.0 — ported from Apps Script v4.1</span>
+    <span class="right">
+      <span class="ping" style="color:#17683C"></span>
+      ข้อมูลไม่ออกนอกเบราว์เซอร์
+    </span>
+  </footer>
+
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<!-- ══ MENU OVERLAY ═════════════════════════════════════════ -->
+<div class="overlay" id="menuOverlay" role="dialog" aria-modal="true" aria-label="เมนูหลัก">
+  <div class="backdrop" id="backdrop"></div>
+  <div class="panel">
+    <div class="panel-head">
+      <div class="brand">
+        <div class="logo-dots"><span></span><span></span><span></span><span></span></div>
+        <span class="brand-name">ครุภัณฑ์ CICM</span>
+      </div>
+      <button class="close-btn" id="closeBtn" aria-label="ปิดเมนู">
+        <svg class="icon-20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+      </button>
+    </div>
+
+    <div class="panel-items" id="panelItems">
+      <a href="#sec-upload">1 · อัปโหลดไฟล์ต้นทาง</a>
+      <a href="#sec-result">2 · ผลการประมวลผล</a>
+      <a href="#sec-log">3 · Log</a>
+    </div>
+
+    <div class="panel-cta">
+      <button id="menuReset">
+        <svg class="icon-20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>
+        ล้างทั้งหมด
+      </button>
+    </div>
+  </div>
+</div>
+
 <script>
-// ==========================================================
-// ⚙️ ค่าตั้งต้นตามสคริปต์ Google Apps Script v4.1
-//    แก้ตรงนี้ได้ถ้ารูปแบบไฟล์ต้นทางเปลี่ยน
-// ==========================================================
-const PRESETS = {
-    "21": { headerRow: 6, cols: 44, label: "ชีต 2.1" },
-    "22": { headerRow: 4, cols: 36, label: "ชีต 2.2" }
-};
+/* ─── เปลือกหน้าเว็บ (Sunrise shell) ────────────────────────
+   งานตกแต่งและการนำทางล้วน ไม่ยุ่งกับ pipeline ใน app.js
+   ทุก id/class ที่ app.js ใช้ถูกคงไว้เหมือนเดิมทั้งหมด
+------------------------------------------------------------- */
+(() => {
+  const bgWord = document.getElementById('bgWord');
+  const hero = document.getElementById('top');
+  const nav = document.getElementById('mainNav');
+  const overlay = document.getElementById('menuOverlay');
+  const menuBtn = document.getElementById('menuBtn');
+  const closeBtn = document.getElementById('closeBtn');
+  const backdrop = document.getElementById('backdrop');
+  const links = Array.from(document.querySelectorAll('#panelItems a'));
 
-// คำที่ใช้เดาว่าคอลัมน์ไหนคือ "เลขครุภัณฑ์" (ใช้ตอนตัดรายการซ้ำ)
-const ASSET_NO_KEYS = ["เลขครุภัณฑ์", "หมายเลขครุภัณฑ์", "รหัสครุภัณฑ์", "asset_no", "assetno", "asset no", "asset id"];
-
-// ==========================================================
-// 📦 สถานะของหน้า
-// ==========================================================
-let workbook = null;      // ไฟล์ที่อ่านเข้ามา
-let resultHeaders = [];   // หัวตารางผลลัพธ์
-let resultRows = [];      // ข้อมูลผลลัพธ์
-let numericCols = [];     // ดัชนีคอลัมน์ที่เป็นตัวเลขล้วน
-
-// ==========================================================
-// 📝 บันทึกการทำงาน
-// ==========================================================
-function log(msg, kind) {
-    const box = document.getElementById("logBox");
-    const t = new Date().toLocaleTimeString("th-TH", { hour12: false });
-    const cls = kind ? ` class="${kind}"` : "";
-    box.innerHTML += `<div><span class="t">[${t}]</span> <span${cls}>${escapeHtml(msg)}</span></div>`;
-    box.scrollTop = box.scrollHeight;
-}
-function clearLog() {
-    document.getElementById("logBox").innerHTML = '<span class="t">[ล้างบันทึกแล้ว]</span>';
-}
-function copyLog() {
-    copyText(document.getElementById("logBox").innerText);
-}
-
-function escapeHtml(s) {
-    return String(s).replace(/[&<>"']/g, c => ({
-        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
-    })[c]);
-}
-
-// ==========================================================
-// 🔔 Toast
-// ==========================================================
-function showToast(message) {
-    const old = document.getElementById("toast");
-    if (old) old.remove();
-    const el = document.createElement("div");
-    el.id = "toast";
-    el.textContent = message;
-    el.style.cssText = `
-        position: fixed; top: 84px; right: 24px;
-        background: #fff; color: #000;
-        padding: 12px 22px; border-radius: 9999px;
-        font-size: 0.9rem; font-family: inherit; font-weight: 600;
-        border: 1px solid rgba(0,0,0,0.14);
-        box-shadow: 0 10px 26px rgba(0,0,0,0.18);
-        animation: slideIn 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-        z-index: 1000;
-    `;
-    document.body.appendChild(el);
-    setTimeout(() => {
-        el.style.opacity = "0";
-        el.style.transition = "opacity 0.3s ease";
-        setTimeout(() => el.remove(), 300);
-    }, 2200);
-}
-
-function copyText(text) {
-    const ta = document.createElement("textarea");
-    ta.value = text;
-    ta.style.position = "fixed";
-    ta.style.opacity = "0";
-    document.body.appendChild(ta);
-    ta.select();
-    let ok = false;
-    try { ok = document.execCommand("copy"); } catch (e) { ok = false; }
-    document.body.removeChild(ta);
-    showToast(ok ? "✓ คัดลอกแล้ว" : "คัดลอกไม่สำเร็จ — กด Ctrl+C เอง");
-    return ok;
-}
-
-// ==========================================================
-// 📂 อ่านไฟล์
-// ==========================================================
-function handleFile(file) {
-    if (!file) return;
-    if (typeof XLSX === "undefined") {
-        log("โหลดไลบรารี SheetJS ไม่สำเร็จ — ตรวจการเชื่อมต่ออินเทอร์เน็ตแล้วรีเฟรชหน้า", "err");
-        showToast("โหลด SheetJS ไม่สำเร็จ");
-        return;
-    }
-
-    document.getElementById("fileName").textContent = file.name;
-    document.getElementById("fileMeta").textContent =
-        `${(file.size / 1024).toFixed(0)} KB · แก้ไขล่าสุด ${new Date(file.lastModified).toLocaleDateString("th-TH")}`;
-    document.getElementById("fileCard").classList.add("show");
-
-    log(`กำลังอ่านไฟล์ "${file.name}"`);
-
-    const reader = new FileReader();
-    reader.onload = (e) => {
-        try {
-            workbook = XLSX.read(new Uint8Array(e.target.result), { type: "array", cellDates: true });
-            const sel = document.getElementById("sheetSelect");
-            sel.innerHTML = workbook.SheetNames
-                .map(n => `<option value="${escapeHtml(n)}">${escapeHtml(n)}</option>`).join("");
-
-            // เดาชีตต้นทางจากชื่อ เช่น "2.1" หรือ "data"
-            const preset = document.getElementById("presetSelect").value;
-            const guess = workbook.SheetNames.find(n => n.trim().startsWith(preset === "22" ? "2.2" : "2.1"))
-                       || workbook.SheetNames.find(n => /data/i.test(n))
-                       || workbook.SheetNames[0];
-            sel.value = guess;
-
-            log(`อ่านสำเร็จ พบ ${workbook.SheetNames.length} ชีต: ${workbook.SheetNames.join(" · ")}`, "ok");
-            log(`เลือกชีตต้นทางให้อัตโนมัติ: "${guess}"`);
-            document.getElementById("runBtn").disabled = false;
-        } catch (err) {
-            log("อ่านไฟล์ไม่สำเร็จ: " + err.message, "err");
-            showToast("อ่านไฟล์ไม่สำเร็จ");
-        }
-    };
-    reader.onerror = () => log("อ่านไฟล์ไม่สำเร็จ", "err");
-    reader.readAsArrayBuffer(file);
-}
-
-// ==========================================================
-// 🔄 แปลงข้อมูล
-// ==========================================================
-function runConvert() {
-    if (!workbook) return;
-
-    const sheetName = document.getElementById("sheetSelect").value;
-    const headerRow = Math.max(1, parseInt(document.getElementById("headerRow").value) || 1);
-    const colCount = Math.max(1, parseInt(document.getElementById("colCount").value) || 1);
-    const preset = document.getElementById("presetSelect").value;
-
-    const optEmpty = document.getElementById("optEmpty").checked;
-    const optDupHeader = document.getElementById("optDupHeader").checked;
-    const optTrim = document.getElementById("optTrim").checked;
-    const optDedup = document.getElementById("optDedup").checked;
-    const optBE = document.getElementById("optBE").checked;
-
-    const ws = workbook.Sheets[sheetName];
-    if (!ws) { log(`ไม่พบชีต "${sheetName}"`, "err"); return; }
-
-    const aoa = XLSX.utils.sheet_to_json(ws, { header: 1, raw: true, defval: "" });
-    log(`— เริ่มแปลงชีต "${sheetName}" (${aoa.length} แถวในไฟล์)`);
-
-    // หาแถวหัวตาราง
-    let hIdx = headerRow - 1;
-    if (preset === "auto") {
-        hIdx = aoa.findIndex(r => r.filter(c => String(c).trim() !== "").length >= 3);
-        if (hIdx < 0) hIdx = 0;
-        log(`ตรวจหัวตารางอัตโนมัติ → แถวที่ ${hIdx + 1}`);
-    }
-    if (hIdx >= aoa.length) { log(`แถวหัวตาราง (${headerRow}) เกินจำนวนแถวในชีต`, "err"); return; }
-
-    const width = preset === "auto" ? aoa[hIdx].length : colCount;
-
-    const headers = aoa[hIdx].slice(0, width).map((c, i) => {
-        const v = String(c == null ? "" : c).trim();
-        return v || `คอลัมน์ ${i + 1}`;
-    });
-
-    const body = aoa.slice(hIdx + 1);
-    const headerKey = headers.join("|").toLowerCase();
-
-    let cutEmpty = 0, cutDup = 0;
-    const seen = new Set();
-    const rows = [];
-
-    // หาคอลัมน์เลขครุภัณฑ์
-    const norm = s => String(s).toLowerCase().replace(/\s/g, "");
-    const assetIdx = headers.findIndex(h => ASSET_NO_KEYS.some(k => norm(h).includes(norm(k))));
-    if (optDedup) {
-        log(assetIdx >= 0
-            ? `ตัดรายการซ้ำโดยใช้คอลัมน์ "${headers[assetIdx]}"`
-            : "ไม่พบคอลัมน์เลขครุภัณฑ์ — จะตัดซ้ำโดยเทียบทั้งแถวแทน", assetIdx >= 0 ? null : "warn");
-    }
-
-    for (const raw of body) {
-        const row = [];
-        for (let i = 0; i < width; i++) {
-            let v = raw[i];
-            if (v == null) v = "";
-            if (v instanceof Date) v = formatDate(v, optBE);
-            else if (optTrim && typeof v === "string") v = v.trim();
-            row.push(v);
-        }
-
-        // ตัดแถวว่าง
-        if (optEmpty && row.every(c => String(c).trim() === "")) { cutEmpty++; continue; }
-
-        // ตัดหัวตารางที่ปนมาในข้อมูล
-        if (optDupHeader && row.join("|").toLowerCase() === headerKey) { cutEmpty++; continue; }
-
-        // ตัดรายการซ้ำ
-        if (optDedup) {
-            const key = assetIdx >= 0 ? String(row[assetIdx]).trim() : row.join("");
-            if (key !== "" && seen.has(key)) { cutDup++; continue; }
-            if (key !== "") seen.add(key);
-        }
-
-        rows.push(row);
-    }
-
-    // แปลงปีเป็น พ.ศ. สำหรับค่าที่เป็นข้อความวันที่
-    if (optBE) {
-        let converted = 0;
-        for (const row of rows) {
-            for (let i = 0; i < row.length; i++) {
-                const conv = toBuddhistYear(row[i]);
-                if (conv !== null) { row[i] = conv; converted++; }
-            }
-        }
-        if (converted) log(`แปลงปีเป็น พ.ศ. ทั้งหมด ${converted.toLocaleString("th-TH")} ค่า`);
-    }
-
-    // หาคอลัมน์ที่เป็นตัวเลขล้วน (ใช้กำหนดรูปแบบตัวเลขตอนส่งออก)
-    numericCols = [];
-    for (let i = 0; i < width; i++) {
-        const vals = rows.map(r => r[i]).filter(v => String(v).trim() !== "");
-        if (vals.length && vals.every(v => typeof v === "number" || /^-?[\d,]+(\.\d+)?$/.test(String(v).trim()))) {
-            numericCols.push(i);
-        }
-    }
-
-    resultHeaders = headers;
-    resultRows = rows;
-
-    document.getElementById("statRead").textContent = body.length.toLocaleString("th-TH");
-    document.getElementById("statPass").textContent = rows.length.toLocaleString("th-TH");
-    document.getElementById("statEmpty").textContent = cutEmpty.toLocaleString("th-TH");
-    document.getElementById("statDup").textContent = cutDup.toLocaleString("th-TH");
-    document.getElementById("statCols").textContent = width.toLocaleString("th-TH");
-
-    log(`ตัดแถวว่าง/หัวซ้ำ ${cutEmpty.toLocaleString("th-TH")} แถว · ตัดรายการซ้ำ ${cutDup.toLocaleString("th-TH")} แถว`);
-    log(`คอลัมน์ที่เป็นตัวเลข ${numericCols.length} คอลัมน์`);
-    log(`เสร็จสิ้น — ได้ข้อมูล ${rows.length.toLocaleString("th-TH")} แถว x ${width} คอลัมน์`, "ok");
-
-    renderPreview();
-    ["dlXlsx", "dlCsv", "copyTsv"].forEach(id => document.getElementById(id).disabled = rows.length === 0);
-    document.getElementById("sec-result").scrollIntoView();
-    showToast(`✓ แปลงสำเร็จ ${rows.length.toLocaleString("th-TH")} แถว`);
-}
-
-// วันที่ → dd/mm/yyyy (พ.ศ. ถ้าเลือกไว้)
-function formatDate(d, toBE) {
-    const y = d.getFullYear() + (toBE ? 543 : 0);
-    return `${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}/${y}`;
-}
-
-// ข้อความวันที่ dd/mm/yyyy ที่ยังเป็น ค.ศ. → พ.ศ. (คืน null ถ้าไม่ใช่)
-function toBuddhistYear(v) {
-    if (typeof v !== "string") return null;
-    const m = v.trim().match(/^(\d{1,2})([\/\-.])(\d{1,2})\2(\d{4})$/);
-    if (!m) return null;
-    const year = parseInt(m[4]);
-    if (year < 1900 || year > 2200) return null;   // 2400+ คือ พ.ศ. อยู่แล้ว
-    return `${m[1]}${m[2]}${m[3]}${m[2]}${year + 543}`;
-}
-
-// ==========================================================
-// 👁️ ตารางพรีวิว
-// ==========================================================
-function renderPreview() {
-    const head = document.getElementById("previewHead");
-    const bodyEl = document.getElementById("previewBody");
-    const empty = document.getElementById("previewEmpty");
-    const q = (document.getElementById("previewSearch").value || "").trim().toLowerCase();
-
-    if (!resultRows.length) {
-        head.innerHTML = ""; bodyEl.innerHTML = "";
-        empty.style.display = "block";
-        empty.textContent = 'ยังไม่มีผลลัพธ์ — อัปโหลดไฟล์แล้วกด "แปลงข้อมูล"';
-        return;
-    }
-
-    const filtered = q
-        ? resultRows.filter(r => r.some(c => String(c).toLowerCase().includes(q)))
-        : resultRows;
-
-    if (!filtered.length) {
-        head.innerHTML = ""; bodyEl.innerHTML = "";
-        empty.style.display = "block";
-        empty.textContent = `ไม่พบรายการที่ตรงกับ "${q}"`;
-        return;
-    }
-
-    empty.style.display = "none";
-    head.innerHTML = "<tr><th>#</th>" + resultHeaders.map(h => `<th>${escapeHtml(h)}</th>`).join("") + "</tr>";
-
-    const shown = filtered.slice(0, 200);
-    bodyEl.innerHTML = shown.map((r, i) =>
-        `<tr><td class="rowno">${i + 1}</td>` + r.map(c => `<td>${escapeHtml(c)}</td>`).join("") + "</tr>"
-    ).join("");
-
-    if (filtered.length > shown.length) {
-        bodyEl.innerHTML += `<tr><td class="rowno" colspan="${resultHeaders.length + 1}">แสดง ${shown.length.toLocaleString("th-TH")} จาก ${filtered.length.toLocaleString("th-TH")} แถว — ดาวน์โหลดไฟล์เพื่อดูทั้งหมด</td></tr>`;
-    }
-}
-
-// ==========================================================
-// 💾 ส่งออก
-// ==========================================================
-function buildSheet() {
-    const aoa = [resultHeaders, ...resultRows];
-    const ws = XLSX.utils.aoa_to_sheet(aoa);
-
-    if (document.getElementById("optNum").checked) {
-        const range = XLSX.utils.decode_range(ws["!ref"]);
-        for (const c of numericCols) {
-            for (let r = 1; r <= range.e.r; r++) {
-                const addr = XLSX.utils.encode_cell({ r, c });
-                const cell = ws[addr];
-                if (!cell) continue;
-                const num = typeof cell.v === "number" ? cell.v : parseFloat(String(cell.v).replace(/,/g, ""));
-                if (!isNaN(num)) { cell.t = "n"; cell.v = num; cell.z = "#,##0.00"; }
-            }
-        }
-    }
-
-    // ความกว้างคอลัมน์พอประมาณ
-    ws["!cols"] = resultHeaders.map((h, i) => {
-        const len = Math.max(String(h).length, ...resultRows.slice(0, 200).map(r => String(r[i] == null ? "" : r[i]).length));
-        return { wch: Math.min(Math.max(len + 2, 8), 45) };
-    });
-    return ws;
-}
-
-function downloadXlsx() {
-    const name = document.getElementById("targetSheet").value.trim() || "3.ทะเบียนรายการครุภัณฑ์ CICM";
-    const wb = XLSX.utils.book_new();
-    // ชื่อชีตใน Excel ยาวได้ไม่เกิน 31 ตัวอักษร
-    XLSX.utils.book_append_sheet(wb, buildSheet(), name.slice(0, 31));
-    try {
-        XLSX.writeFile(wb, `${name}.xlsx`);
-        log(`ส่งออก "${name}.xlsx" (${resultRows.length.toLocaleString("th-TH")} แถว)`, "ok");
-    } catch (err) {
-        log("ดาวน์โหลดไม่สำเร็จ: " + err.message, "err");
-        document.getElementById("dlNote").style.display = "block";
-    }
-}
-
-function downloadCsv() {
-    const name = document.getElementById("targetSheet").value.trim() || "3.ทะเบียนรายการครุภัณฑ์ CICM";
-    const csv = XLSX.utils.sheet_to_csv(buildSheet());
-    const BOM = "\uFEFF";   // ให้ Excel เปิดภาษาไทยได้ถูกต้อง
-    const blob = new Blob([BOM + csv], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url; a.download = `${name}.csv`;
-    document.body.appendChild(a); a.click(); document.body.removeChild(a);
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
-    log(`ส่งออก "${name}.csv"`, "ok");
-}
-
-function copyTsv() {
-    const lines = [resultHeaders.join("\t"), ...resultRows.map(r => r.join("\t"))];
-    copyText(lines.join("\n"));
-    log(`คัดลอก ${resultRows.length.toLocaleString("th-TH")} แถวไปยังคลิปบอร์ด — วางในชีต "${document.getElementById("targetSheet").value}" ได้เลย`, "ok");
-}
-
-// ==========================================================
-// ♻️ เริ่มใหม่
-// ==========================================================
-function resetAll() {
-    workbook = null; resultHeaders = []; resultRows = []; numericCols = [];
-    document.getElementById("fileInput").value = "";
-    document.getElementById("fileCard").classList.remove("show");
-    document.getElementById("sheetSelect").innerHTML = '<option value="">— ยังไม่ได้เลือกไฟล์ —</option>';
-    document.getElementById("previewSearch").value = "";
-    ["statRead", "statPass", "statEmpty", "statDup", "statCols"].forEach(id =>
-        document.getElementById(id).textContent = "0");
-    ["runBtn", "dlXlsx", "dlCsv", "copyTsv"].forEach(id => document.getElementById(id).disabled = true);
-    applyPreset();
-    renderPreview();
-    log("ล้างค่าทั้งหมดแล้ว");
-    showToast("↻ เริ่มใหม่แล้ว");
-}
-
-function applyPreset() {
-    const p = document.getElementById("presetSelect").value;
-    const hr = document.getElementById("headerRow");
-    const cc = document.getElementById("colCount");
-    const known = PRESETS[p];
-    if (known) {
-        hr.value = known.headerRow;
-        cc.value = known.cols;
-        hr.disabled = false; cc.disabled = false;
-    } else if (p === "auto") {
-        hr.disabled = true; cc.disabled = true;
-    } else {
-        hr.disabled = false; cc.disabled = false;
-    }
-}
-
-// ==========================================================
-// 🧭 เปลือกหน้าเว็บ — hero, แถบนำทาง, เมนู overlay
-// ==========================================================
-const elWord = document.getElementById("bgWord");
-const hero = document.getElementById("top");
-const mainNav = document.getElementById("mainNav");
-const overlay = document.getElementById("menuOverlay");
-const menuBtn = document.getElementById("menuBtn");
-const closeBtn = document.getElementById("closeBtn");
-const backdrop = document.getElementById("backdrop");
-const panelLinks = Array.from(document.querySelectorAll("#panelItems a"));
-
-// ยืดตัวอักษรพื้นหลังให้เต็มความสูง hero เสมอ
-function applyHeroScale() {
-    const h = elWord.offsetHeight;
+  // ยืดตัวอักษรพื้นหลังให้เต็มความสูง hero เสมอ
+  function scaleWord() {
+    const h = bgWord.offsetHeight;
     if (!h) return;
-    elWord.style.transform = `scale(1.15, ${(hero.clientHeight * 0.92) / h})`;
-}
+    bgWord.style.transform = `scale(1.15, ${(hero.clientHeight * 0.92) / h})`;
+  }
 
-function onScroll() {
-    mainNav.classList.toggle("scrolled", window.scrollY > hero.clientHeight - 80);
-}
+  function onScroll() {
+    nav.classList.toggle('scrolled', scrollY > hero.clientHeight - 80);
+  }
 
-function setMenu(open) {
-    overlay.classList.toggle("open", open);
-    menuBtn.setAttribute("aria-expanded", String(open));
-    document.body.style.overflow = open ? "hidden" : "";
-    panelLinks.forEach((item, i) => {
-        item.style.transitionDelay = open ? `${150 + i * 60}ms` : "0ms";
-    });
-    if (open) closeBtn.focus();
-    else menuBtn.focus();
-}
+  function setMenu(open) {
+    overlay.classList.toggle('open', open);
+    menuBtn.setAttribute('aria-expanded', String(open));
+    document.body.style.overflow = open ? 'hidden' : '';
+    links.forEach((a, i) => { a.style.transitionDelay = open ? `${150 + i * 60}ms` : '0ms'; });
+    (open ? closeBtn : menuBtn).focus();
+  }
 
-// ==========================================================
-// 🔌 ผูกเหตุการณ์ทั้งหมด
-// ==========================================================
-function initShell() {
-    applyHeroScale();
-    onScroll();
+  scaleWord();
+  onScroll();
+  addEventListener('resize', scaleWord);
+  addEventListener('orientationchange', scaleWord);
+  addEventListener('scroll', onScroll, { passive: true });
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(scaleWord);
 
-    window.addEventListener("resize", applyHeroScale);
-    window.addEventListener("orientationchange", applyHeroScale);
-    window.addEventListener("scroll", onScroll, { passive: true });
-    if (document.fonts && document.fonts.ready) document.fonts.ready.then(applyHeroScale);
+  menuBtn.addEventListener('click', () => setMenu(true));
+  closeBtn.addEventListener('click', () => setMenu(false));
+  backdrop.addEventListener('click', () => setMenu(false));
+  links.forEach(a => a.addEventListener('click', () => setMenu(false)));
+  addEventListener('keydown', e => {
+    if (e.key === 'Escape' && overlay.classList.contains('open')) setMenu(false);
+  });
 
-    menuBtn.addEventListener("click", () => setMenu(true));
-    closeBtn.addEventListener("click", () => setMenu(false));
-    backdrop.addEventListener("click", () => setMenu(false));
-    panelLinks.forEach(a => a.addEventListener("click", () => setMenu(false)));
-    document.addEventListener("keydown", (e) => {
-        if (e.key === "Escape" && overlay.classList.contains("open")) setMenu(false);
-    });
+  // ปุ่มล้างในเมนู → สั่งงานปุ่มเดิมของ app.js ไม่ซ้อนตรรกะใหม่
+  document.getElementById('menuReset').addEventListener('click', () => {
+    setMenu(false);
+    document.getElementById('btn-reset').click();
+  });
 
-    // --- อัปโหลดไฟล์ ---
-    const dz = document.getElementById("dropzone");
-    const fi = document.getElementById("fileInput");
-
-    dz.addEventListener("click", () => fi.click());
-    dz.addEventListener("keydown", (e) => {
-        if (e.key === "Enter" || e.key === " ") { e.preventDefault(); fi.click(); }
-    });
-    fi.addEventListener("change", (e) => handleFile(e.target.files[0]));
-
-    ["dragenter", "dragover"].forEach(ev =>
-        dz.addEventListener(ev, (e) => { e.preventDefault(); dz.classList.add("dragover"); }));
-    ["dragleave", "drop"].forEach(ev =>
-        dz.addEventListener(ev, (e) => { e.preventDefault(); dz.classList.remove("dragover"); }));
-    dz.addEventListener("drop", (e) => {
-        if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
-    });
-
-    // --- ตั้งค่า / ปุ่มทำงาน ---
-    document.getElementById("presetSelect").addEventListener("change", applyPreset);
-    document.getElementById("runBtn").addEventListener("click", runConvert);
-    document.getElementById("dlXlsx").addEventListener("click", downloadXlsx);
-    document.getElementById("dlCsv").addEventListener("click", downloadCsv);
-    document.getElementById("copyTsv").addEventListener("click", copyTsv);
-
-    applyPreset();
-
-    // แจ้งเตือนเรื่องการดาวน์โหลดเมื่อหน้าถูกฝังอยู่ใน iframe (เช่น ตัวอย่างในแชต)
-    try { if (window.self !== window.top) document.getElementById("dlNote").style.display = "block"; }
-    catch (e) { document.getElementById("dlNote").style.display = "block"; }
-
-    if (typeof XLSX === "undefined") {
-        log("โหลด SheetJS ไม่สำเร็จ — ต้องต่ออินเทอร์เน็ตครั้งแรกเพื่อโหลดไลบรารี", "err");
-    } else {
-        log("พร้อมใช้งาน · SheetJS " + (XLSX.version || "") , "ok");
+  // เตือนถ้า SheetJS โหลดไม่สำเร็จ (app.js ต้องใช้)
+  addEventListener('DOMContentLoaded', () => {
+    if (typeof XLSX === 'undefined') {
+      const box = document.getElementById('log');
+      if (box) box.innerHTML += '<div class="e">โหลด SheetJS ไม่สำเร็จ — ต้องต่ออินเทอร์เน็ตครั้งแรกเพื่อโหลดไลบรารี แล้วรีเฟรชหน้า</div>';
     }
-}
-
-window.addEventListener("DOMContentLoaded", initShell);
+  });
+})();
 </script>
+
+<script src="app.js"></script>
 </body>
 </html>
