@@ -1,165 +1,144 @@
-
 <!DOCTYPE html>
 <html lang="th">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>404 - ไม่พบหน้าที่ค้นหา | CICM e-GP</title>
- 
+<title>e-GP วิทยาลัยแพทยศาสตร์นานาชาติจุฬาภรณ์</title>
+
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Google+Sans:ital,opsz,wght@0,17..18,400..900;1,17..18,400..900&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
- 
+<link href="https://fonts.googleapis.com/css2?family=Google+Sans:ital,opsz,wght@0,17..18,400..900;1,17..18,400..900&family=Inter:wght@700;800;900&display=swap" rel="stylesheet">
+
 <style>
 /* ==========================================================
-   🎨 PALETTE — แก้สีทั้งหน้าได้จากตรงนี้ที่เดียว
+   🎨 TOKENS — แก้สีทั้งระบบได้จากตรงนี้ที่เดียว
    ========================================================== */
 :root {
-    --grad-top:    #FF8233;
-    --grad-bottom: #FDAC55;
-    --accent:      #F16524;
-    --menu-top:    #FF6B1A;
-    --menu-bottom: #FF9642;
-    --on-accent:   #FFFFFF;
+    --hero-top:     #FF8233;
+    --hero-bottom:  #FDAC55;
+    --accent:       #F16524;
+    --accent-deep:  #D8531A;
+    --menu-top:     #FF6B1A;
+    --menu-bottom:  #FF9642;
+
+    --page-bg:      #FFF4EB;
+    --surface:      rgba(255, 255, 255, 0.92);
+    --surface-2:    #FFF7F1;
+    --field-bg:     #FFFFFF;
+    --text:         #2B1A10;
+    --text-muted:   #8A6A57;
+    --border:       rgba(43, 26, 16, 0.10);
+    --shadow:       0 12px 34px rgba(140, 70, 25, 0.10);
+    --success:      #2F9E5B;
 }
- 
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --hero-top:    #8A3A11;
+        --hero-bottom: #C25F23;
+        --accent:      #FF7A38;
+        --accent-deep: #F16524;
+        --menu-top:    #A8481A;
+        --menu-bottom: #D2702D;
+
+        --page-bg:     #170D06;
+        --surface:     rgba(44, 27, 17, 0.88);
+        --surface-2:   #241609;
+        --field-bg:    rgba(26, 15, 8, 0.9);
+        --text:        #FFF1E6;
+        --text-muted:  #BE967B;
+        --border:      rgba(255, 225, 205, 0.14);
+        --shadow:      0 12px 34px rgba(0, 0, 0, 0.45);
+        --success:     #3BBE72;
+    }
+}
+
 * { margin: 0; padding: 0; box-sizing: border-box; }
- 
-html { -webkit-text-size-adjust: 100%; }
- 
+html { font-size: 16px; scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+@media (max-width: 768px) { html { font-size: 15px; } }
+
 body {
     font-family: "Google Sans", Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-optical-sizing: auto;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    background: var(--grad-top);
+    background: var(--page-bg);
+    color: var(--text);
 }
- 
-/* ---------- LAYOUT ---------- */
-.page {
-    position: relative;
-    width: 100%;
-    height: 100vh;
-    height: 100dvh;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-    background: linear-gradient(to bottom, var(--grad-top) 0%, var(--grad-bottom) 100%);
-}
- 
-/* ---------- BACKGROUND "404" + OVAL ---------- */
-.bg-layer {
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-    opacity: 0.8;
-    -webkit-mask-image: linear-gradient(to bottom, black 40%, transparent 95%);
-            mask-image: linear-gradient(to bottom, black 40%, transparent 95%);
-}
- 
-.bg-center {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
- 
-#bg404 {
-    font-family: Inter, "Google Sans", sans-serif;
-    color: #FFFFFF;
-    font-weight: 900;
-    line-height: 1;
-    letter-spacing: -0.05em;
-    white-space: nowrap;
-    font-size: clamp(200px, 48vw, 800px);
-    transform: scale(1.15, 1);
-    transform-origin: center;
-}
- 
-#bgOval {
-    background: #FFFFFF;
-    border-radius: 9999px;
-    height: 22vh;
-    width: clamp(120px, 20vw, 400px);
-    transform: scale(1, 1);
-    transform-origin: center;
-}
-@media (min-width: 640px) { #bgOval { height: 26vh; } }
-@media (min-width: 768px) { #bgOval { height: 50vh; } }
- 
-/* ---------- NAVIGATION ---------- */
+
+/* ==========================================================
+   🧭 NAV — ลอยอยู่ด้านบนตลอด เปลี่ยนพื้นหลังเมื่อเลื่อนพ้น hero
+   ========================================================== */
 .nav {
-    position: relative;
-    z-index: 20;
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 40;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 16px;
     gap: 12px;
+    padding: 16px;
+    transition: background 0.35s ease, box-shadow 0.35s ease, padding 0.35s ease;
 }
 @media (min-width: 640px) { .nav { padding: 20px 24px; } }
-@media (min-width: 768px) { .nav { padding: 20px 48px; } }
- 
-.logo { display: flex; align-items: center; }
-.logo-dots {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 2px;
+@media (min-width: 768px) { .nav { padding: 20px 40px; } }
+.nav.scrolled {
+    background: linear-gradient(120deg, var(--menu-top) 0%, var(--menu-bottom) 100%);
+    box-shadow: 0 6px 22px rgba(140, 70, 25, 0.22);
+    padding-top: 12px;
+    padding-bottom: 12px;
 }
-.logo-dots span {
-    display: block;
-    width: 10px; height: 10px;
-    background: #fff;
-    border-radius: 9999px;
-}
+
+.logo { display: flex; align-items: center; text-decoration: none; }
+.logo-dots { display: grid; grid-template-columns: repeat(2, 1fr); gap: 2px; }
+.logo-dots span { display: block; width: 10px; height: 10px; background: #fff; border-radius: 9999px; }
 @media (min-width: 640px) { .logo-dots span { width: 12px; height: 12px; } }
-.logo-text {
-    color: #fff;
-    font-weight: 700;
-    font-size: 1.125rem;
-    margin-left: 8px;
-    letter-spacing: -0.01em;
-}
-@media (min-width: 640px) { .logo-text { font-size: 1.25rem; } }
- 
+.logo-text { color: #fff; font-weight: 700; font-size: 1.05rem; margin-left: 9px; letter-spacing: -0.01em; }
+@media (min-width: 640px) { .logo-text { font-size: 1.2rem; } }
+
 .nav-links { display: none; gap: 4px; }
-@media (min-width: 768px) { .nav-links { display: flex; } }
+@media (min-width: 1080px) { .nav-links { display: flex; } }
 .nav-links a {
-    padding: 6px 16px;
-    font-size: 0.875rem;
+    padding: 7px 15px;
+    font-size: 0.85rem;
     font-weight: 500;
     border-radius: 9999px;
     background: #fff;
-    color: var(--accent);
+    color: var(--accent-deep);
     text-decoration: none;
-    transition: opacity 0.2s ease, color 0.2s ease;
+    transition: opacity 0.2s ease, transform 0.2s ease;
 }
-.nav-links a:hover { opacity: 0.9; }
- 
-.menu-btn {
+.nav-links a:hover { opacity: 0.9; transform: translateY(-1px); }
+
+.nav-actions { display: flex; align-items: center; gap: 8px; }
+.pill-btn {
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    padding: 8px 16px;
+    padding: 9px 16px;
     border: none;
     border-radius: 9999px;
     color: #fff;
     background: var(--accent);
     font-family: inherit;
+    font-size: 0.85rem;
+    font-weight: 500;
     cursor: pointer;
-    transition: opacity 0.2s ease;
+    transition: opacity 0.2s ease, transform 0.2s ease;
 }
-@media (min-width: 640px) { .menu-btn { padding: 10px 20px; } }
-.menu-btn:hover { opacity: 0.9; }
-.menu-btn .label { font-size: 0.875rem; font-weight: 500; display: none; }
-@media (min-width: 640px) { .menu-btn .label { display: inline; } }
-.icon-16 { width: 16px; height: 16px; }
-.icon-20 { width: 20px; height: 20px; }
- 
-/* ---------- MOBILE MENU OVERLAY ---------- */
-.overlay { position: fixed; inset: 0; z-index: 50; visibility: hidden; }
+@media (min-width: 640px) { .pill-btn { padding: 10px 20px; } }
+.pill-btn:hover { opacity: 0.92; transform: translateY(-1px); }
+.pill-btn.ghost { background: rgba(255, 255, 255, 0.22); }
+.pill-btn .label { display: none; }
+@media (min-width: 640px) { .pill-btn .label { display: inline; } }
+.icon-16 { width: 16px; height: 16px; flex: none; }
+.icon-20 { width: 20px; height: 20px; flex: none; }
+
+/* ==========================================================
+   🍔 MENU OVERLAY
+   ========================================================== */
+.overlay { position: fixed; inset: 0; z-index: 60; visibility: hidden; }
 .overlay.open { visibility: visible; }
- 
 .backdrop {
     position: absolute; inset: 0;
     background: rgba(0, 0, 0, 0.4);
@@ -169,7 +148,6 @@ body {
     transition: opacity 500ms ease;
 }
 .overlay.open .backdrop { opacity: 1; }
- 
 .panel {
     position: absolute;
     top: 0; right: 0;
@@ -183,40 +161,25 @@ body {
 }
 @media (min-width: 640px) { .panel { width: 380px; } }
 .overlay.open .panel { transform: translateX(0); }
- 
-.panel-head {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 20px 24px;
-}
+.panel-head { display: flex; align-items: center; justify-content: space-between; padding: 20px 24px; }
 .close-btn {
     width: 40px; height: 40px;
     display: inline-flex; align-items: center; justify-content: center;
-    border: none;
-    border-radius: 9999px;
+    border: none; border-radius: 9999px;
     background: rgba(255, 255, 255, 0.2);
-    color: #fff;
-    cursor: pointer;
+    color: #fff; cursor: pointer;
     transition: background 0.2s ease;
 }
 .close-btn:hover { background: rgba(255, 255, 255, 0.3); }
- 
-.panel-items {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    padding: 8px 24px;
-    overflow-y: auto;
-}
+.panel-items { display: flex; flex-direction: column; gap: 10px; padding: 8px 24px; overflow-y: auto; }
 .panel-items a {
     display: block;
-    padding: 16px 24px;
-    font-size: 1.125rem;
+    padding: 15px 22px;
+    font-size: 1.05rem;
     font-weight: 600;
     color: #fff;
     text-decoration: none;
-    border-radius: 16px;
+    border-radius: 18px;
     background: rgba(255, 255, 255, 0.1);
     opacity: 0;
     transform: translateY(16px);
@@ -225,201 +188,639 @@ body {
 }
 .panel-items a:hover { background: rgba(255, 255, 255, 0.2); }
 .overlay.open .panel-items a { opacity: 1; transform: translateY(0); }
- 
 .panel-cta {
-    position: absolute;
-    bottom: 0; left: 0; right: 0;
+    position: absolute; bottom: 0; left: 0; right: 0;
     padding: 24px;
     opacity: 0;
     transition: opacity 300ms ease;
-    transition-delay: 0ms;
 }
 .overlay.open .panel-cta { opacity: 1; transition-delay: 450ms; }
-.panel-cta a {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    width: 100%;
-    padding: 16px 0;
-    border-radius: 9999px;
-    background: #fff;
-    color: var(--accent);
-    font-weight: 600;
-    font-size: 1rem;
-    text-decoration: none;
+.panel-cta button {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    width: 100%; padding: 16px 0;
+    border: none; border-radius: 9999px;
+    background: #fff; color: var(--accent-deep);
+    font-family: inherit; font-weight: 600; font-size: 1rem;
+    cursor: pointer;
     transition: transform 0.2s ease;
 }
-.panel-cta a:hover { transform: scale(1.02); }
- 
-/* ---------- CENTER VISUAL ---------- */
-.visual-wrap {
-    position: absolute;
-    inset: 0;
+.panel-cta button:hover { transform: scale(1.02); }
+
+/* ==========================================================
+   🏔️ HERO
+   ========================================================== */
+.hero {
+    position: relative;
+    height: 100vh;
+    height: 100dvh;
+    min-height: 560px;
+    overflow: hidden;
     display: flex;
-    align-items: center;
-    justify-content: center;
+    flex-direction: column;
+    background: linear-gradient(to bottom, var(--hero-top) 0%, var(--hero-bottom) 100%);
+}
+
+.bg-layer {
+    position: absolute; inset: 0;
     pointer-events: none;
-    margin-top: calc(-6vh - 40px);
+    opacity: 0.8;
+    -webkit-mask-image: linear-gradient(to bottom, black 45%, transparent 94%);
+            mask-image: linear-gradient(to bottom, black 45%, transparent 94%);
 }
-.visual-box {
-    width: 120vw; height: 85vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+.bg-center { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
+
+#bgWord {
+    font-family: Inter, "Google Sans", sans-serif;
+    color: #FFFFFF;
+    font-weight: 900;
+    line-height: 1;
+    letter-spacing: -0.06em;
+    white-space: nowrap;
+    font-size: clamp(140px, 30vw, 520px);
+    transform: scale(1.15, 1);
+    transform-origin: center;
 }
-@media (min-width: 640px) { .visual-box { width: 70vw; height: 70vh; } }
-@media (min-width: 768px) { .visual-box { width: 62vw; height: 78vh; } }
- 
-.visual-box video {
-    width: 100%; height: 100%;
-    object-fit: contain;
+#bgOval {
+    background: #FFFFFF;
+    border-radius: 9999px;
+    height: 60vh;
+    width: clamp(150px, 23vw, 420px);
+    transform-origin: center;
+}
+@media (min-width: 640px) { #bgOval { height: 66vh; } }
+@media (min-width: 768px) { #bgOval { height: 72vh; } }
+
+.hero-visual {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
     pointer-events: none;
-    mix-blend-mode: darken;
+    margin-top: calc(-7vh - 30px);
 }
-.visual-box video[hidden] { display: none; }
- 
-#fallbackArt {
-    width: min(46vh, 78%);
+#heroArt {
+    width: min(42vh, 68vw);
     height: auto;
-    animation: floaty 5s ease-in-out infinite;
+    animation: floaty 6s ease-in-out infinite;
 }
 @keyframes floaty {
-    0%, 100% { transform: translateY(-8px) rotate(-1.2deg); }
-    50%      { transform: translateY(10px) rotate(1.2deg); }
+    0%, 100% { transform: translateY(-9px) rotate(-1.1deg); }
+    50%      { transform: translateY(9px) rotate(1.1deg); }
 }
-@media (prefers-reduced-motion: reduce) {
-    #fallbackArt { animation: none; }
-}
- 
-/* ---------- BOTTOM CONTENT ---------- */
-.bottom {
+
+.hero-bottom {
     position: relative;
     z-index: 30;
     margin-top: auto;
-    padding: 0 16px 32px;
+    padding: 0 20px 34px;
     display: flex;
     flex-direction: column;
     align-items: center;
     text-align: center;
 }
-@media (min-width: 640px) { .bottom { padding-bottom: 64px; } }
- 
-.bottom h1 {
+@media (min-width: 640px) { .hero-bottom { padding-bottom: 54px; } }
+
+.hero-bottom h1 {
     color: #fff;
-    font-size: 1.125rem;
+    font-size: clamp(1.35rem, 3.6vw, 2.35rem);
+    font-weight: 700;
+    line-height: 1.35;
+    letter-spacing: -0.01em;
+    text-wrap: balance;
+    text-shadow: 0 2px 18px rgba(150, 70, 20, 0.28);
+}
+.br-sm { display: none; }
+@media (max-width: 720px) { .br-sm { display: inline; } }
+
+.hero-bottom .en {
+    display: block;
+    margin-top: 8px;
+    font-size: clamp(0.85rem, 1.6vw, 1.05rem);
     font-weight: 500;
-    margin-bottom: 12px;
-    text-wrap: balance;
+    color: rgba(255, 255, 255, 0.9);
+    letter-spacing: 0.01em;
 }
-@media (min-width: 640px) { .bottom h1 { font-size: 1.25rem; margin-bottom: 16px; } }
-@media (min-width: 768px) { .bottom h1 { font-size: 1.5rem; } }
- 
-.bottom .sub {
+.hero-bottom .org {
+    margin-top: 14px;
+    font-size: 0.85rem;
     color: rgba(255, 255, 255, 0.85);
-    font-size: 0.875rem;
-    margin-bottom: 20px;
-    max-width: 34ch;
-    text-wrap: balance;
 }
- 
 .cta {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 12px 24px;
-    border-radius: 9999px;
-    color: #fff;
-    background: var(--accent);
-    font-weight: 600;
-    font-size: 0.875rem;
-    text-decoration: none;
+    margin-top: 22px;
+    display: inline-flex; align-items: center; gap: 10px;
+    padding: 14px 30px;
+    border: none; border-radius: 9999px;
+    background: var(--accent); color: #fff;
+    font-family: inherit; font-weight: 600; font-size: 0.95rem;
+    text-decoration: none; cursor: pointer;
     transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
-@media (min-width: 640px) { .cta { padding: 16px 32px; font-size: 1rem; } }
-.cta:hover { transform: scale(1.05); box-shadow: 0 10px 24px rgba(0, 0, 0, 0.18); }
- 
-/* ---------- A11Y ---------- */
-a:focus-visible, button:focus-visible {
-    outline: 3px solid #fff;
-    outline-offset: 3px;
+.cta:hover { transform: scale(1.05); box-shadow: 0 12px 26px rgba(0, 0, 0, 0.18); }
+
+/* ==========================================================
+   📄 CONTENT
+   ========================================================== */
+.content {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 56px 16px 90px;
+    display: flex;
+    flex-direction: column;
+    gap: 26px;
 }
+@media (min-width: 768px) { .content { padding: 72px 28px 110px; gap: 32px; } }
+
+.card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 28px;
+    padding: 22px;
+    box-shadow: var(--shadow);
+    scroll-margin-top: 90px;
+}
+@media (min-width: 768px) { .card { padding: 32px; } }
+
+.card h2 {
+    font-size: 1.2rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+@media (min-width: 768px) { .card h2 { font-size: 1.35rem; } }
+.card .card-sub {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    margin-bottom: 22px;
+}
+
+.two-col { display: grid; grid-template-columns: 1fr; gap: 26px; }
+@media (min-width: 900px) { .two-col { grid-template-columns: 1fr 1fr; gap: 32px; } }
+
+/* ---- ฟอร์ม ---- */
+.field-label {
+    display: block;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    margin-bottom: 7px;
+}
+textarea, input[type="text"], select {
+    width: 100%;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 12px 14px;
+    font-family: inherit;
+    font-size: 0.95rem;
+    background-color: var(--field-bg);
+    color: var(--text);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    resize: vertical;
+    box-sizing: border-box;
+}
+select {
+    resize: none;
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23F16524' d='M1 1l5 5 5-5'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 16px center;
+    padding-right: 40px;
+}
+select option { background: var(--field-bg); color: var(--text); }
+textarea:focus, input[type="text"]:focus, select:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(241, 101, 36, 0.22);
+}
+textarea::placeholder, input::placeholder { color: var(--text-muted); opacity: 0.75; }
+
+.form-group { display: flex; gap: 10px; margin-bottom: 18px; align-items: flex-start; }
+.signature-area { height: 200px; white-space: pre-wrap; }
+.receive-area { height: 160px; white-space: pre-wrap; }
+
+button.action {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    background: var(--accent);
+    border: none;
+    border-radius: 9999px;
+    color: #fff;
+    font-family: inherit;
+    font-weight: 600;
+    font-size: 0.9rem;
+    padding: 12px 24px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+}
+button.action:hover { transform: translateY(-1px); box-shadow: 0 8px 18px rgba(241, 101, 36, 0.28); }
+button.action:active { transform: translateY(0) scale(0.99); }
+button.action.wide { width: 100%; margin-top: 12px; }
+
+/* ---- Radio ---- */
+label.radio { display: inline-flex; align-items: center; cursor: pointer; font-weight: 500; }
+input[type="radio"] {
+    appearance: none;
+    background: var(--field-bg);
+    margin: 0 10px 0 0;
+    width: 22px; height: 22px;
+    border: 2px solid var(--border);
+    border-radius: 50%;
+    display: grid; place-content: center;
+    transition: border-color 0.2s ease;
+    cursor: pointer;
+}
+input[type="radio"]::before {
+    content: ""; width: 12px; height: 12px;
+    border-radius: 50%; transform: scale(0);
+    transition: 0.2s transform cubic-bezier(0.2, 0.8, 0.2, 1);
+    box-shadow: inset 1em 1em var(--accent);
+}
+input[type="radio"]:checked { border-color: var(--accent); }
+input[type="radio"]:checked::before { transform: scale(1); }
+
+/* ---- กล่องพรีวิว ---- */
+.preview-box {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    padding: 14px 16px;
+    border-radius: 16px;
+    margin-bottom: 12px;
+}
+.preview-box h4 { font-size: 0.8rem; font-weight: 600; color: var(--text-muted); margin-bottom: 6px; }
+.preview-box p { font-size: 0.92rem; margin: 3px 0; }
+.preview-box .thai-text { color: var(--accent-deep); font-weight: 500; }
+
+/* ---- การ์ดคัดลอกข้อความ ---- */
+.copy-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(215px, 1fr));
+    gap: 14px;
+}
+.copy-item {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 14px;
+}
+.copy-item textarea {
+    height: 84px;
+    font-size: 0.85rem;
+    background: var(--field-bg);
+}
+.copy-item.code textarea { height: 130px; font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: 0.75rem; }
+.copy-item.code { grid-column: 1 / -1; }
+.copy-btn {
+    width: 100%;
+    padding: 9px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    border: none;
+    border-radius: 9999px;
+    background: rgba(241, 101, 36, 0.12);
+    color: var(--accent-deep);
+    font-family: inherit;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+.copy-btn:hover { background: rgba(241, 101, 36, 0.22); }
+
+/* ---- ตารางรายชื่อ ---- */
+.table-wrapper {
+    max-height: 430px;
+    overflow: auto;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    background: var(--surface-2);
+}
+.table-wrapper::-webkit-scrollbar { width: 8px; height: 8px; }
+.table-wrapper::-webkit-scrollbar-track { background: transparent; }
+.table-wrapper::-webkit-scrollbar-thumb { background: rgba(241, 101, 36, 0.35); border-radius: 10px; }
+table { width: 100%; border-collapse: collapse; font-size: 0.86rem; text-align: left; }
+th, td { padding: 11px 15px; border-bottom: 1px solid var(--border); }
+th {
+    position: sticky; top: 0;
+    background: var(--surface-2);
+    font-weight: 600;
+    color: var(--text-muted);
+    font-size: 0.78rem;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    z-index: 10;
+}
+tbody tr { transition: background 0.15s ease; }
+tbody tr:hover { background: rgba(241, 101, 36, 0.07); }
+td.col-name { font-weight: 600; }
+td.col-role { color: var(--text-muted); }
+.mini-btn {
+    padding: 6px 14px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    border: none;
+    border-radius: 9999px;
+    background: rgba(241, 101, 36, 0.12);
+    color: var(--accent-deep);
+    font-family: inherit;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.2s ease;
+}
+.mini-btn:hover { background: rgba(241, 101, 36, 0.24); }
+.count-note { font-size: 0.8rem; color: var(--text-muted); margin-top: 10px; }
+
+/* ---- Footer ---- */
+.foot {
+    text-align: center;
+    padding: 0 20px 46px;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+/* ---- A11y & motion ---- */
+a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
+    outline: 3px solid var(--accent);
+    outline-offset: 2px;
+}
+.nav a:focus-visible, .nav button:focus-visible, .panel a:focus-visible, .panel button:focus-visible { outline-color: #fff; }
 @media (prefers-reduced-motion: reduce) {
-    *, *::before, *::after {
-        animation-duration: 0.01ms !important;
-        transition-duration: 0.01ms !important;
-    }
+    html { scroll-behavior: auto; }
+    *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}
+
+@keyframes slideIn {
+    from { transform: translateX(120%); opacity: 0; }
+    to   { transform: translateX(0); opacity: 1; }
 }
 </style>
 </head>
- 
+
 <body>
-<div class="page">
- 
-    <!-- ===== พื้นหลัง: ตัวเลข 404 ยักษ์ + วงรี ===== -->
-    <div class="bg-layer">
-        <div class="bg-center"><div id="bg404">404</div></div>
-        <div class="bg-center"><div id="bgOval"></div></div>
+
+<!-- ===================== NAV ===================== -->
+<nav class="nav" id="mainNav">
+    <a class="logo" href="#top">
+        <div class="logo-dots"><span></span><span></span><span></span><span></span></div>
+        <span class="logo-text">CICM e-GP</span>
+    </a>
+
+    <div class="nav-links">
+        <a href="#section-copy">ขอซื้อขอจ้าง</a>
+        <a href="#section-budget">พิจารณาอนุมัติ</a>
+        <a href="#section-signature">ใบสั่ง</a>
+        <a href="#section-staff">รายชื่อบุคลากร</a>
+        <a href="#section-receive">ตรวจรับครุภัณฑ์</a>
     </div>
- 
-    <!-- ===== แถบนำทาง ===== -->
-    <nav class="nav">
-        <div class="logo">
-            <div class="logo-dots"><span></span><span></span><span></span><span></span></div>
-            <span class="logo-text">CICM e-GP</span>
-        </div>
- 
-        <div class="nav-links">
-            <a href="#">เกี่ยวกับเรา</a>
-            <a href="#">ระบบ e-GP</a>
-            <a href="#">รายชื่อบุคลากร</a>
-            <a href="#">คำถามที่พบบ่อย</a>
-            <a href="#">ติดต่อเรา</a>
-        </div>
- 
-        <button class="menu-btn" id="menuBtn" aria-label="เปิดเมนู" aria-expanded="false" aria-controls="menuOverlay">
+
+    <div class="nav-actions">
+        <button class="pill-btn ghost" onclick="clearAll()" title="ล้างฟอร์มทั้งหมด">
+            <svg class="icon-16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>
+            <span class="label">ล้างฟอร์ม</span>
+        </button>
+        <button class="pill-btn" id="menuBtn" aria-label="เปิดเมนู" aria-expanded="false" aria-controls="menuOverlay">
             <svg class="icon-16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></svg>
             <span class="label">เมนู</span>
         </button>
-    </nav>
- 
-    <!-- ===== ภาพกลางหน้า (วิดีโอ + ภาพสำรอง) ===== -->
-    <div class="visual-wrap">
-        <div class="visual-box">
-            <video id="heroVideo" autoplay loop muted playsinline hidden></video>
- 
-            <svg id="fallbackArt" viewBox="0 0 320 320" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="ภาพประกอบเอกสารที่ค้นหาไม่พบ">
-                <ellipse cx="160" cy="286" rx="86" ry="13" fill="#000" opacity="0.10"/>
-                <g>
-                    <rect x="74" y="46" width="150" height="196" rx="14" fill="#fff"/>
-                    <path d="M186 46h10l28 28v10h-38z" fill="#FFD9BC"/>
-                    <rect x="98" y="92" width="86" height="10" rx="5" fill="#FFC9A3"/>
-                    <rect x="98" y="118" width="102" height="10" rx="5" fill="#FFE0C9"/>
-                    <rect x="98" y="144" width="74" height="10" rx="5" fill="#FFE0C9"/>
-                    <rect x="98" y="170" width="94" height="10" rx="5" fill="#FFE0C9"/>
-                </g>
-                <g>
-                    <circle cx="196" cy="196" r="52" fill="#fff" opacity="0.28"/>
-                    <circle cx="196" cy="196" r="52" stroke="#F16524" stroke-width="12" fill="none"/>
-                    <rect x="228" y="228" width="66" height="20" rx="10" transform="rotate(45 228 228)" fill="#F16524"/>
-                    <path d="M180 182l32 28M212 182l-32 28" stroke="#F16524" stroke-width="11" stroke-linecap="round"/>
-                </g>
-            </svg>
-        </div>
     </div>
- 
-    <!-- ===== เนื้อหาด้านล่าง ===== -->
-    <div class="bottom">
-        <h1>ขออภัย ไม่พบหน้าที่คุณกำลังค้นหา</h1>
-        <p class="sub">หน้านี้อาจถูกย้าย เปลี่ยนชื่อ หรือลบไปแล้ว ลองกลับไปเริ่มที่หน้าหลัก</p>
-        <a class="cta" href="/">
-            <svg class="icon-16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>
-            กลับหน้าหลัก
+</nav>
+
+<!-- ===================== HERO ===================== -->
+<header class="hero" id="top">
+    <div class="bg-layer">
+        <div class="bg-center"><div id="bgWord">e-GP</div></div>
+        <div class="bg-center"><div id="bgOval"></div></div>
+    </div>
+
+    <div class="hero-visual">
+        <svg id="heroArt" viewBox="0 0 320 320" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="ภาพประกอบเอกสารจัดซื้อจัดจ้างที่ผ่านการอนุมัติ">
+            <ellipse cx="160" cy="288" rx="88" ry="13" fill="#000" opacity="0.10"/>
+            <rect x="64" y="40" width="152" height="200" rx="16" fill="#fff"/>
+            <path d="M178 40h10l28 28v10h-38z" fill="#FFD9BC"/>
+            <rect x="88" y="88" width="88" height="10" rx="5" fill="#FFC9A3"/>
+            <rect x="88" y="114" width="104" height="10" rx="5" fill="#FFE3CF"/>
+            <rect x="88" y="140" width="76" height="10" rx="5" fill="#FFE3CF"/>
+            <rect x="88" y="166" width="96" height="10" rx="5" fill="#FFE3CF"/>
+            <rect x="88" y="192" width="60" height="10" rx="5" fill="#FFE3CF"/>
+            <circle cx="212" cy="206" r="54" fill="#fff"/>
+            <circle cx="212" cy="206" r="54" stroke="#F16524" stroke-width="11" fill="none"/>
+            <path d="M188 206l17 18 32-36" stroke="#F16524" stroke-width="13" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle cx="70" cy="268" r="7" fill="#fff" opacity="0.9"/>
+            <circle cx="252" cy="86" r="9" fill="#fff" opacity="0.85"/>
+            <circle cx="44" cy="132" r="5" fill="#fff" opacity="0.75"/>
+        </svg>
+    </div>
+
+    <div class="hero-bottom">
+        <h1>
+            ระบบจัดซื้อจัดจ้างภาครัฐ<br class="br-sm">ด้วยอิเล็กทรอนิกส์
+            <span class="en">Electronic Government Procurement : e-GP</span>
+        </h1>
+        <p class="org">วิทยาลัยแพทยศาสตร์นานาชาติจุฬาภรณ์</p>
+        <a class="cta" href="#section-copy">
+            เริ่มใช้งาน
+            <svg class="icon-16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14"/><path d="m19 12-7 7-7-7"/></svg>
         </a>
     </div>
-</div>
- 
-<!-- ===== เมนู Overlay ===== -->
+</header>
+
+<!-- ===================== CONTENT ===================== -->
+<main class="content">
+
+    <!-- 1. ข้อความสำเร็จรูป -->
+    <section id="section-copy" class="card">
+        <h2>📃 รายงานขอซื้อขอจ้าง</h2>
+        <p class="card-sub">ข้อความสำเร็จรูปที่ใช้บ่อย กดปุ่มเดียวคัดลอกไปวางในระบบ e-GP ได้ทันที</p>
+        <div class="copy-grid">
+            <div class="copy-item">
+                <textarea id="text1">รายละเอียดตามเอกสารแนบ</textarea>
+                <button class="copy-btn" onclick="copyWithAnimation('text1')">คัดลอก</button>
+            </div>
+            <div class="copy-item">
+                <textarea id="text2">อ้างถึง ERP เลขที่.............................</textarea>
+                <button class="copy-btn" onclick="copyWithAnimation('text2')">คัดลอก</button>
+            </div>
+            <div class="copy-item">
+                <textarea id="text3">วิทยาลัยแพทยศาสตร์นานาชาติจุฬาภรณ์</textarea>
+                <button class="copy-btn" onclick="copyWithAnimation('text3')">คัดลอก</button>
+            </div>
+            <div class="copy-item">
+                <textarea id="text4">(นางสาวบุษกร ล้วนลอย)
+นักวิชาการพัสดุ</textarea>
+                <button class="copy-btn" onclick="copyWithAnimation('text4')">คัดลอก</button>
+            </div>
+            <div class="copy-item">
+                <textarea id="text5">(ผู้ช่วยศาสตราจารย์ นายแพทย์ พีระพงค์ กิติภาวงค์) 
+คณบดี</textarea>
+                <button class="copy-btn" onclick="copyWithAnimation('text5')">คัดลอก</button>
+            </div>
+            <div class="copy-item">
+                <textarea id="text6">ส่วนงาน</textarea>
+                <button class="copy-btn" onclick="copyWithAnimation('text6')">คัดลอก</button>
+            </div>
+            <div class="copy-item">
+                <textarea id="text7">https://tu.ac.th/app/uploads/2024/08/01-%E0%B9%82%E0%B8%A5%E0%B9%82%E0%B8%81%E0%B9%89%E0%B8%98%E0%B8%A3%E0%B8%A3%E0%B8%A1%E0%B8%88%E0%B8%B1%E0%B8%81%E0%B8%A3-%E0%B8%82%E0%B8%B2%E0%B8%A7-%E0%B8%94%E0%B8%B3.jpg</textarea>
+                <button class="copy-btn" onclick="copyWithAnimation('text7')">คัดลอก</button>
+            </div>
+            <div class="copy-item">
+                <textarea id="text8">รายงานขอซื้อขอจ้าง รายการ</textarea>
+                <button class="copy-btn" onclick="copyWithAnimation('text8')">คัดลอก</button>
+            </div>
+            <div class="copy-item">
+                <textarea id="text9">รายงานตรวจรับ รายการ</textarea>
+                <button class="copy-btn" onclick="copyWithAnimation('text9')">คัดลอก</button>
+            </div>
+            <div class="copy-item">
+                <textarea id="text10">คณบดีวิทยาลัยแพทยศาสตร์นานาชาติจุฬาภรณ์</textarea>
+                <button class="copy-btn" onclick="copyWithAnimation('text10')">คัดลอก</button>
+            </div>
+            <div class="copy-item code">
+                <label class="field-label">มาโคร Word — แทนที่จำนวนเงินและอัปเดตฟิลด์</label>
+                <textarea id="text11">Sub ReplaceAmountAndUpdateFields()
+    Dim oldAmount As String
+    Dim newAmount As String
+    
+    ' 1. Input dialog for old and new amounts
+    oldAmount = InputBox("Enter the OLD amount to replace:", "Old Amount")
+    If oldAmount = "" Then Exit Sub
+    
+    newAmount = InputBox("Enter the NEW amount:", "New Amount")
+    If newAmount = "" Then Exit Sub
+    
+    ' Turn off screen updating to prevent flickering and speed up execution
+    Application.ScreenUpdating = False
+    
+    ' 2. Turn on Field Codes (Equivalent to 1st Alt + F9)
+    ActiveWindow.View.ShowFieldCodes = True
+    
+    ' 3. Find and Replace text in all story ranges (including textboxes, headers/footers)
+    Dim rng As Range
+    For Each rng In ActiveDocument.StoryRanges
+        With rng.Find
+            .Text = oldAmount
+            .Replacement.Text = newAmount
+            .Forward = True
+            .Wrap = wdFindContinue
+            .Format = False
+            .MatchCase = False
+            .MatchWholeWord = False
+            .Execute Replace:=wdReplaceAll
+        End With
+    Next rng
+    
+    ' 4. Update all fields (Equivalent to Ctrl + A then F9)
+    ActiveDocument.Fields.Update
+    
+    ' 5. Turn off Field Codes (Equivalent to 2nd Alt + F9)
+    ActiveWindow.View.ShowFieldCodes = False
+    
+    ' Turn screen updating back on
+    Application.ScreenUpdating = True
+    
+    ' Success Message
+    MsgBox "Amount replaced from " & oldAmount & " to " & newAmount & " and fields updated successfully!", vbInformation, "Done"
+End Sub</textarea>
+                <button class="copy-btn" onclick="copyWithAnimation('text11')">คัดลอกมาโคร</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- 2 + 3. อนุมัติ / ใบสั่ง -->
+    <div class="two-col">
+        <section id="section-budget" class="card">
+            <h2>📑 รายงานผลการพิจารณา</h2>
+            <p class="card-sub">กรอกจำนวนเงิน ระบบจะสะกดเป็นเลขไทยและตัวหนังสือให้อัตโนมัติ</p>
+            <div class="form-group">
+                <input type="text" id="amountInput" placeholder="เช่น 16028.60" oninput="this.value=this.value.replace(/[^0-9.]/g,'')">
+                <button class="action" onclick="generateText()">สร้างข้อความ</button>
+            </div>
+            <div id="livePreview"></div>
+            <textarea id="result" class="signature-area" placeholder="ข้อความจะขึ้นตรงนี้"></textarea>
+            <button class="action wide" onclick="copyWithAnimation('result')">คัดลอกข้อความ</button>
+        </section>
+
+        <section id="section-signature" class="card">
+            <h2>📦 ประเภทใบสั่ง</h2>
+            <p class="card-sub">เลือกประเภท ระบบจะสร้างบล็อกลงนามให้ตรงคำ</p>
+            <div style="margin-bottom: 20px; display: flex; gap: 26px;">
+                <label class="radio"><input type="radio" name="orderType" value="buy" onchange="generateSignature()"> ซื้อ</label>
+                <label class="radio"><input type="radio" name="orderType" value="hire" onchange="generateSignature()"> จ้าง</label>
+            </div>
+            <textarea id="signatureResult" class="signature-area" placeholder="เลือก ซื้อ หรือ จ้าง ด้านบน"></textarea>
+            <button class="action wide" onclick="copyWithAnimation('signatureResult')">คัดลอกข้อความ</button>
+        </section>
+    </div>
+
+    <!-- 4. รายชื่อบุคลากร -->
+    <section id="section-staff" class="card">
+        <h2>🙋🏻‍♂️ รายชื่อบุคลากร</h2>
+        <p class="card-sub">ค้นหาแล้วกดคัดลอก ระบบจะจัดคำนำหน้า/ตำแหน่งวิชาการให้ถูกรูปแบบเอกสารอัตโนมัติ</p>
+        <div class="form-group">
+            <input type="text" id="searchInput" placeholder="ค้นหา ชื่อ, นามสกุล, ลำดับ หรือ ตำแหน่ง..." oninput="filterTable()">
+        </div>
+        <div class="table-wrapper">
+            <table id="staffTable">
+                <thead>
+                    <tr>
+                        <th style="width:6%">ลำดับ</th>
+                        <th style="width:13%">คำนำหน้า</th>
+                        <th style="width:17%">วิชาการ/ยศ</th>
+                        <th style="width:25%">ชื่อ-นามสกุล</th>
+                        <th style="width:25%">ตำแหน่งงาน</th>
+                        <th style="width:14%">คัดลอก</th>
+                    </tr>
+                </thead>
+                <tbody id="staffTableBody"></tbody>
+            </table>
+        </div>
+        <p class="count-note" id="staffCount"></p>
+    </section>
+
+    <!-- 5. ตรวจรับครุภัณฑ์ -->
+    <div class="two-col">
+        <section id="section-receive" class="card">
+            <h2>📥 รายงานตรวจรับครุภัณฑ์</h2>
+            <p class="card-sub">เลือกหน่วยงานและกรอกรายละเอียด ข้อความจะขึ้นทางขวาทันที</p>
+
+            <div style="margin-bottom: 16px;">
+                <label class="field-label" for="unitSelect">ชื่อหน่วยงาน</label>
+                <select id="unitSelect" onchange="generateReceiveText()">
+                    <option value="">— เลือกหน่วยงาน —</option>
+                </select>
+            </div>
+
+            <div style="margin-bottom: 16px;">
+                <label class="field-label" for="assetNameInput">ชื่อครุภัณฑ์</label>
+                <input type="text" id="assetNameInput" placeholder="เช่น เครื่องกลั่นระเหยแบบหมุนภายในสุญญากาศ" oninput="generateReceiveText()">
+            </div>
+
+            <div style="display: flex; gap: 12px;">
+                <div style="width: 32%;">
+                    <label class="field-label" for="assetQtyInput">จำนวน (รายการ)</label>
+                    <input type="text" id="assetQtyInput" value="1" placeholder="1" oninput="this.value=this.value.replace(/[^0-9]/g,''); generateReceiveText()">
+                </div>
+                <div style="width: 68%;">
+                    <label class="field-label" for="assetAmountInput">จำนวนเงิน (บาท)</label>
+                    <input type="text" id="assetAmountInput" placeholder="เช่น 291449.00" oninput="this.value=this.value.replace(/[^0-9.]/g,''); generateReceiveText()">
+                </div>
+            </div>
+        </section>
+
+        <section class="card">
+            <h2>📝 ข้อความที่ได้</h2>
+            <p class="card-sub">ตรวจตัวสะกดจำนวนเงินก่อนคัดลอกไปวางในเอกสาร</p>
+            <div id="receivePreview"></div>
+            <textarea id="receiveResult" class="receive-area" placeholder="เลือกหน่วยงานและกรอกข้อมูลด้านซ้าย ข้อความจะขึ้นตรงนี้"></textarea>
+            <button class="action wide" onclick="copyWithAnimation('receiveResult')">คัดลอกข้อความ</button>
+        </section>
+    </div>
+</main>
+
+<p class="foot">งานคลังและพัสดุ · วิทยาลัยแพทยศาสตร์นานาชาติจุฬาภรณ์</p>
+
+<!-- ===================== MENU OVERLAY ===================== -->
 <div class="overlay" id="menuOverlay" role="dialog" aria-modal="true" aria-label="เมนูหลัก">
     <div class="backdrop" id="backdrop"></div>
     <div class="panel">
@@ -432,98 +833,634 @@ a:focus-visible, button:focus-visible {
                 <svg class="icon-20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
             </button>
         </div>
- 
+
         <div class="panel-items" id="panelItems">
-            <a href="#">เกี่ยวกับเรา</a>
-            <a href="#">ระบบ e-GP</a>
-            <a href="#">รายชื่อบุคลากร</a>
-            <a href="#">คำถามที่พบบ่อย</a>
-            <a href="#">ติดต่อเรา</a>
+            <a href="#section-copy">📃 รายงานขอซื้อขอจ้าง</a>
+            <a href="#section-budget">📑 รายงานผลการพิจารณา</a>
+            <a href="#section-signature">📦 ประเภทใบสั่ง</a>
+            <a href="#section-staff">🙋🏻‍♂️ รายชื่อบุคลากร</a>
+            <a href="#section-receive">📥 ตรวจรับครุภัณฑ์</a>
         </div>
- 
+
         <div class="panel-cta">
-            <a href="/">
-                <svg class="icon-20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>
-                กลับหน้าหลัก
-            </a>
+            <button onclick="clearAll(); setMenu(false);">
+                <svg class="icon-20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>
+                ล้างฟอร์มทั้งหมด
+            </button>
         </div>
     </div>
 </div>
- 
+
 <script>
-// ==========================================================
-// 🎬 วิดีโอกลางหน้า — เปลี่ยน URL ได้ที่บรรทัดนี้
-//    ถ้าเว้นว่าง หรือโหลดไม่สำเร็จ จะใช้ภาพ SVG สำรองแทนอัตโนมัติ
-// ==========================================================
-const VIDEO_SRC = "";
- 
-(function initVideo() {
-    const video = document.getElementById("heroVideo");
-    const art = document.getElementById("fallbackArt");
-    if (!VIDEO_SRC) return;
- 
-    video.addEventListener("loadeddata", () => {
-        video.hidden = false;
-        art.style.display = "none";
+// ==========================================
+// 🗂️ ส่วนโหลดข้อมูลตารางรายชื่อ (อัปเดตง่ายจาก Excel)
+// ==========================================
+// ถ้ามีรายชื่อใหม่ ก๊อปปี้จาก Excel มาวางในเครื่องหมาย ` ` ด้านล่างได้เลย
+const rawStaffData = `1	นาง			สุดารักษ์ สิริอังควรา	นักทรัพยากรมนุษย์ ชำนาญการพิเศษ
+2	นางสาว			สุภาพร คนคล่อง	นักวิเคราะห์นโยบายและแผน ชำนาญการ
+3	นางสาว			สิริพร ไพจิตโรจนา	นักทรัพยากรมนุษย์ ชำนาญการ
+4	นางสาว	ศาสตราจารย์	ดร.	เกศรา ณ บางช้าง	ศาสตราจารย์
+5	นาย	รองศาสตราจารย์	ดร.	วีระชัย ทิตภากร	รองศาสตราจารย์
+6	นางสาว	รองศาสตราจารย์	ดร.	วรรณา ชัยเจริญกุล	รองศาสตราจารย์
+7	นาง	ผู้ช่วยศาสตราจารย์	ดร.	จันธิดา กมลาสน์หิรัญ	ผู้ช่วยศาสตราจารย์
+8	นาย	ผู้ช่วยศาสตราจารย์	ดร.	ปรัชญา เพชรเกตุ	ผู้ช่วยศาสตราจารย์
+9	นางสาว	รองศาสตราจารย์	ดร.พญ.	จิตรลดา มีพันแสน	รองศาสตราจารย์
+10	นาย	ผู้ช่วยศาสตราจารย์	ดร.	ตุลยากร เปล่งสุริยการ	ผู้ช่วยศาสตราจารย์
+11	นาย	ผู้ช่วยศาสตราจารย์	ดร.	ศรัณยู พลนิกร	ผู้ช่วยศาสตราจารย์
+12	นางสาว	ผู้ช่วยศาสตราจารย์	ดร.	อังคณา กระจ่าง	ผู้ช่วยศาสตราจารย์
+13	นางสาว	ผู้ช่วยศาสตราจารย์	ดร.	ธารารัฏฐ์ นวลสนิท	ผู้ช่วยศาสตราจารย์
+14	นางสาว	ผู้ช่วยศาสตราจารย์	ดร.	มยุรี ธาราสุข	ผู้ช่วยศาสตราจารย์
+15	นางสาว	ผู้ช่วยศาสตราจารย์	ดร.	กัลยรัตน์ บุญประเสริฐ	ผู้ช่วยศาสตราจารย์
+16	นางสาว	รองศาสตราจารย์	ดร.	โสภิดา สุขประเสริฐ	รองศาสตราจารย์
+17	นางสาว			เขมจุฑา หอมหวล	นักวิชาการศึกษาชำนาญการ
+18	นางสาว	ผู้ช่วยศาสตราจารย์	ดร.	พิรชา จำปาเงิน	ผู้ช่วยศาสตราจารย์
+19	นางสาว	รองศาสตราจารย์	ดร.	นภมณี คอนทอง	รองศาสตราจารย์
+20	นาย	รองศาสตราจารย์	นายแพทย์	กัมมาล กุมาร ปาวา	ที่ปรึกษาคณบดีวิทยาลัยแพทยศาสตร์นานาชาติจุฬาภรณ์
+21	นาย	ผู้ช่วยศาสตราจารย์	นายแพทย์	พีระพงค์ กิติภาวงค์	ผู้เชี่ยวชาญ
+22	นาย	ผู้ช่วยศาสตราจารย์	พันตำรวจตรี นายแพทย์	ธงชัย สุนทราภา	ผู้อำนวยการ
+23	นาย	ผู้ช่วยศาสตราจารย์	ดร.นพ.	ไพรัตน์ ฐาปนาเดโชพล	รองคณบดีฝ่ายกิจการพิเศษ
+24	นาย	ศาสตราจารย์	ดร.นพ.	อดิศว์ ทัศณรงค์	คณบดีวิทยาลัยแพทยศาสตร์นานาชาติจุฬาภรณ์
+25	นางสาว	ผู้ช่วยศาสตราจารย์	ดร.	มยุรฉัตร แก้วมณี	ผู้ช่วยศาสตราจารย์
+26	นางสาว	ผู้ช่วยศาสตราจารย์	ดร.	สุภาวดี ภาบับภา	ผู้ช่วยศาสตราจารย์
+27	นางสาว	ผู้ช่วยศาสตราจารย์	ดร.	อรอนงค์ ทัศคร	ผู้ช่วยศาสตราจารย์
+28	นางสาว			สุภาพร ของสันเทียะ	นักวิชาการเงินและบัญชีชำนาญการ
+29	นางสาว			ภัคนันท์ กระจ่างพันธุ์	นักทรัพยากรมนุษย์ ชำนาญการ
+30	นาง			อมลวรรณ ขำสกุล	นักวิชาการพัสดุ
+31	นาง			นันทา ฉัตรปัญญาเจริญ	เจ้าหน้าที่ระบบงานคอมพิวเตอร์ ชำนาญการ
+32	นาย	รองศาสตราจารย์	ดร.	ศาสตราชัย ประสพดี	รองศาสตราจารย์
+33	นางสาว			ผกามาศ วันทา	นักวิชาการศึกษาชำนาญการ
+34	นาย	รองศาสตราจารย์	ดร.	สุวิทย์ ชัยศรี	รองศาสตราจารย์
+35	นางสาว	ผู้ช่วยศาสตราจารย์	ดร.	ศีตกานต์ นัดพบสุข	ผู้ช่วยศาสตราจารย์
+36	นางสาว			จริกานต์ เจริญมิน	เจ้าหน้าที่บริหารงานทั่วไป ชำนาญการ
+37	นางสาว			ชมพูเนกข์ บุญนารอด	นักวิชาการศึกษาชำนาญการ
+38	นาย			คงกต เนียมนาภา	นักวิชาการศึกษาปฏิบัติการ
+39	นาง			จิรฐา ผดุงสุขสิร	เจ้าหน้าที่บริหารงานทั่วไป ชำนาญการ
+40	นาย	ผู้ช่วยศาสตราจารย์	ดร.	อติภัทร ยาศิริ	ผู้ช่วยศาสตราจารย์
+41	นางสาว	รองศาสตราจารย์	ดร.	นิภาพร เงินยวง	รองศาสตราจารย์
+42	นางสาว			สุภาวดี เขียวแก่	นักวิทยาศาสตร์ชำนาญการ
+43	นาย			จีรยุทธ ศรประจักร์ชัย	เจ้าหน้าที่ระบบงานคอมพิวเตอร์ ชำนาญการ
+44	นาย	ผู้ช่วยศาสตราจารย์	ดร.	สมพงษ์ ทะบันหาร	ผู้ช่วยศาสตราจารย์
+45	นางสาว			วิชานาถ หงษาชุม	นักวิชาการศึกษาชำนาญการ
+46	นางสาว			ศุภนิดา ถานันต๊ะ	นักวิชาการศึกษาชำนาญการ
+47	นางสาว			เดือนเพ็ญ นามวงษ์	นักวิชาการศึกษาชำนาญการ
+48	นางสาว			จุฑาภรณ์ พลวัฒน์	นักวิทยาศาสตร์ชำนาญการ
+49	นางสาว			ชมพูนุท ปานเนียม	นักวิชาการศึกษาชำนาญการ
+50	นางสาว			วิไลลักษณ์ มงคลฉัตร	เจ้าหน้าที่บริหารงานทั่วไป ชำนาญการ
+51	นางสาว	อาจารย์	ดร.	สุภาวดี ด้วงพรม	อาจารย์
+52	นางสาว	รองศาสตราจารย์	ดร.	อารีจรรย์ โสตถิพันธุ์	รองศาสตราจารย์
+53	นางสาว	ผู้ช่วยศาสตราจารย์	ดร.	หยาดนภา ผาเจริญ	ผู้ช่วยศาสตราจารย์
+54	นางสาว	ผู้ช่วยศาสตราจารย์	ดร.	นิภาภรณ์ แสนคุณท้าว	ผู้ช่วยศาสตราจารย์
+55	นางสาว	ผู้ช่วยศาสตราจารย์	ดร.	กนกทิพย์ ปานสุขสาร	ผู้ช่วยศาสตราจารย์
+56	นางสาว	รองศาสตราจารย์	แพทย์หญิง	นันตรา สุวันทารัตน์	รองศาสตราจารย์
+57	นาย	ผู้ช่วยศาสตราจารย์	ดร.	บุรพล สิงห์นา	ผู้ช่วยศาสตราจารย์
+58	นางสาว	ผู้ช่วยศาสตราจารย์	ดร.	อันธิฌา คุณจันทรโชติ	ผู้ช่วยศาสตราจารย์
+59	นาย	รองศาสตราจารย์	ดร.	กัณฑ์วีร์ วิวัฒน์พาณิชย์	รองศาสตราจารย์
+60	นางสาว			สุภจิรา คงครบ	นักวิชาการเงินและบัญชี
+61	นางสาว			ณราวดี สุขเสริม	นักวิชาการเงินและบัญชี
+62	นาง			ธัญญธร ประดิษฐ์ทรัพย์	นักวิเคราะห์นโยบายและแผน
+63	นางสาว			ชดาษา ชีพเมืองแมน	นักวิชาการศึกษาชำนาญการ
+64	นาย	อาจารย์	ดร.	อานนท์ จันทะนุกูล	อาจารย์
+65	นาย	ผู้ช่วยศาสตราจารย์	ดร.	เทวา พนักศรี	ผู้ช่วยศาสตราจารย์
+66	นางสาว	ผู้ช่วยศาสตราจารย์	ดร.	ภัณฑิลา ธาราเบ็ญจศีล	ผู้ช่วยศาสตราจารย์
+67	นาง	รองศาสตราจารย์	แพทย์หญิง	เปรมจิต จันทองจีน	รองศาสตราจารย์
+68	นาย	อาจารย์		จักรี ตั้งเทียนชัยชนะ	อาจารย์
+69	นางสาว	อาจารย์		ณงชนา กลางสุข	ผู้เชี่ยวชาญ
+70	นาย	อาจารย์		ภัคพล ยุทธนากรกุล	อาจารย์
+71	นาย	ผู้ช่วยศาสตราจารย์	ดร.	กิตติคุณ เกิดสมบูรณ์	ผู้ช่วยศาสตราจารย์
+72	นางสาว	ผู้ช่วยศาสตราจารย์	ดร.	รุ่งรวี มงคลรบ	ผู้ช่วยศาสตราจารย์
+73	นางสาว	ผู้ช่วยศาสตราจารย์	ดร.	อาภรณ์ บัวหลวง	ผู้ช่วยศาสตราจารย์
+74	นางสาว			จิราพร ส้มแหงม	นักวิทยาศาสตร์
+75	นาย	ผู้ช่วยศาสตราจารย์	ดร.	นันธิยะ ศรีแก้ว	ผู้ช่วยศาสตราจารย์
+76	นาง	ผู้ช่วยศาสตราจารย์	ดร.	กาญจนา ไรย์ฮอร์ชัค	ผู้ช่วยศาสตราจารย์
+77	นางสาว			นิตยา ราตรีวิจิตร์	นักวิชาการศึกษาชำนาญการ
+78	นางสาว			สุธินี จินดาเสถียร	นักวิเคราะห์นโยบายและแผน
+79	นางสาว	ผู้ช่วยศาสตราจารย์	ดร.	พรรทิพย์ ฉวีบริสุทธิ์	ผู้ช่วยศาสตราจารย์
+80	นางสาว			จารุวรรณ สลางสิงห์	ผู้ปฏิบัติงานพยาบาล
+81	นางสาว			วรางค์สิริ สุดประเสริฐ	นักวิชาการเงินและบัญชี
+82	นาย	รองศาสตราจารย์	นายแพทย์	กู้พงษ์ ศิริบำรุงวงศ์	รองศาสตราจารย์
+83	นางสาว			วิไลลักษณ์ อำพันศรี	นักวิทยาศาสตร์ชำนาญการ
+84	นาย	อาจารย์	ดร.	Noel Pabalan	ผู้เชี่ยวชาญ
+85	นาง			นวลรักษ์ ชอบชื่น	ผู้มีความรู้ความสามารถพิเศษ
+86	นางสาว	ผู้ช่วยศาสตราจารย์	ดร.	ปิยะพร สุรินทร์เลิศ	ผู้ช่วยศาสตราจารย์
+87	นางสาว	อาจารย์		อนันตา เอี่ยมธนาอนันต์	อาจารย์
+88	นางสาว	ผู้ช่วยศาสตราจารย์	ดร.	อัญชนา รอดรังนก	ผู้ช่วยศาสตราจารย์
+89	นางสาว			จิตติญา พฤทธิ์ธโนปจัย	นักวิชาการศึกษาชำนาญการ
+90	นาย	ผู้ช่วยศาสตราจารย์	นายแพทย์	เทพ เศรษฐบุตร	ผู้ช่วยศาสตราจารย์
+91	นางสาว	รองศาสตราจารย์	แพทย์หญิง	ปุณยพัศฐิช์ ศิริธนบดีกุล	รองศาสตราจารย์
+92	นาย	รองศาสตราจารย์	นายแพทย์	ศิษฏ์ ศิรมลพิวัฒน์	รองศาสตราจารย์
+93	นาย			กฤษพล จิตรโชติ	นักวิชาการพัสดุ
+94	นางสาว			ดวงรัตน์ เอกตระกูลชล	เจ้าหน้าที่วิจัย
+95	นางสาว	อาจารย์		สินีนาฎ ทรงคุ้มครอง	อาจารย์
+96	นาย	ศาสตราจารย์	ดร.นพ.	รัฐกร วิไลชนม์	ศาสตราจารย์
+97	นางสาว	อาจารย์	ดร.	ภาวศุทธิ์ ลีดาสวัสดิ์	อาจารย์
+98	นางสาว			วิสสุตา ประเสริฐพรศักดิ์	นักวิชาการศึกษาชำนาญการ
+99	นาง			ชัญญานุช ปาชะโน	นักวิชาการศึกษา
+100	นางสาว			อัญธิกา วงค์สกุล	นักวิชาการโสตทัศนศึกษาชำนาญการ
+101	นางสาว			จิดาภา บัณฑรภิญโญ	นักวิชาการศึกษาชำนาญการ
+102	นาย	ผู้ช่วยศาสตราจารย์	นายแพทย์	ธานี เอี่ยมศรีตระกูล	ผู้ช่วยศาสตราจารย์
+103	นางสาว	ผู้ช่วยศาสตราจารย์	ดร.	ภารดี แสงวัฒนกุล	ผู้ช่วยศาสตราจารย์
+104	นาย	รองศาสตราจารย์	นายแพทย์	กฤต บุญธนาพิบูลย์	รองศาสตราจารย์
+105	นาย	ผู้ช่วยศาสตราจารย์	ดร.	Dawid Michal Krenc	ผู้ช่วยศาสตราจารย์
+106	นาย	ผู้ช่วยศาสตราจารย์	นายแพทย์	กำพล จินตนาวิลาศ	ผู้ช่วยศาสตราจารย์
+107	นาย	ผู้ช่วยศาสตราจารย์	นายแพทย์	กานต์ วิฑูรชาติ	ผู้ช่วยศาสตราจารย์
+108	นาย	รองศาสตราจารย์	นายแพทย์	ฑิยภัทร เลาหเวชวานิช	รองศาสตราจารย์
+109	นางสาว			บุษดี มั่งมีดี	นักวิชาการศึกษา
+110	นางสาว	ผู้ช่วยศาสตราจารย์	แพทย์หญิง	สุเนตรา นิตยวรรธนะ	ผู้ช่วยศาสตราจารย์
+111	นาง			รุ่งนภา ไฮเอ็ท	นักวิชาการศึกษา
+112	นางสาว	อาจารย์	แพทย์หญิง	พรมพร ภัทรเจียรพันธุ์	อาจารย์
+113	นาย	ผู้ช่วยศาสตราจารย์	นายแพทย์	เทียนชัย ภาสุรกุล	ผู้ช่วยศาสตราจารย์
+114	นาย	ผู้ช่วยศาสตราจารย์	นายแพทย์	สมพล อาภรณ์วิรัตน์	ผู้ช่วยศาสตราจารย์
+115	นาย	ผู้ช่วยศาสตราจารย์	นายแพทย์	วรุตม์ พลสวัสดิ์ชัย	ผู้ช่วยศาสตราจารย์
+116	นางสาว	ผู้ช่วยศาสตราจารย์	แพทย์หญิง	สุทธิยา อนุมาศ	ผู้ช่วยศาสตราจารย์
+117	นางสาว	ผู้ช่วยศาสตราจารย์	ดร.	เฉลิมพร อรรถศิลป์	ผู้ช่วยศาสตราจารย์
+118	นางสาว	ผู้ช่วยศาสตราจารย์	ดร.	ปพิชญา พรหมประดิษฐ์	ผู้ช่วยศาสตราจารย์
+119	นางสาว	อาจารย์		เรณู เพ็ญธนานันต์	ผู้เชี่ยวชาญ
+120	นางสาว	อาจารย์	แพทย์หญิง	นวมณฑ์ พลเสน เพทิทปิแอร์	อาจารย์
+121	นางสาว	ผู้ช่วยศาสตราจารย์	ดร.	นวรัตน์ โพธิ์สุวรรณ	ผู้ช่วยศาสตราจารย์
+122	นางสาว	อาจารย์	ดร.	กุลดาวรรณ จันอ่อน	อาจารย์
+123	นางสาว	ผู้ช่วยศาสตราจารย์	ดร.	กันตา ปรานวีระไพบูลย์	ผู้ช่วยศาสตราจารย์
+124	นางสาว	อาจารย์	แพทย์หญิง	รุ่งนภา ศิลปดีเลิศกุล	อาจารย์
+125	นางสาว			ศศิฉาย ใจเบิกบาน	นักเทคโนโลยีหัวใจและทรวงอก
+126	นาย			วายุ ศักดิ์ดี	นักวิชาการโสตทัศนศึกษา
+127	นาย			พลังธรณ์ วันผ่อง	ช่างเทคนิค
+128	นางสาว			นพรัตน์ อำพันศรี	นักวิชาการโสตทัศนศึกษา
+129	นาย			นัทธ์ฐภัค อัศวชุติพนธ์	นักวิชาการโสตทัศนศึกษา
+130	นาย	อาจารย์	ดร.นพ.	ภวิษณุ์ ผดุงศักดิ์สวัสดิ์	อาจารย์
+131	นาย	ผู้ช่วยศาสตราจารย์	ดร.	ประทีป อมรรัตนพันธ์	ผู้ช่วยศาสตราจารย์
+132	นางสาว			กรรณิการ์ สมจิตร์	นักทัศนมาตร
+133	นาย			คีรีเมฆ เกตุสุธรรม	นักทัศนมาตร
+134	นาย			รวิสุต วรเวช	นักวิเทศสัมพันธ์
+135	นางสาว	อาจารย์	แพทย์หญิง	ณฤชนก เลิศกุศล	อาจารย์
+136	นางสาว			มณธิญา พิพิธธินันท์	นักวิเทศสัมพันธ์
+137	นางสาว	ผู้ช่วยศาสตราจารย์	แพทย์หญิง	ณัฐสุดา อ่วมแป้น	ผู้ช่วยศาสตราจารย์
+138	นาย	ผู้ช่วยศาสตราจารย์	ดร.	อดิเทพ หาญสกล	ผู้ช่วยศาสตราจารย์
+139	นางสาว			ศิริพร อินโนนเชือก	ผู้ปฏิบัติงานบริหาร
+140	นางสาว			วิลีรัตน์ พุ่มพวง	นักทรัพยากรมนุษย์ ปฏิบัติการ
+141	นางสาว			สุวรรณา พบชัยภูมิ	นักวิชาการเงินและบัญชี
+142	นาย			รัฐวุฒิ ฐาปนะกุล	นักทัศนมาตร
+143	นาย	ผู้ช่วยศาสตราจารย์	ดร.	พศวีร์ มงคลปทุมรัตน์	ผู้ช่วยศาสตราจารย์
+144	นางสาว	อาจารย์	แพทย์หญิง	สร้อยศรี เธียรธัญทิพ	อาจารย์
+145	นาย	อาจารย์	นายแพทย์	อาทิ วงศ์ชะอุ่ม	อาจารย์
+146	นาย			จุฬานิวัฒน์ ตั้งมั่น	เจ้าหน้าที่บริหารงานทั่วไป
+147	นางสาว			พิมพลอย จันทร์เขียว	นักเทคโนโลยีหัวใจและทรวงอก
+148	นาย			ชาญชัย พิมแพง	ผู้มีความรู้ความสามารถพิเศษ
+149	นางสาว			พรสุดา ศรีมาบุตร	นักวิทยาศาสตร์
+150	นางสาว	อาจารย์	ดร.	กนกพร แผลงฤทธิ์	อาจารย์
+151	นางสาว	อาจารย์	แพทย์หญิง	ชาริณี กันตะสิริพิทักษ์	อาจารย์
+152	นางสาว			จุฑาภรณ์ วรรณภูมิ	นักวิชาการศึกษาปฏิบัติการ
+153	นาย	อาจารย์	ดร.	ธีรฉัตร แซ่เฮ่ง	อาจารย์
+154	นางสาว	อาจารย์	แพทย์หญิง	ธมลพรรณ จุลละพราหมณ์	อาจารย์
+155	นางสาว	อาจารย์	แพทย์หญิง	ธีรยา ปิยจารวงษ์	อาจารย์
+156	นางสาว			อรัญญา ยุวดี	นักเทคโนโลยีหัวใจและทรวงอก
+157	นาย	อาจารย์	ดร.	ปวีณ คันศร	อาจารย์
+158	นางสาว	ผู้ช่วยศาสตราจารย์	ดร.	ธนา จักษ์เมธา	ผู้ช่วยศาสตราจารย์
+159	นางสาว	รองศาสตราจารย์	แพทย์หญิง	ทิพวรรณ หรรษคุณาชัย	ผู้บริหาร
+160	นางสาว			บุษกร ล้วนลอย	นักวิชาการพัสดุ
+161	นางสาว	อาจารย์	ดร.	นิภาวรรณ น่วมเกตุ	อาจารย์
+162	นาย	ผู้ช่วยศาสตราจารย์	ดร.	ศราวุธ ลาภมณีย์	ผู้ช่วยศาสตราจารย์
+163	นาย			เชาว์วรรธน์ จันทนา	เจ้าหน้าที่ระบบงานคอมพิวเตอร์
+164	นางสาว			ชมพูนุช ชมบุญ	นักประชาสัมพันธ์
+165	นาง	รองศาสตราจารย์	ดร.	ชะนวนทอง ธนสุกาญจน์	ผู้เชี่ยวชาญ
+166	นาย			โยนาธาน ไมเออร์	นักเทคโนโลยีหัวใจและทรวงอก
+167	นางสาว	อาจารย์	แพทย์หญิง	จิตรา ปาวา	อาจารย์
+168	นาย	อาจารย์	นายแพทย์	นนทพันธ์ ณรงค์	อาจารย์
+169	นางสาว			พัชราภรณ์ จันจั่นเพ็ชร	นักวิชาการศึกษาปฏิบัติการ
+170	นาย		พันจ่าอากาศเอก	ธีรวัตร พวงพันธ์	นักวิเคราะห์นโยบายและแผน
+171	นางสาว	อาจารย์	แพทย์หญิง	ณภัทร กัมมาระบุตร	อาจารย์
+172	นาย	อาจารย์	นายแพทย์	สิทธา ศรีปรัชญาอนันต์	อาจารย์
+173	นางสาว			ศิริลักษณ์ รอดแจ่ม	เจ้าหน้าที่บริหารงานทั่วไป
+174	นางสาว	อาจารย์	แพทย์หญิง	ภัทรวรรณ วรรณสาธพ	อาจารย์
+175	นาย	อาจารย์	ดร.	ศุภวิชญ์ บุญเกื้อ	อาจารย์
+176	นางสาว	อาจารย์	ดร.	กฤษณา ทิพย์คำ	อาจารย์
+177	นางสาว			ภัทรวลัย จำปานันท์	นักทัศนมาตร
+178	นาย			ศุภมิตร นันทวัฒนานุกูล	นักวิชาการศึกษาปฏิบัติการ
+179	นางสาว			นฤกัญ สังข์ฉิม	เจ้าหน้าที่บริหารงานทั่วไป
+180	นาย			ธีรภัทร เพ็ชรจร	นักวิชาการศึกษา (กิจการนักศึกษา)`;
+
+function loadStaffTable() {
+    const tbody = document.getElementById("staffTableBody");
+    const rows = rawStaffData.trim().split('\n');
+    let html = "";
+
+    rows.forEach(row => {
+        const cols = row.split('\t');
+        if(cols.length >= 6) {
+            const prefix = cols[1] ? cols[1].trim() : "";
+            const academic = cols[2] ? cols[2].trim() : "";
+            const rank = cols[3] ? cols[3].trim() : "";
+            const fullName = cols[4] ? cols[4].trim() : "";
+            
+            // ----------------------------------------------------
+            // 📝 จัดการข้อความสำหรับคัดลอก (Copy Text)
+            // ----------------------------------------------------
+            let textToCopy = "";
+            
+            if (academic || rank) {
+                // เงื่อนไขใหม่: ถ้ามีตำแหน่งวิชาการหรือยศ -> ไม่ต้องเอาคำนำหน้า
+                // ผลลัพธ์: ศาสตราจารย์ ดร. เกศรา ณ บางช้าง
+                textToCopy = [academic, rank, fullName].filter(Boolean).join(" ");
+            } else {
+                // ถ้าไม่มีตำแหน่งวิชาการหรือยศ -> เอาคำนำหน้าติดกับชื่อ
+                // ผลลัพธ์: นางสาวสุดารักษ์ สิริอังควรา
+                textToCopy = prefix + fullName;
+            }
+
+            // ----------------------------------------------------
+            // 📊 จัดการข้อความสำหรับแสดงในตาราง (Display Text)
+            // ----------------------------------------------------
+            const displayTitle = [academic, rank].filter(Boolean).join(" ");
+
+            html += `<tr>
+                <td>${cols[0]}</td>
+                <td>${prefix}</td>
+                <td>${displayTitle}</td>
+                <td class="col-name">${fullName}</td>
+                <td class="col-role">${cols[5]}</td>
+                <td><button class="mini-btn" onclick="copyCustomText('${textToCopy}')">คัดลอกชื่อ</button></td>
+            </tr>`;
+        }
     });
-    video.addEventListener("error", () => {
-        video.hidden = true;
-        art.style.display = "";
-    });
-    video.src = VIDEO_SRC;
-})();
- 
-// ==========================================================
-// 📐 ปรับสเกลแนวตั้งของตัวเลข 404 และวงรี ตามความสูงจอ
-// ==========================================================
-const el404 = document.getElementById("bg404");
-const elOval = document.getElementById("bgOval");
- 
-function applyScale() {
-    const h = el404.offsetHeight;
-    if (!h) return;
-    const scaleY = window.innerHeight / h;
-    el404.style.transform = `scale(1.15, ${scaleY * 1.4})`;
- 
-    // ตัวเลข 404 ถูกยืดสูง = 1.4 เท่าของความสูงจอเสมอ ช่องว่างกลางเลข 0
-    // จึงสูงราว 0.84 เท่าของจอ — วงรีต้องสูงกว่านั้นเล็กน้อยเพื่อกลบให้สนิท
-    elOval.style.height = (window.innerHeight * 0.92) + "px";
-    elOval.style.transform = "scale(1, 1)";
+    tbody.innerHTML = html;
+    updateCount();
 }
+
+// แสดงจำนวนรายชื่อที่เห็นอยู่ตอนนี้
+function updateCount() {
+    const note = document.getElementById("staffCount");
+    if (!note) return;
+    const rows = document.querySelectorAll("#staffTableBody tr");
+    const shown = Array.from(rows).filter(r => r.style.display !== "none").length;
+    note.textContent = shown === rows.length
+        ? `ทั้งหมด ${rows.length} รายชื่อ`
+        : `พบ ${shown} จาก ${rows.length} รายชื่อ`;
+}
+
+// ==========================================
+// 📥 รายงานตรวจรับครุภัณฑ์
+// ==========================================
+// 🏢 รายชื่อหน่วยงาน (เพิ่ม/แก้ไขได้ที่ list นี้)
+const unitList = [
+    "งานประชาสัมพันธ์",
+    "งานบริหารทรัพยากรมนุษย์",
+    "งานบริหารทั่วไป",
+    "งานคลังและพัสดุ",
+    "งานแผนและงบประมาณ",
+    "งานบริการการศึกษา",
+    "งานเทคโนโลยีสารสนเทศ",
+    "ผู้มีความรู้ความสามารถพิเศษ",
+    "งานประกันคุณภาพการศึกษา",
+    "คณะแพทยศาสตร์",
+    "สำนักวิชาการแพทย์บูรณาการ",
+    "สำนักวิชาแพทยศาสตร์",
+    "วิทยาลัยแพทยศาสตร์นานาชาติจุฬาภรณ์",
+    "งานวิเทศสัมพันธ์",
+    "งานกิจการนักศึกษา",
+    "งานวิจัย",
+    "โครงการบริการวิชาการคลินิกการแพทย์ผสมผสาน (แผนจีน)",
+    "งานบัณฑิตศึกษา",
+    "งานยุทธศาสตร์และงบประมาณ",
+    "งานส่งเสริมและสนับสนุนการศึกษา",
+    "งานบริหาร",
+    "งานวิจัย ส่งเสริมและพัฒนาวิชาการ",
+    "ศูนย์สอบ วิทยาลัยแพทยศาสตร์นานาชาติจุฬาภรณ์",
+    "Skill Lab"
+];
+
+function loadUnitOptions() {
+    const sel = document.getElementById("unitSelect");
+    if (!sel) return;
+    let html = '<option value="">— เลือกหน่วยงาน —</option>';
+    unitList.forEach(u => {
+        html += `<option value="${u}">${u}</option>`;
+    });
+    sel.innerHTML = html;
+}
+
+function generateReceiveText() {
+    const unit = document.getElementById("unitSelect").value.trim();
+    const asset = document.getElementById("assetNameInput").value.trim();
+    const qtyRaw = document.getElementById("assetQtyInput").value.trim();
+    const amountRaw = document.getElementById("assetAmountInput").value.trim();
+
+    const qty = qtyRaw || "1";
+    const amount = amountRaw
+        ? parseFloat(amountRaw).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})
+        : "";
+
+    const uUnit = unit || "[ชื่อหน่วยงาน]";
+    const uAsset = asset || "[ชื่อครุภัณฑ์]";
+    const uAmount = amount || "[จำนวนเงิน]";
+
+    const text = `ตามที่ ${uUnit} ได้ตรวจรับครุภัณฑ์ รายการ${uAsset} จำนวน ${qty} รายการ เป็นเงิน ${uAmount} บาท เรียบร้อยแล้ว นั้น`;
+
+    document.getElementById("receiveResult").value = text;
+
+    const preview = document.getElementById("receivePreview");
+    if (amountRaw) {
+        preview.innerHTML = `
+            <div class="preview-box">
+                <h4>ตัวสะกดจำนวนเงิน</h4>
+                <p class="thai-text">(${numberToThaiText(amountRaw)})</p>
+            </div>
+        `;
+    } else {
+        preview.innerHTML = '';
+    }
+}
+
+// โหลดตารางตอนเปิดเว็บ
+window.onload = function() {
+    loadStaffTable();
+    loadUnitOptions();
+    initShell();
+};
+
+// ฟังก์ชันค้นหาในตาราง (Search Filter)
+function filterTable() {
+    let input = document.getElementById("searchInput");
+    let filter = input.value.toUpperCase();
+    let table = document.getElementById("staffTable");
+    let tr = table.getElementsByTagName("tr");
+
+    for (let i = 1; i < tr.length; i++) {
+        let tdElements = tr[i].getElementsByTagName("td");
+        let match = false;
+        // ค้นหาทุกๆ คอลัมน์
+        for(let j=0; j<5; j++) {
+            if (tdElements[j]) {
+                let txtValue = tdElements[j].textContent || tdElements[j].innerText;
+                if (txtValue.toUpperCase().indexOf(filter) > -1) {
+                    match = true;
+                    break;
+                }
+            }
+        }
+        tr[i].style.display = match ? "" : "none";
+    }
+    updateCount();
+}
+
+// ==========================================
+// 🚀 ฟังก์ชันหลัก (Toast & UI Interactions)
+// ==========================================
+
+// ฟังก์ชันแสดง Toast แจ้งเตือน
+function showToast(message) {
+    const oldToast = document.getElementById('apple-toast');
+    if (oldToast) oldToast.remove();
+
+    const toast = document.createElement('div');
+    toast.id = 'apple-toast';
+    toast.textContent = message;
+    toast.style.cssText = `
+        position: fixed; top: 30px; right: 30px;
+        background: var(--success); color: #fff;
+        padding: 12px 24px; border-radius: 9999px;
+        font-size: 0.9rem; font-family: inherit; font-weight: 600;
+        box-shadow: 0 8px 22px rgba(0, 0, 0, 0.22);
+        animation: slideIn 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        z-index: 1000;
+    `;
+    
+    document.body.appendChild(toast);
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateY(-10px)';
+        toast.style.transition = 'all 0.3s ease';
+        setTimeout(() => toast.remove(), 300);
+    }, 2000);
+}
+
+// Copy จาก Input/Textarea
+function copyWithAnimation(id) {
+    const el = document.getElementById(id);
+    if (!el.value) return; 
+    
+    el.select();
+    document.execCommand('copy');
+    
+    el.style.backgroundColor = 'rgba(0, 122, 255, 0.1)';
+    setTimeout(() => el.style.backgroundColor = '', 300);
+
+    showToast('✓ คัดลอกแล้ว');
+}
+
+// Copy ข้อความที่กำหนดเอง (เช่น รายชื่อในตาราง)
+function copyCustomText(text) {
+    const tempInput = document.createElement("textarea");
+    tempInput.value = text;
+    document.body.appendChild(tempInput);
+    tempInput.select();
+    document.execCommand("copy");
+    document.body.removeChild(tempInput);
+    
+    showToast(`✓ คัดลอก "${text}" แล้ว`);
+}
+
+// Live Preview งบประมาณ
+function livePreview() {
+    const amount = document.getElementById('amountInput').value;
+    const preview = document.getElementById('livePreview');
+    
+    if(amount) {
+        preview.innerHTML = `
+            <div class="preview-box">
+                <h4>ตัวอย่างเอกสาร</h4>
+                <p>จำนวนเงิน: <strong>${toThaiNumber(parseFloat(amount).toLocaleString('en-US',{minimumFractionDigits:2}))}</strong> บาท</p>
+                <p class="thai-text">(${numberToThaiText(amount)})</p>
+            </div>
+        `;
+    } else {
+        preview.innerHTML = '';
+    }
+}
+document.getElementById('amountInput').addEventListener('input', livePreview);
+
+// Keyboard Shortcuts
+document.addEventListener('keydown', (e) => {
+    if ((e.metaKey || e.ctrlKey) && e.key === 'c') {
+        const activeEl = document.activeElement;
+        if (activeEl && activeEl.tagName === 'TEXTAREA') {
+            copyWithAnimation(activeEl.id);
+        }
+    }
+    if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+        if (document.activeElement.id === 'amountInput') {
+            generateText();
+        }
+    }
+});
+
+function clearAll() {
+    document.getElementById('amountInput').value = '';
+    document.getElementById('result').value = '';
+    document.getElementById('signatureResult').value = '';
+    document.getElementById('searchInput').value = '';
+    document.getElementById('livePreview').innerHTML = '';
+    const radios = document.querySelectorAll('input[name="orderType"]');
+    radios.forEach(r => r.checked = false);
+
+    // ล้างส่วนรายงานตรวจรับครุภัณฑ์
+    document.getElementById('unitSelect').value = '';
+    document.getElementById('assetNameInput').value = '';
+    document.getElementById('assetQtyInput').value = '1';
+    document.getElementById('assetAmountInput').value = '';
+    document.getElementById('receiveResult').value = '';
+    document.getElementById('receivePreview').innerHTML = '';
+
+    filterTable(); // รีเซ็ตการกรองตาราง
+    showToast("↻ ล้างฟอร์มแล้ว");
+}
+
+// ==========================================
+// ⚙️ Logic ต้นฉบับ
+// ==========================================
+
+function toThaiNumber(num){
+    return num.replace(/\d/g, d => "๐๑๒๓๔๕๖๗๘๙"[d]);
+}
+
+function numberToThaiText(number){
+    const txtNumArr = ["ศูนย์","หนึ่ง","สอง","สาม","สี่","ห้า","หก","เจ็ด","แปด","เก้า"];
+    const txtDigitArr = ["","สิบ","ร้อย","พัน","หมื่น","แสน","ล้าน"];
+
+    number = parseFloat(number).toFixed(2);
+    let [integer, decimal] = number.split(".");
+    let bahtText = "";
+    let len = integer.length;
+
+    for(let i=0;i<len;i++){
+        let n = parseInt(integer.charAt(i));
+        if(n!=0){
+            if(i==(len-1) && n==1 && len>1) bahtText+="เอ็ด";
+            else if(i==(len-2) && n==2) bahtText+="ยี่";
+            else if(i==(len-2) && n==1) bahtText+="";
+            else bahtText+=txtNumArr[n];
+            bahtText+=txtDigitArr[len-i-1];
+        }
+    }
+    bahtText+="บาท";
+
+    if(decimal=="00"){
+        bahtText+="ถ้วน";
+    }else{
+        if(decimal.charAt(0)!="0"){
+            if(decimal.charAt(0)=="2") bahtText+="ยี่";
+            else if(decimal.charAt(0)!="1") bahtText+=txtNumArr[decimal.charAt(0)];
+            bahtText+="สิบ";
+        }
+        if(decimal.charAt(1)!="0"){
+            if(decimal.charAt(1)=="1" && decimal.charAt(0)!="0") bahtText+="เอ็ด";
+            else bahtText+=txtNumArr[decimal.charAt(1)];
+        }
+        bahtText+="สตางค์";
+    }
+    return bahtText;
+}
+
+function generateText(){
+    let amount = document.getElementById("amountInput").value;
+    if(!amount) return;
+
+    let thaiNumber = toThaiNumber(parseFloat(amount).toLocaleString('en-US',{minimumFractionDigits:2}));
+    let thaiText = numberToThaiText(amount);
+
+    let content = `
+                                                                        (นางสาวบุษกร ล้วนลอย) 
+เรียน คณบดี (ผ่านผู้ช่วยคณบดีฝ่ายการคลังและแผน)	             นักวิชาการพัสดุ 
+        ตามรายงานผลข้างต้นดำเนินการตามระเบียบกระทรวง 
+การคลังว่าด้วยการจัดซื้อจัดจ้างและบริหารพัสดุภาครัฐ พ.ศ. ๒๕๖๐  
+โดยวิธีเฉพาะเจาะจงภายในวงเงิน  ${thaiNumber} บาท  
+(${thaiText}) 
+จึงเรียนมาเพื่อโปรดพิจารณา หากเห็นชอบด้วยโปรดอนุมัติ 
  
-window.addEventListener("resize", applyScale);
-window.addEventListener("orientationchange", applyScale);
-if (document.fonts && document.fonts.ready) document.fonts.ready.then(applyScale);
-applyScale();
- 
+
+                    (นางสาวสุภาพร คนคล่อง) 
+            หัวหน้างานยุทธศาสตร์และงบประมาณ 
+`;
+
+    document.getElementById("result").value = content;
+}
+
+function generateSignature(){
+    let type = document.querySelector('input[name="orderType"]:checked');
+    if(!type) return;
+
+    let isBuy = type.value === "buy";
+
+    let text = `
+ลงชื่อ..............................................................สั่ง${isBuy ? "ซื้อ" : "จ้าง"}
+(ผู้ช่วยศาสตราจารย์ นายแพทย์ พีระพงค์ กิติภาวงค์)
+คณบดี	 
+วันที่..............................................................	 
+
+
+ลงชื่อ..................................................ผู้รับใบสั่ง${isBuy ? "ซื้อ" : "จ้าง"}
+(..............................................................) 
+................................................................ 
+วันที่............................................................... 
+`;
+
+    document.getElementById("signatureResult").value = text;
+}
+
+
+
 // ==========================================================
-// 🍔 เมนู Overlay
+// 🧭 เปลือกหน้าเว็บ — hero, แถบนำทาง, เมนู overlay
 // ==========================================================
+const elWord = document.getElementById("bgWord");
+const elOval = document.getElementById("bgOval");
+const hero = document.getElementById("top");
+const mainNav = document.getElementById("mainNav");
 const overlay = document.getElementById("menuOverlay");
 const menuBtn = document.getElementById("menuBtn");
 const closeBtn = document.getElementById("closeBtn");
 const backdrop = document.getElementById("backdrop");
-const items = Array.from(document.querySelectorAll("#panelItems a"));
- 
+const panelLinks = Array.from(document.querySelectorAll("#panelItems a"));
+
+// ยืดตัวอักษร e-GP ให้เต็มความสูง hero เสมอ
+function applyHeroScale() {
+    const h = elWord.offsetHeight;
+    if (!h) return;
+    const scaleY = (hero.clientHeight * 0.92) / h;
+    elWord.style.transform = `scale(1.15, ${scaleY})`;
+}
+
+// เปลี่ยนพื้นหลังแถบนำทางเมื่อเลื่อนพ้น hero
+function onScroll() {
+    mainNav.classList.toggle("scrolled", window.scrollY > hero.clientHeight - 90);
+}
+
+// เมนู overlay
 function setMenu(open) {
     overlay.classList.toggle("open", open);
     menuBtn.setAttribute("aria-expanded", String(open));
     document.body.style.overflow = open ? "hidden" : "";
-    items.forEach((item, i) => {
+    panelLinks.forEach((item, i) => {
         item.style.transitionDelay = open ? `${150 + i * 60}ms` : "0ms";
     });
     if (open) closeBtn.focus();
     else menuBtn.focus();
 }
- 
-menuBtn.addEventListener("click", () => setMenu(true));
-closeBtn.addEventListener("click", () => setMenu(false));
-backdrop.addEventListener("click", () => setMenu(false));
-document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape" && overlay.classList.contains("open")) setMenu(false);
-});
+
+function initShell() {
+    applyHeroScale();
+    onScroll();
+
+    window.addEventListener("resize", applyHeroScale);
+    window.addEventListener("orientationchange", applyHeroScale);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(applyHeroScale);
+
+    menuBtn.addEventListener("click", () => setMenu(true));
+    closeBtn.addEventListener("click", () => setMenu(false));
+    backdrop.addEventListener("click", () => setMenu(false));
+    panelLinks.forEach(a => a.addEventListener("click", () => setMenu(false)));
+    document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape" && overlay.classList.contains("open")) setMenu(false);
+    });
+}
 </script>
 </body>
 </html>
- 
-
