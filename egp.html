@@ -104,7 +104,7 @@ hr {
     align-items: flex-start;
 }
 
-textarea, input[type="text"] {
+textarea, input[type="text"], select {
     width: 100%;
     border: 1px solid rgba(0, 0, 0, 0.1);
     border-radius: 10px;
@@ -115,20 +115,40 @@ textarea, input[type="text"] {
     background: rgba(255, 255, 255, 0.9);
     color: inherit;
     resize: vertical;
-    
+
     box-sizing: border-box;
 }
 
-textarea:focus, input[type="text"]:focus {
+select {
+    resize: none;
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%2386868b' d='M1 1l5 5 5-5'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    padding-right: 38px;
+}
+
+textarea:focus, input[type="text"]:focus, select:focus {
     outline: none;
     border-color: #007AFF;
     box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.2);
-    background: #fff;
+    background-color: #fff;
 }
 
 .small-area { height: 60px; }
 .large-area { height: 380px; white-space: pre-wrap; }
 .signature-area { height: 200px; white-space: pre-wrap; }
+.receive-area { height: 160px; white-space: pre-wrap; }
+
+.field-label {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #86868b;
+    margin-bottom: 6px;
+}
 
 /* 🖱️ 5. Buttons & Micro-interactions */
 button {
@@ -157,6 +177,7 @@ button:active {
 
 /* Radio Buttons */
 label { display: inline-flex; align-items: center; cursor: pointer; font-weight: 500; }
+.field-label { display: block; }
 input[type="radio"] {
     appearance: none;
     background: rgba(255,255,255,0.8);
@@ -185,7 +206,7 @@ input[type="radio"]:checked::before { transform: scale(1); }
     border: 1px solid rgba(0, 0, 0, 0.1);
     background: rgba(255, 255, 255, 0.6);
     box-shadow: inset 0 2px 10px rgba(0,0,0,0.02);
-    
+
 }
 
 .table-wrapper::-webkit-scrollbar { width: 8px; }
@@ -213,6 +234,10 @@ th {
 }
 tr { transition: background 0.2s ease; }
 tr:hover { background: rgba(0, 122, 255, 0.05); }
+
+.layout-table, .layout-table > tbody > tr, .layout-table > tbody > tr > td { border: none; }
+.layout-table > tbody > tr:hover { background: transparent; }
+.layout-table > tbody > tr > td { border-bottom: none; vertical-align: top; }
 
 .mini-btn {
     padding: 6px 12px;
@@ -255,14 +280,19 @@ tr:hover { background: rgba(0, 122, 255, 0.05); }
     .copy-grid {
         grid-template-columns: 1fr;
     }
+    .layout-table, .layout-table > tbody, .layout-table > tbody > tr, .layout-table > tbody > tr > td {
+        display: block;
+        width: 100% !important;
+    }
 }
 
 /* 🌙 7. Dark Mode Support */
 @media (prefers-color-scheme: dark) {
     body { background: #000; color: #fff; }
     .container { background: rgba(28, 28, 30, 0.8); color: #fff; border-color: rgba(255,255,255,0.1); }
-    textarea, input[type="text"] { background: rgba(44, 44, 46, 0.8); color: #fff; border-color: rgba(255, 255, 255, 0.1); }
-    textarea:focus, input[type="text"]:focus { background: #1c1c1e; border-color: #0A84FF; box-shadow: 0 0 0 3px rgba(10, 132, 255, 0.3); }
+    textarea, input[type="text"], select { background-color: rgba(44, 44, 46, 0.8); color: #fff; border-color: rgba(255, 255, 255, 0.1); }
+    textarea:focus, input[type="text"]:focus, select:focus { background-color: #1c1c1e; border-color: #0A84FF; box-shadow: 0 0 0 3px rgba(10, 132, 255, 0.3); }
+    select option { background: #1c1c1e; color: #fff; }
     button { background: #0A84FF; }
     button:hover { background: #3095ff; box-shadow: 0 4px 12px rgba(10, 132, 255, 0.4); }
     .quick-actions button { background: rgba(255,255,255,0.1); color: #fff; border-color: rgba(255,255,255,0.1); }
@@ -270,7 +300,8 @@ tr:hover { background: rgba(0, 122, 255, 0.05); }
     hr { background: rgba(255,255,255,0.1); }
     input[type="radio"] { background: rgba(44, 44, 46, 0.8); border-color: rgba(255,255,255,0.3); }
     #livePreview > div { background: #1c1c1e !important; border: 1px solid rgba(255,255,255,0.1); }
-    
+    #receivePreview > div { background: #1c1c1e !important; border: 1px solid rgba(255,255,255,0.1); }
+
     /* Table Dark Mode */
     .table-wrapper { background: rgba(28, 28, 30, 0.6); border-color: rgba(255,255,255,0.1); }
     th { background: rgba(44, 44, 46, 0.95); color: #a1a1a6; }
@@ -293,6 +324,7 @@ tr:hover { background: rgba(0, 122, 255, 0.05); }
 <div class="quick-actions">
     <button onclick="clearAll()" title="ล้างฟอร์มทั้งหมด"><span>↻</span> ล้าง</button>
     <button onclick="document.getElementById('section-staff').scrollIntoView()" title="ไปที่ตารางรายชื่อ"><span>🙋🏻‍♀️</span> ดูรายชื่อ</button>
+    <button onclick="document.getElementById('section-receive').scrollIntoView()" title="ไปที่รายงานตรวจรับครุภัณฑ์"><span>📥</span> ตรวจรับครุภัณฑ์</button>
 </div>
 
 <div style="display: flex; flex-direction: column; align-items: center; text-align: center; margin-bottom: 35px; margin-top: 10px;">
@@ -302,7 +334,7 @@ tr:hover { background: rgba(0, 122, 255, 0.05); }
             <span style="font-size: 1.1rem; color: #86868b; font-weight: 500;">Electronic Government Procurement : e-GP</span>
         </h1>
     </div>
-    
+
 <hr>
 
 <div id="section-copy" class="section">
@@ -312,23 +344,23 @@ tr:hover { background: rgba(0, 122, 255, 0.05); }
             <textarea id="text1">รายละเอียดตามเอกสารแนบ</textarea>
             <button onclick="copyWithAnimation('text1')">Copy</button>
         </div>
-        
+
         <div class="copy-item">
             <textarea id="text2">อ้างถึง ERP เลขที่.............................</textarea>
             <button onclick="copyWithAnimation('text2')">Copy</button>
         </div>
-        
+
         <div class="copy-item">
             <textarea id="text3">วิทยาลัยแพทยศาสตร์นานาชาติจุฬาภรณ์</textarea>
             <button onclick="copyWithAnimation('text3')">Copy</button>
         </div>
-        
+
         <div class="copy-item">
             <textarea id="text4">(นางสาวบุษกร ล้วนลอย)
 นักวิชาการพัสดุ</textarea>
             <button onclick="copyWithAnimation('text4')">Copy</button>
         </div>
-        
+
         <div class="copy-item">
             <textarea id="text5">(ผู้ช่วยศาสตราจารย์ นายแพทย์ พีระพงค์ กิติภาวงค์) 
 คณบดี</textarea>
@@ -349,7 +381,7 @@ tr:hover { background: rgba(0, 122, 255, 0.05); }
             <textarea id="text8">รายงานขอซื้อขอจ้าง รายการ</textarea>
             <button onclick="copyWithAnimation('text8')">Copy</button>
         </div>
-        
+
         <div class="copy-item">
             <textarea id="text9">รายงานตรวจรับ รายการ</textarea>
             <button onclick="copyWithAnimation('text9')">Copy</button>
@@ -413,7 +445,7 @@ End Sub</textarea>
 
 <hr>
 
-<table>
+<table class="layout-table">
 <tbody>
     <tr>
 <td style="width:50%">
@@ -423,7 +455,7 @@ End Sub</textarea>
         <input type="text" id="amountInput" placeholder="กรอกจำนวนเงิน เช่น 16028.60" oninput="this.value=this.value.replace(/[^0-9.]/g,'')">
         <button onclick="generateText()">สร้างข้อความ</button>
     </div>
-    
+
     <div id="livePreview" style="margin-bottom: 10px;"></div>
 
     <textarea id="result" class="signature-area"></textarea>
@@ -451,7 +483,7 @@ End Sub</textarea>
     <div class="form-group">
         <input type="text" id="searchInput" placeholder="ค้นหา ชื่อ, นามสกุล, ลำดับ หรือ ตำแหน่ง..." onkeyup="filterTable()">
     </div>
-    
+
     <div class="table-wrapper">
         <table id="staffTable">
             <thead>
@@ -469,6 +501,53 @@ End Sub</textarea>
         </table>
     </div>
 </div>
+
+<hr>
+
+<table class="layout-table">
+<tbody>
+    <tr>
+<td style="width:50%">
+<div id="section-receive" class="section">
+    <h2>📥รายงานตรวจรับครุภัณฑ์</h2>
+
+    <div style="margin-bottom: 16px;">
+        <label class="field-label" for="unitSelect">ชื่อหน่วยงาน</label>
+        <select id="unitSelect" onchange="generateReceiveText()">
+            <option value="">— เลือกหน่วยงาน —</option>
+        </select>
+    </div>
+
+    <div style="margin-bottom: 16px;">
+        <label class="field-label" for="assetNameInput">ชื่อครุภัณฑ์</label>
+        <input type="text" id="assetNameInput" placeholder="เช่น เครื่องกลั่นระเหยแบบหมุนภายในสุญญากาศ" oninput="generateReceiveText()">
+    </div>
+
+    <div style="margin-bottom: 16px; display: flex; gap: 12px;">
+        <div style="width: 30%;">
+            <label class="field-label" for="assetQtyInput">จำนวน (รายการ)</label>
+            <input type="text" id="assetQtyInput" value="1" placeholder="1" oninput="this.value=this.value.replace(/[^0-9]/g,''); generateReceiveText()">
+        </div>
+        <div style="width: 70%;">
+            <label class="field-label" for="assetAmountInput">จำนวนเงิน (บาท)</label>
+            <input type="text" id="assetAmountInput" placeholder="เช่น 291449.00" oninput="this.value=this.value.replace(/[^0-9.]/g,''); generateReceiveText()">
+        </div>
+    </div>
+
+    <button onclick="generateReceiveText()" style="width: 100%;">สร้างข้อความ</button>
+</div>
+</td>
+<td style="width:50%">
+<div class="section">
+    <h2>📝ข้อความที่ได้</h2>
+    <div id="receivePreview" style="margin-bottom: 10px;"></div>
+    <textarea id="receiveResult" class="receive-area" placeholder="เลือกหน่วยงานและกรอกข้อมูลด้านซ้าย ข้อความจะขึ้นตรงนี้"></textarea>
+    <button onclick="copyWithAnimation('receiveResult')" style="margin-top: 10px; width: 100%;">Copy</button>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
 
 </div>
 
@@ -704,8 +783,84 @@ function loadStaffTable() {
     tbody.innerHTML = html;
 }
 
+// ==========================================
+// 📥 รายงานตรวจรับครุภัณฑ์
+// ==========================================
+// 🏢 รายชื่อหน่วยงาน (เพิ่ม/แก้ไขได้ที่ list นี้)
+const unitList = [
+    "งานประชาสัมพันธ์",
+    "งานบริหารทรัพยากรมนุษย์",
+    "งานบริหารทั่วไป",
+    "งานคลังและพัสดุ",
+    "งานแผนและงบประมาณ",
+    "งานบริการการศึกษา",
+    "งานเทคโนโลยีสารสนเทศ",
+    "ผู้มีความรู้ความสามารถพิเศษ",
+    "งานประกันคุณภาพการศึกษา",
+    "คณะแพทยศาสตร์",
+    "สำนักวิชาการแพทย์บูรณาการ",
+    "สำนักวิชาแพทยศาสตร์",
+    "วิทยาลัยแพทยศาสตร์นานาชาติจุฬาภรณ์",
+    "งานวิเทศสัมพันธ์",
+    "งานกิจการนักศึกษา",
+    "งานวิจัย",
+    "โครงการบริการวิชาการคลินิกการแพทย์ผสมผสาน (แผนจีน)",
+    "งานบัณฑิตศึกษา",
+    "งานยุทธศาสตร์และงบประมาณ",
+    "งานส่งเสริมและสนับสนุนการศึกษา",
+    "งานบริหาร",
+    "งานวิจัย ส่งเสริมและพัฒนาวิชาการ",
+    "ศูนย์สอบ วิทยาลัยแพทยศาสตร์นานาชาติจุฬาภรณ์",
+    "Skill Lab"
+];
+
+function loadUnitOptions() {
+    const sel = document.getElementById("unitSelect");
+    if (!sel) return;
+    let html = '<option value="">— เลือกหน่วยงาน —</option>';
+    unitList.forEach(u => {
+        html += `<option value="${u}">${u}</option>`;
+    });
+    sel.innerHTML = html;
+}
+
+function generateReceiveText() {
+    const unit = document.getElementById("unitSelect").value.trim();
+    const asset = document.getElementById("assetNameInput").value.trim();
+    const qtyRaw = document.getElementById("assetQtyInput").value.trim();
+    const amountRaw = document.getElementById("assetAmountInput").value.trim();
+
+    const qty = qtyRaw || "1";
+    const amount = amountRaw
+        ? parseFloat(amountRaw).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})
+        : "";
+
+    const uUnit = unit || "[ชื่อหน่วยงาน]";
+    const uAsset = asset || "[ชื่อครุภัณฑ์]";
+    const uAmount = amount || "[จำนวนเงิน]";
+
+    const text = `ตามที่ ${uUnit} ได้ตรวจรับครุภัณฑ์ รายการ${uAsset} จำนวน ${qty} รายการ เป็นเงิน ${uAmount} บาท เรียบร้อยแล้ว นั้น`;
+
+    document.getElementById("receiveResult").value = text;
+
+    const preview = document.getElementById("receivePreview");
+    if (amountRaw) {
+        preview.innerHTML = `
+            <div style="background: #f5f5f7; padding: 16px; border-radius: 12px;">
+                <h4 style="margin: 0 0 8px 0; color: #86868b; font-size: 0.9rem;">ตัวสะกดจำนวนเงิน</h4>
+                <p style="margin: 4px 0; color: #007AFF;">(${numberToThaiText(amountRaw)})</p>
+            </div>
+        `;
+    } else {
+        preview.innerHTML = '';
+    }
+}
+
 // โหลดตารางตอนเปิดเว็บ
-window.onload = loadStaffTable;
+window.onload = function() {
+    loadStaffTable();
+    loadUnitOptions();
+};
 
 // ฟังก์ชันค้นหาในตาราง (Search Filter)
 function filterTable() {
@@ -830,6 +985,15 @@ function clearAll() {
     document.getElementById('livePreview').innerHTML = '';
     const radios = document.querySelectorAll('input[name="orderType"]');
     radios.forEach(r => r.checked = false);
+
+    // ล้างส่วนรายงานตรวจรับครุภัณฑ์
+    document.getElementById('unitSelect').value = '';
+    document.getElementById('assetNameInput').value = '';
+    document.getElementById('assetQtyInput').value = '1';
+    document.getElementById('assetAmountInput').value = '';
+    document.getElementById('receiveResult').value = '';
+    document.getElementById('receivePreview').innerHTML = '';
+
     filterTable(); // รีเซ็ตการกรองตาราง
 }
 
