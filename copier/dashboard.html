@@ -487,13 +487,14 @@ tbody tr:hover{background:var(--surface-2)}
 
 <div class="kpis" id="kpis"></div>
 
+<!-- แก้ไขการ์ดแนวโน้มรายเดือนแยกตามประเภทงานพิมพ์ -->
 <div class="card">
-  <h2>แนวโน้มรายเดือน · ยอดเบิกคำนวณ เทียบ ใบแจ้งหนี้</h2>
+  <h2>แนวโน้มการใช้งานรายเดือน แยกตามประเภทงานพิมพ์</h2>
+  <p class="q">เปรียบเทียบแนวโน้มปริมาณการใช้งานในแต่ละเดือนแยกตามประเภทงานพิมพ์ · หน่วยเป็นยอดใช้สุทธิ (แผ่น) · เรียงตามปีงบประมาณ ต.ค. ถึง ก.ย.</p>
   <div class="legend">
-    <span><i class="ln" style="background:var(--s1)"></i>ยอดเบิกคำนวณ</span>
-    <span><i class="ln" style="background:var(--inv)"></i>ยอดตามใบแจ้งหนี้</span>
-    <span><i style="background:var(--bad)"></i>ใบแจ้งสูงกว่า</span>
-    <span><i style="background:var(--good)"></i>ใบแจ้งต่ำกว่า</span>
+    <span><i class="ln" style="background:var(--s1)"></i>ขาว-ดำ (เครื่องขาว-ดำ)</span>
+    <span><i class="ln" style="background:var(--s2)"></i>ขาว-ดำ (เครื่องสี)</span>
+    <span><i class="ln" style="background:var(--s3)"></i>สี (เครื่องสี)</span>
   </div>
   <div class="chart" id="c-trend"></div>
 </div>
@@ -698,45 +699,56 @@ function monthsSorted(list){
 }
 
 /* ---------- charts ---------- */
+/* ปรับปรุงฟังก์ชัน drawTrend ให้แสดงแยกตาม 3 ประเภทงานพิมพ์ */
 function drawTrend(){
   const host=$('#c-trend'), ms=monthsSorted(VIEW);
   if(!ms.length){ host.innerHTML='<p class="empty">ไม่มีข้อมูลตามตัวกรองที่เลือก</p>'; return; }
-  const agg=ms.map(m=>{ const rs=VIEW.filter(r=>r.month===m);
-    return {m, calc:rs.reduce((a,r)=>a+r.calc,0), inv:rs.reduce((a,r)=>a+(r.hasInv?r.inv:r.calc),0),
-            net:rs.reduce((a,r)=>a+r.net,0), n:rs.length}; });
-  agg.forEach(a=>a.diff=+(a.inv-a.calc).toFixed(2));
-  const W=Math.max(760,ms.length*54+110), H=300, L=72,R=18,T=14,B=64, w=W-L-R, h=H-T-B-46;
-  const s=svg(host,W,H);
-  const max=nice(Math.max(...agg.map(a=>Math.max(a.calc,a.inv)),1));
-  grid(s,L,T,w,h,max);
-  txt(s,L-8,T-3,'บาท',{anchor:'end',size:10,w:600,fill:cssv('--ink-2')});
-  const step=w/Math.max(1,agg.length-1||1);
-  const X=i=>agg.length===1?L+w/2:L+i*step, Y=v=>T+h-v/max*h;
-  const line=(key,color,wid)=>{
-    let d=''; agg.forEach((a,i)=>{ d+=(i?'L':'M')+X(i)+' '+Y(a[key])+' '; });
-    E('path',{d,fill:'none',stroke:color,'stroke-width':wid,'stroke-linejoin':'round','stroke-linecap':'round'},s);
-  };
-  line('inv',cssv('--inv'),2); line('calc',cssv('--s1'),2.4);
-  agg.forEach((a,i)=>{
-    [['inv',cssv('--inv')],['calc',cssv('--s1')]].forEach(([k,c])=>{
-      const cir=E('circle',{cx:X(i),cy:Y(a[k]),r:4,fill:cssv('--surface'),stroke:c,'stroke-width':2},s);
-      tp(cir,`${mlab(a.m)} · ปีงบ ${fyOf(a.m)}\nยอดเบิกคำนวณ ${f2(a.calc)} บาท\nใบแจ้งหนี้ ${f2(a.inv)} บาท\nผลต่าง ${f2(a.diff)} บาท\nยอดใช้สุทธิ ${f0(a.net)} แผ่น · ${a.n} รายการ`);
+  
+  const cols=[cssv('--s1'), cssv('--s2'), cssv('--s3')];
+  const agg=ms.map(m=>{
+    const rs=VIEW.filter(r=>r.month===m);
+    const o={m, v:[0,0,0], tot:0, n:rs.length};
+    rs.forEach(r=>{
+      const idx=TYPES.indexOf(r.type);
+      if(idx>=0){
+        o.v[idx]+=r.net;
+        o.tot+=r.net;
+      }
     });
-    if(agg.length<=26) txt(s,X(i),T+h+16,mlab(a.m),{size:10,rot:agg.length>14?-40:0});
+    return o;
   });
-  /* variance bars */
-  const vT=T+h+30, vH=42;
-  const vmax=nice(Math.max(...agg.map(a=>Math.abs(a.diff)),1));
-  E('line',{x1:L,x2:L+w,y1:vT+vH/2,y2:vT+vH/2,stroke:cssv('--line-2')},s);
-  txt(s,L-8,vT+vH/2+4,'ผลต่าง',{anchor:'end',size:10});
-  const bw=Math.min(16,w/agg.length*0.5);
+
+  const maxVal = Math.max(...agg.map(a=>Math.max(...a.v)), 1);
+  const max = nice(maxVal);
+
+  const W=Math.max(760,ms.length*54+110), H=270, L=72, R=24, T=20, B=48, w=W-L-R, h=H-T-B;
+  const s=svg(host,W,H);
+  
+  grid(s,L,T,w,h,max);
+  txt(s,L-8,T-4,'แผ่น',{anchor:'end',size:10,w:600,fill:cssv('--ink-2')});
+  
+  const step=w/Math.max(1,agg.length-1||1);
+  const X=i=>agg.length===1?L+w/2:L+i*step, Y=v=>T+h-(v/max)*h;
+
+  // วาด 3 เส้นคนละประเภท
+  [0, 1, 2].forEach(typeIdx=>{
+    let d='';
+    agg.forEach((a,i)=>{
+      d += (i===0?'M':'L') + X(i) + ' ' + Y(a.v[typeIdx]) + ' ';
+    });
+    E('path',{d, fill:'none', stroke:cols[typeIdx], 'stroke-width':2.5, 'stroke-linejoin':'round', 'stroke-linecap':'round'}, s);
+  });
+
+  // วาดจุด Interaction Dots & Labels
   agg.forEach((a,i)=>{
-    const hh=Math.abs(a.diff)/vmax*(vH/2-2);
-    if(hh<0.5) return;
-    const up=a.diff>0;
-    const rc=E('rect',{x:X(i)-bw/2,y:up?vT+vH/2-hh:vT+vH/2,width:bw,height:hh,rx:2,
-      fill:up?cssv('--bad'):cssv('--good')},s);
-    tp(rc,`${mlab(a.m)}\nผลต่าง ${f2(a.diff)} บาท (${up?'ใบแจ้งสูงกว่า':'ใบแจ้งต่ำกว่า'})`);
+    [0, 1, 2].forEach(typeIdx=>{
+      const cy = Y(a.v[typeIdx]);
+      const cir=E('circle',{cx:X(i), cy:cy, r:4.5, fill:cssv('--surface'), stroke:cols[typeIdx], 'stroke-width':2}, s);
+      tp(cir, `${mlab(a.m)} · ปีงบ ${fyOf(a.m)}\n${TYPES[typeIdx]}\nยอดใช้สุทธิ ${f0(a.v[typeIdx])} แผ่น\n(รวมทุกประเภท ${f0(a.tot)} แผ่น)`);
+    });
+    if(agg.length<=26){
+      txt(s, X(i), T+h+18, mlab(a.m), {size:10, rot:agg.length>14?-40:0});
+    }
   });
 }
 
