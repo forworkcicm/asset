@@ -1,636 +1,887 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>ตัวคำนวณค่าเสื่อมราคา (Asset Depreciation)</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ค่าเสื่อมราคาครุภัณฑ์ CICM</title>
 
-    <!-- ไฟล์นี้ถูกสร้างอัตโนมัติจาก tools/build-single-file.mjs ห้ามแก้โดยตรง แก้ที่ js/*.js และ css/*.css แล้ว build ใหม่
-         VENDOR: ดู README.md หัวข้อ "SRI และ CSP" ก่อนนำขึ้นใช้งานจริง
-         รัน tools/fetch-vendor.sh เพื่อดาวน์โหลดไลบรารีมาไว้ใน vendor/ และรับค่า integrity -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous" referrerpolicy="no-referrer">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" crossorigin="anonymous" referrerpolicy="no-referrer">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/themes/material_blue.css" crossorigin="anonymous" referrerpolicy="no-referrer">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Sarabun:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Google+Sans+Code:wght@400;500;700&display=swap">
 
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Libre+Barcode+128&family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   ค่าเสื่อมราคาครุภัณฑ์ — Mosaic edition
+   ระบบสี: พื้นเทาอ่อน + การ์ดพาสเทลไล่สี ขอบขาว มุมโค้ง 22px
+   ตัวอักษร: Google Sans (ข้อความ) / Google Sans Code (ตัวเลข)
+   ไม่มี framework ไอคอนเป็น inline SVG ทั้งหมด
+   ============================================================ */
+*, *::before, *::after { box-sizing: border-box; }
 
-    <style>
-/* ===== css/app.css ===== */
 :root {
-    --main-font: 'Google Sans', 'Sarabun', sans-serif;
-    --barcode-font: "Libre Barcode 128", system-ui;
+    --font-main: 'Google Sans', 'Sarabun', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --font-num: 'Google Sans Code', 'Google Sans', 'Sarabun', ui-monospace, monospace;
+
+    --page: #f0f0f0;
+    --ink: #141414;
+    --ink-2: #3a3f42;
+    --ink-3: #6b7176;
+    --ink-4: #949ba0;
+
+    --radius: 22px;
+    --radius-sm: 14px;
+    --card-border: 1.6px solid rgba(255,255,255,.92);
+    --card-shadow: 0 2px 16px rgba(24,30,45,.045);
+    --ring: 0 0 0 3px rgba(0,0,0,.047);
+    --ring-strong: 0 0 0 3.2px rgba(0,0,0,.055);
+
+    --lime-ink: #15201a;
+    --accent: #5f8b3e;
+    --accent-deep: #3d7a3e;
+    --rose: #b5316e;
+    --amber: #b06000;
+    --violet: #5b3fa8;
+
+    --g-lime: radial-gradient(90% 70% at 6% 0%, rgba(226,236,200,.9) 0%, rgba(226,236,200,0) 70%),
+              linear-gradient(168deg, #e2ebc9 0%, #e9f0c4 48%, #f0f4b8 78%, #f3f5b0 100%);
+    --g-blush: radial-gradient(120% 140% at 92% 100%, rgba(255,236,246,.95) 0%, rgba(255,236,246,0) 62%),
+               linear-gradient(135deg, #f9d9e9 0%, #fbdfec 55%, #fce6f1 100%);
+    --g-mist: linear-gradient(180deg, #fcfdfd 0%, #f4f7f9 30%, #e2ebef 66%, #cedce4 100%);
+    --g-peach: radial-gradient(115% 70% at 22% 0%, #fdf2e5 0%, rgba(253,242,229,0) 68%),
+               linear-gradient(180deg, #f9f1e8 0%, #f7efe6 100%);
+    --g-lav: linear-gradient(103deg, #eae9f5 0%, #e2e0f1 34%, #cfcdea 72%, #c2c0e6 100%);
+    --g-paper: linear-gradient(180deg, #ffffff 0%, #fbfcfd 100%);
+    --g-gold-green: linear-gradient(90deg, #f2b705 0%, #e7b208 26%, #a8a422 52%, #6a8f33 76%, #3d7a3e 100%);
 }
 
+html { -webkit-text-size-adjust: 100%; }
 body {
-    background-color: #f8f9fa;
-    color: #202124;
-    font-family: var(--main-font);
+    margin: 0;
+    padding: 28px 22px 56px;
+    background: var(--page);
+    color: var(--ink);
+    font-family: var(--font-main);
+    font-size: 15px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
 }
+h1, h2, h3, h4 { margin: 0; font-weight: 700; text-wrap: balance; letter-spacing: normal; }
+p { margin: 0; }
+ul { margin: 0; }
+.num { font-family: var(--font-num); font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
 
-input, select, textarea, button, .btn, .form-control, .form-select, table {
-    font-family: var(--main-font) !important;
-}
+.page { max-width: 1374px; margin: 0 auto; display: flex; flex-direction: column; gap: 18px; }
 
-.barcode {
-    font-family: var(--barcode-font);
-    font-size: 3.5rem;
-    line-height: 1;
-    white-space: nowrap;
+/* ---------- การ์ดหลัก ---------- */
+.card {
+    position: relative;
+    border-radius: var(--radius);
+    border: var(--card-border);
+    box-shadow: var(--card-shadow);
     overflow: hidden;
-    display: inline-block;
+    background: var(--g-paper);
 }
+.t-lime  { background: var(--g-lime); }
+.t-blush { background: var(--g-blush); }
+.t-mist  { background: var(--g-mist); }
+.t-peach { background: var(--g-peach); }
+.t-lav   { background: var(--g-lav); }
 
-.card { border: none; border-radius: 16px; transition: all 0.3s ease; }
-.form-label { font-weight: 500; font-size: 0.95rem; color: #444746; }
-.section-label { font-size: 0.78rem; font-weight: 700; letter-spacing: .04em; color: #9aa0a6; text-transform: uppercase; margin: 18px 0 8px; }
-.section-label:first-child { margin-top: 0; }
+/* ---------- Hero ---------- */
+.hero { padding: 34px 34px 32px; display: flex; align-items: flex-end; gap: 28px; flex-wrap: wrap; }
+.hero-copy { flex: 1 1 420px; min-width: 280px; }
+.hero h1 { font-size: clamp(28px, 3.4vw, 41px); line-height: 1.22; color: var(--lime-ink); letter-spacing: -0.03em; }
+.hero h1 .g { color: var(--accent); }
+.hero .sub { margin-top: 12px; font-size: 16px; line-height: 1.45; color: #1e2a1b; letter-spacing: -0.012em; max-width: 60ch; opacity: .88; }
+.hero-side { display: flex; flex-direction: column; align-items: flex-end; gap: 12px; }
+.hero-actions { display: flex; gap: 9px; flex-wrap: wrap; justify-content: flex-end; }
 
-.input-group-text { background-color: #f1f3f4; border-right: none; color: #5f6368; border-radius: 8px 0 0 8px; }
-.form-control, .form-select {
-    border-radius: 8px;
-    border: 1px solid #dadce0;
-    padding: 10px 12px;
-    font-size: 1rem;
+.docpill {
+    display: inline-flex; align-items: center; gap: 9px;
+    height: 34px; padding: 0 16px; border-radius: 999px;
+    background: linear-gradient(100deg, #ffffff 18%, #f2f7e2 100%);
+    box-shadow: var(--ring); font-size: 12.5px; font-weight: 500; color: #2c3428;
 }
-.form-control:focus, .form-select:focus {
-    box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.2);
-    border-color: #1a73e8;
+.docpill b { font-family: var(--font-num); font-weight: 700; color: #14210f; }
+
+/* ---------- ปุ่ม ---------- */
+.btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+    height: 38px; padding: 0 18px; border: 0; border-radius: 999px;
+    font-family: var(--font-main); font-size: 13.5px; font-weight: 500; letter-spacing: -0.01em;
+    cursor: pointer; background: rgba(255,255,255,.86); color: #17201a;
+    box-shadow: var(--ring); transition: transform .15s ease, box-shadow .15s ease, background .15s ease;
 }
-.input-group .form-control { border-radius: 0 8px 8px 0; }
-.currency-input { border-left: none; font-weight: 500; }
-
-/* โฟกัสต้องมองเห็นได้เสมอ (accessibility) */
-.btn:focus-visible, .form-control:focus-visible, .form-select:focus-visible {
-    outline: 3px solid #1a73e8;
-    outline-offset: 2px;
-}
-
-.is-invalid-custom { border-color: #d93025 !important; background-color: #fff8f7; }
-.error-msg { color: #d93025; font-size: 0.85rem; display: none; margin-top: 6px; font-weight: 500; }
-.alert-box-errors { display: none; }
-
-.visually-hidden-live {
-    position: absolute;
-    width: 1px; height: 1px;
-    margin: -1px; padding: 0;
-    overflow: hidden;
-    clip: rect(0 0 0 0);
-    white-space: nowrap;
-    border: 0;
-}
-
-.chart-container {
-    width: 100%; height: 280px; position: relative;
-    background: #fff; border-radius: 12px; border: 1px solid #e9ecef;
-    padding: 10px; overflow: hidden;
-}
-.chart-container canvas { max-width: 100%; }
-
-.copy-area {
-    background-color: #f8f9fa;
-    border: 1px dashed #c4c7c5;
-    border-radius: 8px;
-    padding: 16px;
-    font-size: 0.9rem;
-}
-.user-select-all { user-select: all; -webkit-user-select: all; }
-
+.btn:hover { transform: translateY(-1px); box-shadow: 0 0 0 3px rgba(0,0,0,.06), 0 4px 12px rgba(30,40,25,.10); }
+.btn:active { transform: translateY(0); }
+.btn svg { flex: none; }
 .btn-primary {
-    background-color: #1a73e8; border-color: #1a73e8;
-    border-radius: 20px; padding: 8px 24px; font-weight: 500;
+    height: 46px; width: 100%; font-size: 15px; font-weight: 700;
+    background: linear-gradient(135deg, #3d7a3e 0%, #4f8a37 55%, #6a8f33 100%);
+    color: #fff; box-shadow: 0 4px 14px rgba(45,90,40,.28);
 }
-.btn-primary:hover { background-color: #1557b0; border-color: #1557b0; }
-.btn-primary:disabled { background-color: #7fa8e0; border-color: #7fa8e0; }
-.btn-outline-success, .btn-outline-danger, .btn-outline-primary { border-radius: 20px; }
-.btn-light { border-radius: 20px; color: #1a73e8; font-weight: 500; background: #e8f0fe; border: none; }
+.btn-primary:hover { box-shadow: 0 7px 20px rgba(45,90,40,.32); }
+.btn-primary:disabled { opacity: .6; cursor: progress; transform: none; }
+.btn-ghost { background: rgba(255,255,255,.7); }
+.btn-danger { color: #a50e0e; }
+.btn-sm { height: 34px; padding: 0 14px; font-size: 12.5px; }
+.btn-file { flex: 1 1 0; background: rgba(255,255,255,.9); font-size: 12.5px; height: 36px; padding: 0 10px; }
+:where(.btn, input, select, textarea, [tabindex]):focus-visible {
+    outline: 3px solid #1f6f4a; outline-offset: 2px;
+}
 
-.stat-card { border-radius: 14px; }
-.stat-card p { letter-spacing: .03em; }
-.stat-card h4, .stat-card h5, .stat-card h6 { line-height: 1.2; }
+/* ---------- โครง mosaic ---------- */
+.mosaic { display: grid; grid-template-columns: 372px minmax(0, 1fr); gap: 18px; align-items: start; }
+.rail { display: flex; flex-direction: column; gap: 18px; min-width: 0; }
 
-.progress { height: 22px; border-radius: 20px; background-color: #eef1f4; }
-.progress-bar { border-radius: 20px; font-size: 0.78rem; font-weight: 600; }
-.progress-caption { display: flex; justify-content: space-between; font-size: 0.85rem; color: #5f6368; margin-bottom: 4px; }
-.life-kpi-strip { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; font-size: 0.85rem; background: #f1f6fe; border-radius: 10px; padding: 10px 14px; margin-bottom: 14px; }
-.life-kpi-strip .kpi-item span.v { font-weight: 700; color: #1f1f1f; display: block; }
+/* ---------- ฟอร์ม ---------- */
+.form-card { padding: 26px 24px 26px; }
+.card-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 18px; }
+.card-head h2 { font-size: 18px; color: #101418; display: flex; align-items: center; gap: 9px; }
+.section-label {
+    font-size: 11px; font-weight: 700; letter-spacing: .09em; text-transform: uppercase;
+    color: #7f8a92; margin: 22px 0 10px;
+}
+.field { margin-bottom: 14px; }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.grid-5-7 { display: grid; grid-template-columns: 5fr 7fr; gap: 12px; }
+label.lbl, .lbl { display: block; font-size: 13px; font-weight: 500; color: #4b565d; margin-bottom: 6px; letter-spacing: -0.005em; }
 
-.status-badge { font-size: 0.85rem; font-weight: 600; padding: 5px 10px; border-radius: 20px; display: inline-block; }
-.status-active { background: #e6f4ea; color: #137333; }
-.status-warn { background: #fef7e0; color: #b06000; }
-.status-done { background: #fce8e6; color: #c5221f; }
-.status-neutral { background: #e8eaed; color: #444746; }
+.input, select.input {
+    width: 100%; height: 44px; padding: 0 14px;
+    font-family: var(--font-main); font-size: 14.5px; color: var(--ink);
+    background: rgba(255,255,255,.94); border: 0; border-radius: 12px;
+    box-shadow: var(--ring); transition: box-shadow .16s ease, background .16s ease;
+}
+select.input {
+    appearance: none; padding-right: 38px; cursor: pointer;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5 6 6.5l5-5' fill='none' stroke='%23555' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 14px center;
+}
+.input:focus { outline: none; box-shadow: 0 0 0 3px rgba(61,122,62,.42); background: #fff; }
+.input::placeholder { color: #a3acb2; }
+.input.num, input.money { font-family: var(--font-num); font-variant-numeric: tabular-nums; }
+input.money { text-align: right; font-weight: 500; }
+#cost { font-weight: 700; color: #1f5f34; font-size: 17px; }
+.money-wrap { position: relative; }
+.money-wrap .baht {
+    position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+    font-size: 14px; color: #8b949a; pointer-events: none; font-family: var(--font-num);
+}
+.money-wrap input { padding-left: 32px; text-align: right; }
+.date-wrap { position: relative; }
+.date-wrap .cal { position: absolute; right: 13px; top: 50%; transform: translateY(-50%); pointer-events: none; opacity: .5; }
+.date-wrap input { padding-right: 40px; font-family: var(--font-num); }
+.hint { font-size: 11.5px; color: #7d878d; margin-top: 6px; line-height: 1.4; }
 
-.chart-toggle .btn { border-radius: 20px; font-size: 0.82rem; padding: 5px 14px; }
+.is-invalid-custom { box-shadow: 0 0 0 3px rgba(217,48,37,.5) !important; background: #fffaf9 !important; }
+.error-msg { display: none; margin-top: 6px; font-size: 12.5px; font-weight: 500; color: #c5221f; }
+.alert-box-errors { display: none; }
+#formAlertBox {
+    display: none; margin-bottom: 16px; padding: 13px 15px; border-radius: 14px;
+    background: linear-gradient(135deg, #fdeceb 0%, #fce7e6 100%);
+    box-shadow: 0 0 0 3px rgba(197,34,31,.10); color: #a50e0e; font-size: 13px;
+}
+#formAlertBox .ttl { font-weight: 700; margin-bottom: 4px; display: flex; align-items: center; gap: 7px; }
+#formAlertList { padding-left: 18px; margin: 0; }
+#formAlertList li { margin-top: 2px; }
 
-.calc-method-box { background: #f8f9fa; border-radius: 10px; border: 1px solid #e9ecef; padding: 16px; font-size: 0.9rem; }
-.calc-method-box .formula { font-family: 'Courier New', monospace; background: #fff; border: 1px solid #e0e0e0; border-radius: 6px; padding: 10px 12px; margin: 6px 0 14px; white-space: pre-wrap; }
+/* chip radio */
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip-radio { position: relative; }
+.chip-radio input { position: absolute; opacity: 0; width: 0; height: 0; }
+.chip-radio span {
+    display: inline-flex; align-items: center; height: 34px; padding: 0 15px; border-radius: 999px;
+    font-size: 13px; font-weight: 500; color: #2b3238; cursor: pointer;
+    background: linear-gradient(180deg, rgba(247,253,255,.97) 0%, rgba(240,250,254,.93) 100%);
+    box-shadow: var(--ring); transition: all .15s ease;
+}
+.chip-radio input:checked + span {
+    background: linear-gradient(135deg, #3d7a3e 0%, #5f8b3e 100%); color: #fff;
+    box-shadow: 0 3px 10px rgba(45,90,40,.28);
+}
+.chip-radio input:disabled + span { opacity: .45; cursor: not-allowed; }
+.chip-radio input:focus-visible + span { outline: 3px solid #1f6f4a; outline-offset: 2px; }
 
-tr.row-current-year { background-color: #fff8e1 !important; }
-tr.row-projection td { color: #5b3fa8; font-style: italic; }
-.current-year-tag { font-size: 0.68rem; background: #1a73e8; color: #fff; border-radius: 10px; padding: 1px 8px; margin-left: 6px; white-space: nowrap; }
-.snapshot-subrow { background-color: #eef6ff !important; }
-.status-pill { font-size: 0.72rem; padding: 3px 9px; border-radius: 10px; font-weight: 600; white-space: nowrap; }
-tr.row-total td { border-top: 2px solid #444746 !important; font-weight: 700; background: #f8f9fa; }
-.table-legend { font-size: 0.8rem; color: #5f6368; }
+#dirtyNotice {
+    display: none; margin-top: 10px; padding: 10px 13px; border-radius: 12px;
+    background: #fdf3e3; box-shadow: 0 0 0 3px rgba(176,96,0,.10);
+    font-size: 12.5px; color: #8a4f00; line-height: 1.45;
+}
+.btn-row { display: flex; gap: 8px; margin-top: 10px; }
 
-.recon-box { border-radius: 12px; padding: 16px 18px; font-size: 0.9rem; }
-.recon-ok { background: #e6f4ea; border: 1px solid #b7e1c3; color: #0d652d; }
-.recon-fail { background: #fce8e6; border: 1px solid #f5b3ae; color: #a50e0e; }
-.recon-box .formula-line { font-family: 'Courier New', monospace; }
+/* ---------- Stat mosaic ---------- */
+.stat-grid { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 14px; }
+.stat {
+    border-radius: 18px; border: var(--card-border); box-shadow: var(--card-shadow);
+    padding: 16px 16px 15px; min-height: 108px; display: flex; flex-direction: column;
+}
+.stat .k { font-size: 10.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: #7d858b; line-height: 1.35; }
+.stat .v { margin-top: auto; padding-top: 10px; font-family: var(--font-num); font-size: 25px; font-weight: 700; letter-spacing: -0.035em; line-height: 1.05; font-variant-numeric: tabular-nums; }
+.stat .v.sm { font-size: 16px; letter-spacing: -0.02em; font-family: var(--font-main); font-weight: 700; }
+.stat .foot { margin-top: 8px; font-size: 10.5px; line-height: 1.5; color: #6f767c; }
+.stat .foot b { font-family: var(--font-num); font-weight: 500; color: #4a5157; }
+.stat.wide { grid-column: span 2; }
+.s-cost  { background: var(--g-lav); }  .s-cost .v  { color: #2d2a5e; }
+.s-accum { background: var(--g-blush); } .s-accum .v { color: var(--rose); }
+.s-book  { background: var(--g-lime); }  .s-book .v  { color: #2f6b2c; }
+.s-year  { background: var(--g-peach); } .s-year .v  { color: #9a5a12; }
+.s-plain { background: linear-gradient(180deg,#ffffff 0%, #f6f7f8 100%); }
+.s-plain .v { color: #21272b; }
 
-.selftest-box { font-size: 0.85rem; border-radius: 12px; padding: 14px 16px; background: #f1f3f4; border: 1px solid #dadce0; }
+.status-badge {
+    align-self: flex-start; margin-top: auto; padding: 6px 13px; border-radius: 999px;
+    font-size: 12.5px; font-weight: 700;
+}
+.status-active  { background: #e6f4ea; color: #137333; }
+.status-warn    { background: #fef3d8; color: #9a5a00; }
+.status-done    { background: #fce8e6; color: #c5221f; }
+.status-neutral { background: #eceef0; color: #4a5157; }
+
+/* ---------- Progress ---------- */
+.prog-card { padding: 22px 24px 24px; }
+.kpi-strip { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 18px; }
+.kpi-item {
+    flex: 1 1 150px; padding: 11px 15px; border-radius: 14px;
+    background: rgba(255,255,255,.66); box-shadow: var(--ring);
+}
+.kpi-item .k { font-size: 10.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: #7d858b; }
+.kpi-item .v { margin-top: 3px; font-size: 14.5px; font-weight: 700; color: #1a2024; }
+.prog-line + .prog-line { margin-top: 16px; }
+.prog-cap { display: flex; justify-content: space-between; font-size: 12.5px; color: #5c656b; margin-bottom: 6px; font-weight: 500; }
+.prog-cap .pct { font-family: var(--font-num); font-weight: 700; color: #1f272b; }
+.track { height: 20px; border-radius: 999px; background: rgba(255,255,255,.72); box-shadow: inset 0 0 0 1px rgba(0,0,0,.045); overflow: hidden; }
+.bar { height: 100%; width: 0%; border-radius: 999px; transition: width .7s cubic-bezier(.16,1,.3,1); }
+.bar-age { background: linear-gradient(90deg, #6f79d8 0%, #5b63c4 100%); }
+.bar-age.over { background: linear-gradient(90deg, #e0705f 0%, #c5221f 100%); }
+.bar-dep { background: var(--g-gold-green); box-shadow: 0 2px 8px rgba(150,120,20,.20); }
+.prog-note { margin-top: 8px; font-size: 12px; color: #5c656b; }
+.prog-note b { font-family: var(--font-num); font-weight: 500; }
+
+/* ---------- Chart ---------- */
+.chart-card { padding: 22px 24px 24px; }
+.chart-toggle { display: flex; gap: 7px; flex-wrap: wrap; }
+.chart-toggle .btn { height: 32px; padding: 0 14px; font-size: 12.5px; background: rgba(255,255,255,.72); }
+.chart-toggle .btn.active { background: linear-gradient(135deg,#3d7a3e,#5f8b3e); color: #fff; box-shadow: 0 3px 10px rgba(45,90,40,.25); }
+.chart-body { display: grid; grid-template-columns: minmax(0,5fr) minmax(0,7fr); gap: 18px; align-items: start; }
+.meta-list { display: flex; flex-direction: column; gap: 0; }
+.meta-row { display: flex; justify-content: space-between; gap: 12px; padding: 11px 2px; border-bottom: 1px solid rgba(20,30,50,.09); font-size: 13px; }
+.meta-row:last-child { border-bottom: 0; }
+.meta-row .k { color: #5c656b; }
+.meta-row .v { font-weight: 700; text-align: right; color: #1a2024; }
+.chart-container {
+    position: relative; height: 300px; padding: 10px;
+    background: rgba(255,255,255,.78); border-radius: 16px; box-shadow: var(--ring);
+    display: flex; align-items: center; justify-content: center; overflow: hidden;
+}
+.chart-container canvas { width: 100% !important; height: 100% !important; }
+#chartEmptyMsg { font-size: 13px; color: #6f767c; display: flex; align-items: center; gap: 7px; }
+
+/* ---------- Collapsible ---------- */
+.collapse-head {
+    width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    padding: 18px 24px; background: none; border: 0; cursor: pointer;
+    font-family: var(--font-main); font-size: 15px; font-weight: 700; color: #1a2024;
+    text-align: left;
+}
+.collapse-head .chev { transition: transform .25s ease; }
+.collapse-head[aria-expanded="true"] .chev { transform: rotate(180deg); }
+.collapse-body { display: none; padding: 0 24px 24px; }
+.collapse-body.open { display: block; }
+.calc-method-box {
+    background: rgba(255,255,255,.8); border-radius: 16px; box-shadow: var(--ring);
+    padding: 20px; font-size: 13.5px; line-height: 1.6; color: #2b3238;
+}
+.calc-method-box .formula {
+    font-family: var(--font-num); font-size: 12.5px; line-height: 1.65;
+    background: #fff; border-radius: 12px; box-shadow: var(--ring);
+    padding: 13px 15px; margin: 8px 0 16px; white-space: pre-wrap;
+}
+.calc-method-box .text-muted { color: #6f767c; font-size: 12px; }
+
+/* ---------- Copy areas ---------- */
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; align-items: start; }
+.copy-card { padding: 20px 22px 22px; }
+.copy-card h3 { font-size: 14px; display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+.copy-area {
+    background: rgba(255,255,255,.9); border-radius: 16px; box-shadow: var(--ring);
+    padding: 16px 18px; font-size: 13px; user-select: all; -webkit-user-select: all;
+}
+.copy-area table { width: 100%; border-collapse: collapse; }
+.copy-area td { padding: 4px 0; }
+.copy-area td:first-child { color: #6f767c; }
+.copy-area td:last-child { text-align: right; font-weight: 700; }
+.copy-area .n { font-family: var(--font-num); font-variant-numeric: tabular-nums; }
+
+/* ---------- ตาราง ---------- */
+.table-card { overflow: hidden; }
+.table-head { padding: 20px 24px 16px; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.table-head h2 { font-size: 17px; display: flex; align-items: center; gap: 9px; }
+.table-scroll { overflow-x: auto; }
+table.sched { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 900px; }
+table.sched thead th {
+    position: sticky; top: 0; z-index: 1;
+    background: linear-gradient(180deg, #f3f4f7 0%, #eceef3 100%);
+    padding: 11px 14px; font-size: 11.5px; font-weight: 700; letter-spacing: .02em;
+    color: #4b545b; text-align: left; white-space: nowrap;
+    border-bottom: 1px solid rgba(20,30,50,.10);
+}
+table.sched tbody td { padding: 10px 14px; border-bottom: 1px solid rgba(20,30,50,.06); vertical-align: middle; }
+table.sched tbody tr:nth-child(even) { background: rgba(246,247,249,.6); }
+table.sched tbody tr:hover { background: rgba(226,235,239,.55); }
+.text-center { text-align: center; } .text-end { text-align: right; }
+table.sched td.text-end, table.sched td.text-center { font-family: var(--font-num); font-variant-numeric: tabular-nums; }
+table.sched td:nth-child(3) { font-family: var(--font-num); font-size: 12.5px; white-space: nowrap; }
+.text-success { color: #1f6f36; } .fw-bold { font-weight: 700; }
+tr.row-current-year { background: linear-gradient(90deg, #fff7dd 0%, #fffaea 100%) !important; }
+tr.row-projection td { color: var(--violet); font-style: italic; }
+tr.snapshot-subrow { background: #eaf2fd !important; }
+tr.row-total td { border-top: 2px solid #2a3236 !important; font-weight: 700; background: #f2f4f6 !important; }
+.current-year-tag {
+    display: inline-block; margin-left: 7px; padding: 1px 9px; border-radius: 999px;
+    background: linear-gradient(135deg,#3d7a3e,#5f8b3e); color: #fff; font-size: 10px; font-weight: 700;
+    font-family: var(--font-main); white-space: nowrap; vertical-align: middle;
+}
+.status-pill { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 700; white-space: nowrap; font-family: var(--font-main); }
+.table-foot { padding: 18px 24px 24px; display: flex; flex-direction: column; gap: 14px; }
+.table-legend { font-size: 12px; color: #6f767c; line-height: 1.6; }
+
+.recon-box { border-radius: 16px; padding: 16px 18px; font-size: 13px; line-height: 1.7; }
+.recon-ok { background: linear-gradient(135deg,#e9f6ec 0%, #e3f3e8 100%); box-shadow: 0 0 0 3px rgba(19,115,51,.10); color: #0d652d; }
+.recon-fail { background: linear-gradient(135deg,#fdecea 0%, #fce7e6 100%); box-shadow: 0 0 0 3px rgba(197,34,31,.12); color: #a50e0e; }
+.recon-box .formula-line { font-family: var(--font-num); font-size: 12.5px; }
+.selftest-box {
+    border-radius: 16px; padding: 16px 18px; font-size: 12.5px; line-height: 1.75;
+    background: linear-gradient(180deg,#f7f8fa 0%, #f1f3f6 100%); box-shadow: var(--ring);
+}
 .selftest-box .t-pass { color: #137333; }
 .selftest-box .t-fail { color: #c5221f; font-weight: 700; }
+.selftest-box .text-muted { color: #6f767c; }
 
-.note-inline { font-size: 0.78rem; color: #5f6368; }
-.print-signature { display: none; }
-
-/* ===== css/print.css ===== */
-@page { size: A4; margin: 13mm 12mm; }
-
-@media print {
-    body { background-color: white; margin-top: 20px; font-size: 11px; }
-    .container { max-width: 100% !important; padding: 0; }
-    .card { box-shadow: none !important; border: 1px solid #eee !important; }
-    .d-print-none { display: none !important; }
-    .col-print-12 {
-        width: 100% !important;
-        flex: 0 0 auto !important;
-        max-width: 100% !important;
-    }
-    .chart-container {
-        height: auto !important;
-        min-height: 150px;
-        max-height: 250px;
-        border: 1px solid #000;
-        page-break-inside: avoid;
-        padding: 4px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        overflow: hidden;
-        margin: 0 auto;
-    }
-    .chart-container canvas {
-        max-width: 100% !important;
-        max-height: 100% !important;
-        height: auto !important;
-        width: auto !important;
-    }
-    table { font-size: 9.5px; width: 100%; }
-    th { background-color: #eee !important; color: #000 !important; }
-    tr.row-projection td { font-style: italic; }
-    .barcode { font-size: 4rem; color: #000; }
-    * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-
-    .print-header-overlay {
-        position: fixed;
-        top: 0;
-        right: 0;
-        width: 100%;
-        text-align: right;
-        padding: 10px 20px;
-        background-color: white;
-        z-index: 9999;
-        display: block !important;
-    }
-    .print-signature { display: flex !important; }
-    #scheduleCard { page-break-before: always; }
-    .recon-box { page-break-inside: avoid; }
-    .selftest-box { display: none !important; }
+.visually-hidden-live {
+    position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0;
+    overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
 }
 
-    </style>
+/* ---------- ส่วนพิมพ์ ---------- */
+.print-only { display: none; }
+@media screen { .print-signature { display: none !important; } }
 
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+/* ============================================================
+   Entrance choreography — เล่นครั้งเดียวแล้วถอดออก
+   ============================================================ */
+.motion-pending .card, .motion-pending .stat { opacity: 0; visibility: hidden; }
+
+@keyframes panel-settle {
+    from { opacity: 0; translate: 0 12px; scale: .988; clip-path: inset(3% round 22px); }
+    62%  { opacity: 1; }
+    to   { opacity: 1; translate: 0 0; scale: 1; clip-path: inset(0% round 22px); }
+}
+@keyframes type-unmask {
+    from { opacity: 0; translate: 0 16px; clip-path: inset(0 0 96% 0); }
+    to   { opacity: 1; translate: 0 0; clip-path: inset(0 0 0 0); }
+}
+@keyframes content-rise { from { opacity: 0; translate: 0 9px; } to { opacity: 1; translate: 0 0; } }
+@keyframes detail-settle { from { opacity: 0; translate: 0 8px; scale: .97; } to { opacity: 1; translate: 0 0; scale: 1; } }
+@keyframes chart-unmask { from { opacity: 0; translate: 0 10px; clip-path: inset(100% 0 0 0); } to { opacity: 1; translate: 0 0; clip-path: inset(0 0 0 0); } }
+
+.entrance-run .card, .entrance-run .stat { will-change: opacity, translate, scale, clip-path; }
+.entrance-run .card {
+    animation: panel-settle .78s cubic-bezier(.16,1,.3,1) backwards;
+}
+.entrance-run .e1 { animation-delay: .04s; }
+.entrance-run .e2 { animation-delay: .12s; }
+.entrance-run .e3 { animation-delay: .20s; }
+.entrance-run .e4 { animation-delay: .26s; }
+.entrance-run .e5 { animation-delay: .32s; }
+.entrance-run .e6 { animation-delay: .38s; }
+.entrance-run .stat { animation: detail-settle .56s cubic-bezier(.16,1,.3,1) backwards; }
+.entrance-run .stat:nth-child(1) { animation-delay: .30s; }
+.entrance-run .stat:nth-child(2) { animation-delay: .35s; }
+.entrance-run .stat:nth-child(3) { animation-delay: .40s; }
+.entrance-run .stat:nth-child(4) { animation-delay: .45s; }
+.entrance-run .stat:nth-child(5) { animation-delay: .50s; }
+.entrance-run .stat:nth-child(6) { animation-delay: .55s; }
+.entrance-run .stat:nth-child(7) { animation-delay: .60s; }
+.entrance-run .stat:nth-child(8) { animation-delay: .65s; }
+.entrance-run .hero h1 { animation: type-unmask .78s cubic-bezier(.22,1,.36,1) .18s backwards; }
+.entrance-run .hero .sub { animation: content-rise .54s cubic-bezier(.16,1,.3,1) .46s backwards; }
+.entrance-run .hero-side { animation: content-rise .54s cubic-bezier(.16,1,.3,1) .56s backwards; }
+.entrance-run .form-card .card-head { animation: type-unmask .64s cubic-bezier(.22,1,.36,1) .34s backwards; }
+.entrance-run .chart-container { animation: chart-unmask .86s cubic-bezier(.16,1,.3,1) .60s backwards; }
+.entrance-run .table-card .table-scroll { animation: chart-unmask .82s cubic-bezier(.16,1,.3,1) .52s backwards; }
+
+@media (prefers-reduced-motion: reduce) {
+    .motion-pending .card, .motion-pending .stat { opacity: 1; visibility: visible; }
+    .entrance-run *, .card, .stat, .bar { animation: none !important; transition: none !important; }
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 1100px) {
+    .mosaic { grid-template-columns: 1fr; }
+    .stat-grid { grid-template-columns: repeat(2, minmax(0,1fr)); }
+    .chart-body { grid-template-columns: 1fr; }
+}
+@media (max-width: 700px) {
+    body { padding: 16px 12px 40px; }
+    .page { gap: 14px; }
+    .hero { padding: 24px 20px; }
+    .hero-side { align-items: stretch; width: 100%; }
+    .hero-actions { justify-content: flex-start; }
+    .form-card, .prog-card, .chart-card, .copy-card { padding: 20px 16px; }
+    .stat-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+    .stat.wide { grid-column: span 2; }
+    .two-col { grid-template-columns: 1fr; }
+    .grid-5-7, .grid2 { grid-template-columns: 1fr; }
+    .table-head, .table-foot { padding-left: 16px; padding-right: 16px; }
+}
+
+/* ---------- พิมพ์ ---------- */
+@page { size: A4; margin: 13mm 12mm; }
+@media print {
+    body { background: #fff; padding: 0; font-size: 11px; }
+    .page { max-width: 100%; gap: 10px; }
+    .d-print-none, .hero, .stat-grid { display: none !important; }
+    .print-only { display: block !important; }
+    .card { box-shadow: none !important; border: 1px solid #ddd !important; background: #fff !important; border-radius: 10px; }
+    .chart-container { height: 200px !important; box-shadow: none; border: 1px solid #ccc; background: #fff; }
+    .chart-container canvas { width: 100% !important; height: 100% !important; }
+    .table-scroll { overflow: visible !important; }
+    table.sched { font-size: 9px; min-width: 0; table-layout: fixed; }
+    table.sched th, table.sched td { padding: 5px 4px; }
+    table.sched th { white-space: normal !important; line-height: 1.25; }
+    table.sched td:nth-child(3) { font-size: 8.2px; white-space: nowrap; }
+    table.sched th:nth-child(1), table.sched td:nth-child(1) { width: 8%; }
+    table.sched th:nth-child(2), table.sched td:nth-child(2) { width: 6%; }
+    table.sched th:nth-child(3), table.sched td:nth-child(3) { width: 21%; }
+    table.sched th:nth-child(4), table.sched td:nth-child(4) { width: 7%; }
+    table.sched th:nth-child(5), table.sched td:nth-child(5) { width: 15%; }
+    table.sched th:nth-child(6), table.sched td:nth-child(6) { width: 16%; }
+    table.sched th:nth-child(7), table.sched td:nth-child(7) { width: 14%; }
+    table.sched th:nth-child(8), table.sched td:nth-child(8) { width: 13%; }
+    .current-year-tag { font-size: 8px; padding: 0 5px; }
+    .status-pill { font-size: 8.5px; padding: 2px 5px; white-space: normal; line-height: 1.3; }
+    table.sched thead th { background: #eee !important; color: #000 !important; }
+    #scheduleCard { page-break-before: always; }
+    #scheduleCard .table-head { padding-top: 16px; }
+    .recon-box { page-break-inside: avoid; }
+    .chart-card { padding: 12px 14px; }
+    .chart-body { grid-template-columns: 1fr; gap: 8px; }
+    .selftest-box { display: none !important; }
+    .print-signature { display: flex !important; }
+    * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .print-head-overlay { position: fixed; top: 0; right: 0; width: auto; text-align: right; padding: 0; background: transparent; z-index: 9999; display: block !important; font-size: 9.5px; color: #444; }
+    .print-info { width: 100%; border-collapse: collapse; font-size: 10px; }
+    .print-info td { border: 1px solid #bbb; padding: 4px 6px; }
+    .print-info td.k { background: #f3f3f3; font-weight: 700; width: 22%; }
+    .print-title { text-align: center; margin: 14px 0 8px; }
+    .print-title h2 { font-size: 15px; }
+    .print-signature { display: flex; justify-content: space-between; margin-top: 34px; padding-top: 18px; }
+    .print-signature .sig { width: 45%; text-align: center; font-size: 10px; }
+    .print-signature .sig .rule { border-bottom: 1px dotted #333; height: 34px; }
+}
+</style>
+
+<script>
+(function () {
+    try {
+        if (!window.matchMedia || !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+            document.documentElement.classList.add('motion-pending');
+            window.__entranceFailSafe = setTimeout(function () {
+                document.documentElement.classList.remove('motion-pending');
+            }, 2400);
+        }
+    } catch (e) { /* ไม่ให้ animation ทำให้หน้าเว็บพัง */ }
+})();
+</script>
+
 </head>
 <body>
-
-<div class="print-header-overlay d-none">
-    <span class="text-muted small">ลำดับที่เอกสาร: <span id="printDocRef" class="fw-bold text-dark" style="font-size: 1.1em;">-</span></span>
+<div class="print-head-overlay print-only">
+    <span>ลำดับที่เอกสาร: <b id="printDocRef">-</b></span>
 </div>
 
-<div class="container py-5">
-    <div class="d-flex justify-content-between align-items-center mb-4 d-print-none flex-wrap gap-2">
-        <div>
-            <h1 class="h3 mb-1 fw-bold" style="color: #1f1f1f;">
-                <i class="fa-solid fa-calculator me-2 text-primary" aria-hidden="true"></i>คำนวณค่าเสื่อมราคา
-            </h1>
-            <p class="text-muted small mb-0">ระบบคำนวณค่าเสื่อมราคาครุภัณฑ์ (เส้นตรง)</p>
+<div class="page">
+
+    <!-- ===================== HERO ===================== -->
+    <header class="card t-lime hero e1">
+        <div class="hero-copy">
+            <h1><span class="g">ค่าเสื่อมราคา</span>ครุภัณฑ์<br>คำนวณรายวัน ตรงทุกสตางค์</h1>
+            <p class="sub">วิธีเส้นตรง คิดค่าเสื่อมเป็นรายวันด้วยเศษส่วนจำนวนเต็ม (BigInt) ไม่ปัดเศษกลางทาง ยอดรวมตลอดอายุการใช้งานเท่ากับ (ราคาทุน − มูลค่าซาก) พอดีเสมอ</p>
         </div>
-        <div class="d-flex gap-2 flex-wrap">
-            <button id="btnSelfTest" type="button" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
-                <i class="fa-solid fa-vial-circle-check me-1" aria-hidden="true"></i> ตรวจสอบระบบ
-            </button>
-            <button id="btnReset" type="button" class="btn btn-outline-danger btn-sm rounded-pill px-3">
-                <i class="fa-solid fa-eraser me-1" aria-hidden="true"></i> ล้างข้อมูล
-            </button>
-            <button id="btnPrint" type="button" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
-                <i class="fa-solid fa-print me-1" aria-hidden="true"></i> พิมพ์รายงาน
-            </button>
-        </div>
-    </div>
-
-    <div class="d-none d-print-block mb-3 text-center" style="margin-top: 20px;">
-        <h4 class="mb-1">รายงานการคำนวณค่าเสื่อมราคาครุภัณฑ์</h4>
-        <p class="small text-muted mb-0">พิมพ์เมื่อ: <span id="printDate"></span></p>
-    </div>
-
-    <div class="row g-4">
-        <div class="col-lg-4 d-print-none">
-            <div class="card shadow-sm h-100">
-                <div class="card-header bg-white py-3 border-bottom-0 d-flex justify-content-between align-items-center">
-                    <h2 class="mb-0 fw-bold h5"><i class="fa-regular fa-pen-to-square me-2" aria-hidden="true"></i>ข้อมูลสินทรัพย์</h2>
-                    <button id="btnExample" type="button" class="btn btn-light btn-sm">
-                        <i class="fa-solid fa-rotate-right me-1" aria-hidden="true"></i> ตัวอย่าง
-                    </button>
-                </div>
-                <div class="card-body pt-0">
-                    <form id="assetForm" novalidate>
-
-                    <div id="formAlertBox" class="alert alert-danger alert-box-errors" role="alert" aria-live="assertive">
-                        <div class="fw-bold mb-1"><i class="fa-solid fa-circle-exclamation me-1" aria-hidden="true"></i> ข้อมูลไม่ถูกต้อง</div>
-                        <ul class="mb-0 ps-3 small" id="formAlertList"></ul>
-                    </div>
-
-                    <div class="row mb-3">
-                        <div class="col-5">
-                            <label class="form-label" for="assetCode">รหัสครุภัณฑ์</label>
-                            <input id="assetCode" type="text" class="form-control" placeholder="เช่น 1234-001-0001">
-                        </div>
-                        <div class="col-7">
-                            <label class="form-label" for="assetName">รายการ</label>
-                            <input id="assetName" type="text" class="form-control" placeholder="เช่น เครื่องสำรองไฟ 1KVA">
-                        </div>
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label" for="cost">ราคาทุน (บาท)</label>
-                        <div class="input-group">
-                            <span class="input-group-text" aria-hidden="true">฿</span>
-                            <input id="cost" type="text" inputmode="decimal" class="form-control currency-input fw-bold text-primary" placeholder="0.00" aria-describedby="costError">
-                        </div>
-                        <div id="costError" class="error-msg"></div>
-                    </div>
-
-                    <div class="row mb-3">
-                        <div class="col-6">
-                            <label class="form-label" for="salvage">มูลค่าซาก</label>
-                            <input id="salvage" type="text" inputmode="decimal" value="1.00" class="form-control currency-input text-end" aria-describedby="salvageError">
-                            <div id="salvageError" class="error-msg"></div>
-                        </div>
-                        <div class="col-6">
-                            <label class="form-label" for="lifeYears">อายุตามบัญชี (ปี)</label>
-                            <input id="lifeYears" type="number" value="5" min="1" max="100" step="1" class="form-control text-end" aria-describedby="lifeYearsError">
-                            <div id="lifeYearsError" class="error-msg"></div>
-                        </div>
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label" for="startDate">วันที่เริ่มใช้ (วว/ดด/ปปปป)</label>
-                        <div class="input-group">
-                            <input type="text" id="startDate" class="form-control date-input" placeholder="เช่น 01/10/2567" maxlength="10" aria-describedby="startDateError">
-                            <span class="input-group-text bg-white" aria-hidden="true"><i class="fa-regular fa-calendar text-muted"></i></span>
-                        </div>
-                        <div id="startDateError" class="error-msg"></div>
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label" for="currentDate">คำนวณถึงวันที่ (Snapshot)</label>
-                        <div class="input-group">
-                            <input type="text" id="currentDate" class="form-control date-input" placeholder="วันที่ปัจจุบัน" maxlength="10" aria-describedby="currentDateError">
-                            <span class="input-group-text bg-white" aria-hidden="true"><i class="fa-regular fa-calendar text-muted"></i></span>
-                        </div>
-                        <div id="currentDateError" class="error-msg"></div>
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label small mb-1" for="operStatus">สถานะการใช้งาน</label>
-                        <select id="operStatus" class="form-select">
-                            <option value="ใช้งานอยู่" selected>ใช้งานอยู่</option>
-                            <option value="ส่งซ่อม">ส่งซ่อม</option>
-                            <option value="ชำรุด">ชำรุด</option>
-                            <option value="รอจำหน่าย">รอจำหน่าย</option>
-                            <option value="จำหน่ายแล้ว">จำหน่ายแล้ว</option>
-                            <option value="โอน">โอน</option>
-                            <option value="สูญหาย">สูญหาย</option>
-                        </select>
-                        <div class="form-text small">สถานะนี้ใช้เพื่อแสดงผลเท่านั้น ไม่มีผลต่อการหยุดคิดค่าเสื่อม</div>
-                    </div>
-
-                    <div class="section-label">หลักเกณฑ์การคำนวณ</div>
-
-                    <div class="mb-3">
-                        <span class="form-label small mb-1 d-block" id="depMethodLabel">วิธีคำนวณ</span>
-                        <div class="d-flex flex-wrap gap-3 small" role="radiogroup" aria-labelledby="depMethodLabel">
-                            <div class="form-check">
-                                <input class="form-check-input" type="radio" name="depMethod" id="methodStraight" checked>
-                                <label class="form-check-label" for="methodStraight">เส้นตรง</label>
-                            </div>
-                            <div class="form-check">
-                                <input class="form-check-input" type="radio" name="depMethod" id="methodMonth" disabled>
-                                <label class="form-check-label text-muted" for="methodMonth">ตามจำนวนเดือน (เร็วๆ นี้)</label>
-                            </div>
-                            <div class="form-check">
-                                <input class="form-check-input" type="radio" name="depMethod" id="methodCustom" disabled>
-                                <label class="form-check-label text-muted" for="methodCustom">กำหนดเอง (เร็วๆ นี้)</label>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label small mb-1" for="yearBasis">ปีฐาน (จำนวนวันต่อปี)</label>
-                        <select id="yearBasis" class="form-select">
-                            <option value="actual" selected>ตามจริง (365 หรือ 366 วัน ตามปีอธิกสุรทิน)</option>
-                            <option value="fixed365">คงที่ 365 วันทุกปี</option>
-                        </select>
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label small mb-1" for="eolPolicy">นโยบายวันครบอายุ</label>
-                        <select id="eolPolicy" class="form-select">
-                            <option value="anniversaryMinusOneDay" selected>วันก่อนวันครบรอบ (ใช้สูตรเดียวทุกกรณี)</option>
-                            <option value="clampedAnniversaryAsLastDay">กรณี 29 ก.พ. ให้ใช้วันสิ้นเดือนกุมภาพันธ์เป็นวันครบอายุ</option>
-                        </select>
-                        <div class="form-text small">เป็นนโยบายทางบัญชีของหน่วยงาน ไม่ใช่กฎสากล มีผลเฉพาะกรณีวันที่เริ่มใช้ไม่มีอยู่จริงในปีปลายทาง เช่น 29 กุมภาพันธ์</div>
-                    </div>
-
-                    <div class="section-label">ข้อมูลเอกสาร</div>
-
-                    <div class="mb-3">
-                        <label class="form-label" for="budget">แหล่งงบประมาณ</label>
-                        <select id="budget" class="form-select">
-                            <option value="กองทุนค่าธรรมเนียมการศึกษา">กองทุนค่าธรรมเนียมการศึกษา</option>
-                            <option value="งบคลัง มหาวิทยาลัยธรรมศาสตร์">งบคลัง มหาวิทยาลัยธรรมศาสตร์</option>
-                            <option selected value="งบรายได้วิทยาลัยแพทยศาสตร์นานาชาติจุฬาภรณ์">งบรายได้วิทยาลัยแพทยศาสตร์นานาชาติจุฬาภรณ์</option>
-                            <option value="งบบริจาค">งบบริจาค</option>
-                            <option value="งบกองทุนวิจัย">งบกองทุนวิจัย</option>
-                        </select>
-                    </div>
-
-                    <div class="mb-4">
-                        <label class="form-label" for="docRef">ลำดับที่เอกสาร</label>
-                        <input type="text" id="docRef" class="form-control" placeholder="เช่น 000">
-                        <div class="form-text small">เลขที่นี้จะแสดงมุมขวาบนเมื่อสั่งพิมพ์</div>
-                    </div>
-
-                    <div class="d-grid gap-2">
-                        <button id="calcBtn" type="button" class="btn btn-primary shadow-sm">
-                            <span id="calcBtnLabel">คำนวณผลลัพธ์</span>
-                        </button>
-                        <div class="d-flex gap-2">
-                            <button id="btnCSV" type="button" class="btn btn-outline-success flex-fill btn-sm">
-                                <i class="fa-solid fa-file-csv me-1" aria-hidden="true"></i> CSV
-                            </button>
-                            <button id="btnExcel" type="button" class="btn btn-outline-success flex-fill btn-sm">
-                                <i class="fa-solid fa-file-excel me-1" aria-hidden="true"></i> Excel
-                            </button>
-                            <button id="btnPDF" type="button" class="btn btn-outline-danger flex-fill btn-sm">
-                                <i class="fa-solid fa-file-pdf me-1" aria-hidden="true"></i> PDF
-                            </button>
-                        </div>
-                        <div id="dirtyNotice" class="note-inline text-danger" style="display:none;" role="status">
-                            <i class="fa-solid fa-triangle-exclamation me-1" aria-hidden="true"></i>
-                            ข้อมูลเปลี่ยนแปลงหลังคำนวณ กรุณากดคำนวณใหม่ก่อนพิมพ์หรือส่งออก
-                        </div>
-                    </div>
-                    </form>
-                </div>
+        <div class="hero-side d-print-none">
+            <div class="docpill">ลำดับที่เอกสาร <b id="heroDocRef">-</b></div>
+            <div class="hero-actions">
+                <button id="btnSelfTest" type="button" class="btn">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 2v6.5L4.8 17A3 3 0 0 0 7.5 21.5h9A3 3 0 0 0 19.2 17L15 8.5V2"/><path d="M7.5 2h9"/><path d="M6.4 14.5h11.2"/></svg>
+                    ตรวจสอบระบบ
+                </button>
+                <button id="btnReset" type="button" class="btn btn-danger">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h16"/><path d="M13.5 3.5 20 10l-7.5 7.5H8L3.5 13z"/></svg>
+                    ล้างข้อมูล
+                </button>
+                <button id="btnPrint" type="button" class="btn">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 8V3h10v5"/><path d="M7 18H5a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-2"/><rect x="7" y="14" width="10" height="7" rx="1"/></svg>
+                    พิมพ์รายงาน
+                </button>
             </div>
         </div>
+    </header>
 
-        <div class="col-lg-8 col-print-12">
+    <!-- ===================== หัวรายงานเฉพาะตอนพิมพ์ ===================== -->
+    <div class="print-only print-title">
+        <h2>รายงานการคำนวณค่าเสื่อมราคาครุภัณฑ์</h2>
+        <p style="font-size:10px;color:#666;">พิมพ์เมื่อ: <span id="printDate"></span></p>
+    </div>
+    <div class="print-only">
+        <table class="print-info">
+            <tbody>
+                <tr><td class="k">รหัสครุภัณฑ์</td><td id="printAssetCode">-</td><td class="k">รายการ</td><td id="printAssetName">-</td></tr>
+                <tr><td class="k">ราคาทุน</td><td id="printCost">-</td><td class="k">มูลค่าซาก</td><td id="printSalvage">-</td></tr>
+                <tr><td class="k">อายุตามบัญชี</td><td id="printLife">-</td><td class="k">วันที่เริ่มใช้งาน</td><td id="printStartDate">-</td></tr>
+                <tr><td class="k">วันที่คำนวณ</td><td id="printCurrentDate">-</td><td class="k">ครบอายุการใช้งาน</td><td id="printEndOfLife">-</td></tr>
+                <tr><td class="k">อายุการใช้งานจริง</td><td id="printDuration">-</td><td class="k">อายุคงเหลือ</td><td id="printRemaining">-</td></tr>
+                <tr><td class="k">ค่าเสื่อมสะสมที่เกิดขึ้นจริง</td><td id="printAccumulated2">-</td><td class="k">มูลค่าตามบัญชี</td><td id="printBookValue2">-</td></tr>
+                <tr><td class="k">ค่าเสื่อมปีนี้ (ถึงวันคำนวณ)</td><td id="printThisYearActual">-</td><td class="k">สถานะค่าเสื่อม</td><td id="printDepStatus">-</td></tr>
+                <tr><td class="k">สถานะการใช้งาน</td><td id="printOperStatus">-</td><td class="k">แหล่งงบประมาณ</td><td id="printBudget">-</td></tr>
+            </tbody>
+        </table>
+    </div>
 
-            <p id="resultStatusLive" class="visually-hidden-live" role="status" aria-live="polite"></p>
+    <p id="resultStatusLive" class="visually-hidden-live" role="status" aria-live="polite"></p>
 
-            <div class="d-none d-print-block mb-3">
-    <table class="table table-bordered mb-2" style="font-size: 0.85rem;">
-        <tbody>
-            <tr><td class="fw-bold bg-light" style="width:28%;">รหัสครุภัณฑ์</td><td id="printAssetCode">-</td><td class="fw-bold bg-light" style="width:22%;">รายการ</td><td id="printAssetName">-</td></tr>
-            <tr><td class="fw-bold bg-light">ราคาทุน</td><td id="printCost">-</td><td class="fw-bold bg-light">มูลค่าซาก</td><td id="printSalvage">-</td></tr>
-            <tr><td class="fw-bold bg-light">อายุตามบัญชี</td><td id="printLife">-</td><td class="fw-bold bg-light">วันที่เริ่มใช้งาน</td><td id="printStartDate">-</td></tr>
-            <tr><td class="fw-bold bg-light">วันที่คำนวณ</td><td id="printCurrentDate">-</td><td class="fw-bold bg-light">ครบอายุการใช้งาน</td><td id="printEndOfLife">-</td></tr>
-            <tr><td class="fw-bold bg-light">อายุการใช้งานจริง</td><td id="printDuration">-</td><td class="fw-bold bg-light">อายุคงเหลือ</td><td id="printRemaining">-</td></tr>
-            <tr><td class="fw-bold bg-light">ค่าเสื่อมสะสมที่เกิดขึ้นจริง (ถึงวันคำนวณ)</td><td id="printAccumulated2">-</td><td class="fw-bold bg-light">มูลค่าตามบัญชี</td><td id="printBookValue2">-</td></tr>
-            <tr><td class="fw-bold bg-light">ค่าเสื่อมปีนี้ เกิดขึ้นจริงถึงวันคำนวณ</td><td id="printThisYearActual">-</td><td class="fw-bold bg-light">สถานะค่าเสื่อม</td><td id="printDepStatus">-</td></tr>
-            <tr><td class="fw-bold bg-light">สถานะการใช้งาน</td><td id="printOperStatus">-</td><td></td><td></td></tr>
-        </tbody>
-    </table>
-</div>
+    <!-- ===================== MOSAIC ===================== -->
+    <div class="mosaic">
 
-            <!-- Dashboard -->
-            <div class="row row-cols-2 row-cols-md-4 g-3 mb-4 d-print-none">
-                <div class="col">
-                    <div class="card shadow-sm border-start border-4 border-primary h-100 stat-card">
-                        <div class="card-body p-3">
-                            <p class="text-muted small mb-1 fw-bold text-uppercase">ราคาทุน</p>
-                            <h4 class="mb-0 text-primary fw-bold" id="resCost">-</h4>
-                        </div>
-                    </div>
-                </div>
-                <div class="col">
-                    <div class="card shadow-sm border-start border-4 border-danger h-100 stat-card">
-                        <div class="card-body p-3">
-                            <p class="text-muted small mb-1 fw-bold text-uppercase">ค่าเสื่อมสะสมที่เกิดขึ้นจริง (ถึงวันคำนวณ)</p>
-                            <h4 class="mb-0 text-danger fw-bold" id="resAccumulated">-</h4>
-                        </div>
-                    </div>
-                </div>
-                <div class="col">
-                    <div class="card shadow-sm border-start border-4 border-success h-100 stat-card">
-                        <div class="card-body p-3">
-                            <p class="text-muted small mb-1 fw-bold text-uppercase">มูลค่าตามบัญชี</p>
-                            <h4 class="mb-0 text-success fw-bold" id="resBookValue">-</h4>
-                        </div>
-                    </div>
-                </div>
-                <div class="col">
-                    <div class="card shadow-sm border-start border-4 border-info h-100 stat-card">
-                        <div class="card-body p-3">
-                            <p class="text-muted small mb-1 fw-bold text-uppercase">ค่าเสื่อมปีนี้ เกิดขึ้นจริงถึงวันคำนวณ</p>
-                            <h5 class="mb-0 fw-bold" style="color:#0b8793;" id="resThisYear">-</h5>
-                            <p class="text-muted mb-0" style="font-size:0.72rem;">
-                                ประมาณการหลังวันคำนวณ: <span id="resThisYearProjected">-</span><br>
-                                รวมทั้งช่วงในปีนี้: <span id="resThisYearPeriod">-</span><br>
-                                เต็มปีตามอัตราบัญชี: <span id="resThisYearRate">-</span>
-                            </p>
-                        </div>
-                    </div>
-                </div>
-                <div class="col">
-                    <div class="card shadow-sm border-start border-4 border-secondary h-100 stat-card">
-                        <div class="card-body p-3">
-                            <p class="text-muted small mb-1 fw-bold text-uppercase">อายุการใช้งานจริง</p>
-                            <h6 class="mb-0 fw-bold" id="resDuration">-</h6>
-                        </div>
-                    </div>
-                </div>
-                <div class="col">
-                    <div class="card shadow-sm border-start border-4 border-secondary h-100 stat-card">
-                        <div class="card-body p-3">
-                            <p class="text-muted small mb-1 fw-bold text-uppercase">อายุคงเหลือ</p>
-                            <h6 class="mb-0 fw-bold" id="resRemaining">-</h6>
-                        </div>
-                    </div>
-                </div>
-                <div class="col">
-                    <div class="card shadow-sm border-start border-4 border-warning h-100 stat-card">
-                        <div class="card-body p-3">
-                            <p class="text-muted small mb-1 fw-bold text-uppercase">สถานะการใช้งาน</p>
-                            <span class="status-badge status-neutral" id="resOperStatus">-</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="col">
-                    <div class="card shadow-sm border-start border-4 border-warning h-100 stat-card">
-                        <div class="card-body p-3">
-                            <p class="text-muted small mb-1 fw-bold text-uppercase">สถานะค่าเสื่อม</p>
-                            <span class="status-badge status-neutral" id="resDepStatus">-</span>
-                        </div>
-                    </div>
-                </div>
+        <!-- ---------- ฟอร์ม ---------- -->
+        <section class="card t-mist form-card e2 d-print-none" aria-label="ข้อมูลสินทรัพย์">
+            <div class="card-head">
+                <h2>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="2.5" width="16" height="19" rx="3"/><path d="M8 7h8M8 11.5h3M8 16h3M15 11.5v4.5"/></svg>
+                    ข้อมูลสินทรัพย์
+                </h2>
+                <button id="btnExample" type="button" class="btn btn-sm">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 12a8.5 8.5 0 1 1-2.6-6.1"/><path d="M20.5 4.5V10H15"/></svg>
+                    ตัวอย่าง
+                </button>
             </div>
 
-            <!-- Progress -->
-            <div class="card shadow-sm mb-4 d-print-none">
-                <div class="card-body">
-                    <div class="life-kpi-strip">
-                        <div class="kpi-item"><span>เริ่มใช้งาน</span><span class="v" id="kpiStart">-</span></div>
-                        <div class="kpi-item"><span>ครบอายุการใช้งาน</span><span class="v" id="kpiEndOfLife">-</span></div>
-                        <div class="kpi-item"><span>เหลืออายุ</span><span class="v" id="kpiRemaining">-</span></div>
+            <form id="assetForm" novalidate>
+                <div id="formAlertBox" role="alert" aria-live="assertive">
+                    <div class="ttl">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9.2"/><path d="M12 7.5v5.5M12 16.3v.2"/></svg>
+                        ข้อมูลไม่ถูกต้อง
                     </div>
-                    <div class="mb-3">
-                        <div class="progress-caption">
-                            <span id="ageProgressCaptionLabel">อายุการใช้งาน (เทียบกับวันครบอายุจริง)</span>
-                            <span id="ageProgressLabel">0%</span>
-                        </div>
-                        <div class="progress">
-                            <div id="ageProgressBar" class="progress-bar bg-primary" role="progressbar"
-                                 aria-labelledby="ageProgressCaptionLabel" style="width:0%" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
-                        </div>
+                    <ul id="formAlertList"></ul>
+                </div>
+
+                <div class="field grid-5-7">
+                    <div>
+                        <label class="lbl" for="assetCode">รหัสครุภัณฑ์</label>
+                        <input id="assetCode" type="text" class="input num" placeholder="1234-001-0001">
                     </div>
                     <div>
-                        <div class="progress-caption">
-                            <span id="depProgressCaptionLabel">ค่าเสื่อม</span>
-                            <span id="depProgressLabel">0%</span>
-                        </div>
-                        <div class="progress">
-                            <div id="depProgressBar" class="progress-bar bg-danger" role="progressbar"
-                                 aria-labelledby="depProgressCaptionLabel" style="width:0%" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
-                        </div>
-                        <div class="small text-muted mt-1" id="depProgressCaption">เหลือมูลค่าตามบัญชี -</div>
+                        <label class="lbl" for="assetName">รายการ</label>
+                        <input id="assetName" type="text" class="input" placeholder="เครื่องสำรองไฟ 1KVA">
                     </div>
                 </div>
-            </div>
 
-            <div class="card shadow-sm mb-4">
-                <div class="card-header bg-white py-3 border-bottom-0 d-flex justify-content-between align-items-center flex-wrap gap-2">
-                    <h2 class="mb-0 fw-bold h6"><i class="fa-solid fa-chart-line me-2 text-primary" aria-hidden="true"></i>แนวโน้มค่าเสื่อมราคา</h2>
-                    <div class="btn-group chart-toggle d-print-none" role="group" aria-label="เลือกตัวชี้วัดกราฟ">
-                        <button type="button" class="btn btn-primary active" data-metric="book" aria-pressed="true">มูลค่าตามบัญชี</button>
-                        <button type="button" class="btn btn-outline-primary" data-metric="accum" aria-pressed="false">ค่าเสื่อมสะสม</button>
-                        <button type="button" class="btn btn-outline-primary" data-metric="annual" aria-pressed="false">ค่าเสื่อมตามช่วง</button>
+                <div class="field">
+                    <label class="lbl" for="cost">ราคาทุน (บาท)</label>
+                    <div class="money-wrap">
+                        <span class="baht" aria-hidden="true">฿</span>
+                        <input id="cost" type="text" inputmode="decimal" class="input money currency-input" placeholder="0.00" aria-describedby="costError">
                     </div>
+                    <div id="costError" class="error-msg"></div>
                 </div>
-                <div class="card-body pt-0">
-                    <div class="row">
-                        <div class="col-md-5 mb-3">
-                            <ul class="list-group list-group-flush small">
-                                <li class="list-group-item d-flex justify-content-between px-0">
-                                    <span class="text-muted">ช่วงวันที่</span>
-                                    <span class="fw-bold text-end" id="resDateRange">-</span>
-                                </li>
-                                <li class="list-group-item d-flex justify-content-between px-0">
-                                    <span class="text-muted">แหล่งงบประมาณ</span>
-                                    <span class="fw-bold text-end" id="resBudgetDisplay">-</span>
-                                </li>
-                                <li class="list-group-item d-flex justify-content-between px-0">
-                                    <span class="text-muted">รหัสครุภัณฑ์</span>
-                                    <span class="fw-bold text-end" id="resAssetCodeDisplay">-</span>
-                                </li>
-                            </ul>
-                        </div>
-                        <div class="col-md-7">
-                             <div id="chartContainer" class="chart-container d-flex align-items-center justify-content-center bg-light rounded">
-                                <canvas id="depChart" role="img" aria-label="กราฟแนวโน้มค่าเสื่อมราคา ข้อมูลตัวเลขทั้งหมดอยู่ในตารางด้านล่าง"></canvas>
-                                <div id="chartEmptyMsg" class="text-muted small"><i class="fa-solid fa-info-circle me-1" aria-hidden="true"></i> กดคำนวณเพื่อแสดงกราฟ</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
 
-            <!-- Calculation method -->
-            <div class="card shadow-sm mb-4 d-print-none">
-                <div class="card-header bg-white py-3 border-bottom-0">
-                    <button class="btn btn-light btn-sm w-100 text-start" type="button" data-bs-toggle="collapse" data-bs-target="#calcMethodCollapse" aria-expanded="false" aria-controls="calcMethodCollapse">
-                        <i class="fa-solid fa-square-root-variable me-2" aria-hidden="true"></i> แสดงวิธีคำนวณ
+                <div class="field grid2">
+                    <div>
+                        <label class="lbl" for="salvage">มูลค่าซาก</label>
+                        <input id="salvage" type="text" inputmode="decimal" value="1.00" class="input money currency-input" aria-describedby="salvageError">
+                        <div id="salvageError" class="error-msg"></div>
+                    </div>
+                    <div>
+                        <label class="lbl" for="lifeYears">อายุตามบัญชี (ปี)</label>
+                        <input id="lifeYears" type="number" value="5" min="1" max="100" step="1" class="input num" style="text-align:right" aria-describedby="lifeYearsError">
+                        <div id="lifeYearsError" class="error-msg"></div>
+                    </div>
+                </div>
+
+                <div class="field">
+                    <label class="lbl" for="startDate">วันที่เริ่มใช้ (วว/ดด/ปปปป พ.ศ.)</label>
+                    <div class="date-wrap">
+                        <input type="text" id="startDate" class="input date-input" placeholder="01/10/2567" maxlength="10" inputmode="numeric" aria-describedby="startDateError">
+                        <svg class="cal" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#3a3f42" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><rect x="3.2" y="4.8" width="17.6" height="16" rx="3"/><path d="M3.2 9.6h17.6M8 2.8v4M16 2.8v4"/></svg>
+                    </div>
+                    <div id="startDateError" class="error-msg"></div>
+                </div>
+
+                <div class="field">
+                    <label class="lbl" for="currentDate">คำนวณถึงวันที่ (Snapshot)</label>
+                    <div class="date-wrap">
+                        <input type="text" id="currentDate" class="input date-input" placeholder="วันที่ปัจจุบัน" maxlength="10" inputmode="numeric" aria-describedby="currentDateError">
+                        <svg class="cal" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#3a3f42" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><rect x="3.2" y="4.8" width="17.6" height="16" rx="3"/><path d="M3.2 9.6h17.6M8 2.8v4M16 2.8v4"/></svg>
+                    </div>
+                    <div id="currentDateError" class="error-msg"></div>
+                    <div class="hint">พิมพ์เฉพาะตัวเลข ระบบเติม / ให้อัตโนมัติ · <button type="button" id="btnToday" class="btn btn-sm" style="height:26px;padding:0 11px;font-size:11.5px;margin-top:4px;">ใช้วันนี้</button></div>
+                </div>
+
+                <div class="field">
+                    <label class="lbl" for="operStatus">สถานะการใช้งาน</label>
+                    <select id="operStatus" class="input">
+                        <option value="ใช้งานอยู่" selected>ใช้งานอยู่</option>
+                        <option value="ส่งซ่อม">ส่งซ่อม</option>
+                        <option value="ชำรุด">ชำรุด</option>
+                        <option value="รอจำหน่าย">รอจำหน่าย</option>
+                        <option value="จำหน่ายแล้ว">จำหน่ายแล้ว</option>
+                        <option value="โอน">โอน</option>
+                        <option value="สูญหาย">สูญหาย</option>
+                    </select>
+                    <div class="hint">ใช้เพื่อแสดงผลเท่านั้น ไม่มีผลต่อการหยุดคิดค่าเสื่อม</div>
+                </div>
+
+                <div class="section-label">หลักเกณฑ์การคำนวณ</div>
+
+                <div class="field">
+                    <span class="lbl" id="depMethodLabel">วิธีคำนวณ</span>
+                    <div class="chips" role="radiogroup" aria-labelledby="depMethodLabel">
+                        <label class="chip-radio"><input type="radio" name="depMethod" id="methodStraight" checked><span>เส้นตรง</span></label>
+                        <label class="chip-radio"><input type="radio" name="depMethod" id="methodMonth" disabled><span>ตามจำนวนเดือน</span></label>
+                        <label class="chip-radio"><input type="radio" name="depMethod" id="methodCustom" disabled><span>กำหนดเอง</span></label>
+                    </div>
+                </div>
+
+                <div class="field">
+                    <label class="lbl" for="yearBasis">ปีฐาน (จำนวนวันต่อปี)</label>
+                    <select id="yearBasis" class="input">
+                        <option value="actual" selected>ตามจริง (365 หรือ 366 วัน ตามปีอธิกสุรทิน)</option>
+                        <option value="fixed365">คงที่ 365 วันทุกปี</option>
+                    </select>
+                </div>
+
+                <div class="field">
+                    <label class="lbl" for="eolPolicy">นโยบายวันครบอายุ</label>
+                    <select id="eolPolicy" class="input">
+                        <option value="anniversaryMinusOneDay" selected>วันก่อนวันครบรอบ (ใช้สูตรเดียวทุกกรณี)</option>
+                        <option value="clampedAnniversaryAsLastDay">กรณี 29 ก.พ. ใช้วันสิ้นเดือนกุมภาพันธ์</option>
+                    </select>
+                    <div class="hint">เป็นนโยบายทางบัญชีของหน่วยงาน ไม่ใช่กฎสากล มีผลเฉพาะกรณีวันที่เริ่มใช้ไม่มีอยู่จริงในปีปลายทาง เช่น 29 กุมภาพันธ์</div>
+                </div>
+
+                <div class="section-label">ข้อมูลเอกสาร</div>
+
+                <div class="field">
+                    <label class="lbl" for="budget">แหล่งงบประมาณ</label>
+                    <select id="budget" class="input">
+                        <option value="กองทุนค่าธรรมเนียมการศึกษา">กองทุนค่าธรรมเนียมการศึกษา</option>
+                        <option value="งบคลัง มหาวิทยาลัยธรรมศาสตร์">งบคลัง มหาวิทยาลัยธรรมศาสตร์</option>
+                        <option selected value="งบรายได้วิทยาลัยแพทยศาสตร์นานาชาติจุฬาภรณ์">งบรายได้วิทยาลัยแพทยศาสตร์นานาชาติจุฬาภรณ์</option>
+                        <option value="งบบริจาค">งบบริจาค</option>
+                        <option value="งบกองทุนวิจัย">งบกองทุนวิจัย</option>
+                    </select>
+                </div>
+
+                <div class="field">
+                    <label class="lbl" for="docRef">ลำดับที่เอกสาร</label>
+                    <input type="text" id="docRef" class="input num" placeholder="000">
+                    <div class="hint">เลขที่นี้จะแสดงมุมขวาบนเมื่อสั่งพิมพ์</div>
+                </div>
+
+                <button id="calcBtn" type="button" class="btn btn-primary">
+                    <span id="calcBtnLabel">คำนวณผลลัพธ์</span>
+                </button>
+
+                <div class="btn-row">
+                    <button id="btnCSV" type="button" class="btn btn-file">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2.8H7a2 2 0 0 0-2 2v14.4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7.8z"/><path d="M14 2.8V8h5"/></svg>
+                        CSV
+                    </button>
+                    <button id="btnExcel" type="button" class="btn btn-file">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="4" width="17" height="16" rx="2.4"/><path d="M3.5 9.5h17M9.5 9.5V20M14.5 9.5V20"/></svg>
+                        Excel
+                    </button>
+                    <button id="btnPDF" type="button" class="btn btn-file btn-danger">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2.8H7a2 2 0 0 0-2 2v14.4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7.8z"/><path d="M14 2.8V8h5M8.6 16.4c3.6-1.2 5-4.6 4.3-6-.8-1.5-2.2.4-1.3 3 .9 2.6 3 4 4.9 3.6"/></svg>
+                        PDF
                     </button>
                 </div>
-                <div class="collapse" id="calcMethodCollapse">
-                    <div class="card-body pt-0">
-                        <div class="calc-method-box text-muted" id="calcMethodBody">กดคำนวณเพื่อแสดงวิธีคิด</div>
-                    </div>
+
+                <div id="dirtyNotice" role="status">
+                    ข้อมูลเปลี่ยนแปลงหลังคำนวณ กดคำนวณใหม่ก่อนพิมพ์หรือส่งออก
+                </div>
+            </form>
+        </section>
+
+        <!-- ---------- ผลลัพธ์ ---------- -->
+        <div class="rail">
+
+            <div class="stat-grid e3">
+                <div class="stat s-cost">
+                    <p class="k">ราคาทุน</p>
+                    <p class="v" id="resCost">-</p>
+                </div>
+                <div class="stat s-accum">
+                    <p class="k">ค่าเสื่อมสะสม ถึงวันคำนวณ</p>
+                    <p class="v" id="resAccumulated">-</p>
+                </div>
+                <div class="stat s-book">
+                    <p class="k">มูลค่าตามบัญชี</p>
+                    <p class="v" id="resBookValue">-</p>
+                </div>
+                <div class="stat s-year">
+                    <p class="k">ค่าเสื่อมปีนี้ เกิดขึ้นจริง</p>
+                    <p class="v" id="resThisYear">-</p>
+                    <p class="foot">
+                        ประมาณการหลังวันคำนวณ <b id="resThisYearProjected">-</b><br>
+                        รวมทั้งช่วงในปีนี้ <b id="resThisYearPeriod">-</b><br>
+                        เต็มปีตามอัตราบัญชี <b id="resThisYearRate">-</b>
+                    </p>
+                </div>
+                <div class="stat s-plain">
+                    <p class="k">อายุการใช้งานจริง</p>
+                    <p class="v sm" id="resDuration">-</p>
+                </div>
+                <div class="stat s-plain">
+                    <p class="k">อายุคงเหลือ</p>
+                    <p class="v sm" id="resRemaining">-</p>
+                </div>
+                <div class="stat s-plain">
+                    <p class="k">สถานะการใช้งาน</p>
+                    <span class="status-badge status-neutral" id="resOperStatus">-</span>
+                </div>
+                <div class="stat s-plain">
+                    <p class="k">สถานะค่าเสื่อม</p>
+                    <span class="status-badge status-neutral" id="resDepStatus">-</span>
                 </div>
             </div>
 
-            <div class="d-print-none row g-3">
-                <div class="col-md-6">
-                    <div class="card shadow-sm bg-light border-0 h-100">
-                        <div class="card-body">
-                            <h3 class="text-primary fw-bold mb-2 small h6"><i class="fa-regular fa-copy me-1" aria-hidden="true"></i> สรุปข้อมูล (Copy)</h3>
-                            <div class="copy-area user-select-all bg-white shadow-sm">
-                                <table class="w-100" style="font-size:0.85rem;">
-                                    <tbody>
-                                        <tr><td class="text-muted">รหัสครุภัณฑ์</td><td class="text-end fw-bold"><span id="copyAssetCode">-</span></td></tr>
-                                        <tr><td class="text-muted">รายการ</td><td class="text-end fw-bold"><span id="copyAssetName">-</span></td></tr>
-                                        <tr><td class="text-muted">ราคาทุน</td><td class="text-end fw-bold"><span id="copyCost">-</span> บาท</td></tr>
-                                        <tr><td class="text-muted">อายุการใช้งาน</td><td class="text-end"><span id="copyDuration">-</span></td></tr>
-                                        <tr><td class="text-muted">ค่าเสื่อมสะสม</td><td class="text-end fw-bold text-danger"><span id="copyAccumulated">-</span> บาท</td></tr>
-                                        <tr><td class="text-muted">มูลค่าคงเหลือ</td><td class="text-end fw-bold text-success"><span id="copyBookValue">-</span> บาท</td></tr>
-                                        <tr><td class="text-muted">สถานะการใช้งาน</td><td class="text-end"><span id="copyOperStatus">-</span></td></tr>
-                                        <tr><td class="text-muted">แหล่งงบ</td><td class="text-end"><span id="copyBudget">-</span></td></tr>
-                                        <tr><td class="text-muted">เลขที่เอกสาร</td><td class="text-end"><span id="copyDocRef">-</span></td></tr>
-                                    </tbody>
-                                </table>
-                            </div>
+            <section class="card t-blush prog-card e4 d-print-none" aria-label="ความคืบหน้า">
+                <div class="kpi-strip">
+                    <div class="kpi-item"><p class="k">เริ่มใช้งาน</p><p class="v" id="kpiStart">-</p></div>
+                    <div class="kpi-item"><p class="k">ครบอายุการใช้งาน</p><p class="v" id="kpiEndOfLife">-</p></div>
+                    <div class="kpi-item"><p class="k">เหลืออายุ</p><p class="v" id="kpiRemaining">-</p></div>
+                </div>
+                <div class="prog-line">
+                    <div class="prog-cap">
+                        <span id="ageProgressCaptionLabel">อายุการใช้งาน (เทียบกับวันครบอายุจริง)</span>
+                        <span class="pct" id="ageProgressLabel">0%</span>
+                    </div>
+                    <div class="track">
+                        <div id="ageProgressBar" class="bar bar-age" role="progressbar" aria-labelledby="ageProgressCaptionLabel" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+                </div>
+                <div class="prog-line">
+                    <div class="prog-cap">
+                        <span id="depProgressCaptionLabel">ค่าเสื่อมสะสม</span>
+                        <span class="pct" id="depProgressLabel">0%</span>
+                    </div>
+                    <div class="track">
+                        <div id="depProgressBar" class="bar bar-dep" role="progressbar" aria-labelledby="depProgressCaptionLabel" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+                    <p class="prog-note" id="depProgressCaption">เหลือมูลค่าตามบัญชี -</p>
+                </div>
+            </section>
+
+            <section class="card t-lav chart-card e5" aria-label="แนวโน้มค่าเสื่อมราคา">
+                <div class="card-head">
+                    <h2>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 3.5v17h17"/><path d="M7 15.5l3.8-4.6 3 2.6L20 6.5"/></svg>
+                        แนวโน้มค่าเสื่อมราคา
+                    </h2>
+                    <div class="chart-toggle d-print-none" role="group" aria-label="เลือกตัวชี้วัดกราฟ">
+                        <button type="button" class="btn active" data-metric="book" aria-pressed="true">มูลค่าตามบัญชี</button>
+                        <button type="button" class="btn" data-metric="accum" aria-pressed="false">ค่าเสื่อมสะสม</button>
+                        <button type="button" class="btn" data-metric="annual" aria-pressed="false">ค่าเสื่อมตามช่วง</button>
+                    </div>
+                </div>
+                <div class="chart-body">
+                    <div class="meta-list">
+                        <div class="meta-row"><span class="k">ช่วงวันที่</span><span class="v num" id="resDateRange">-</span></div>
+                        <div class="meta-row"><span class="k">แหล่งงบประมาณ</span><span class="v" id="resBudgetDisplay">-</span></div>
+                        <div class="meta-row"><span class="k">รหัสครุภัณฑ์</span><span class="v num" id="resAssetCodeDisplay">-</span></div>
+                    </div>
+                    <div id="chartContainer" class="chart-container">
+                        <canvas id="depChart" role="img" aria-label="กราฟแนวโน้มค่าเสื่อมราคา ข้อมูลตัวเลขทั้งหมดอยู่ในตารางด้านล่าง"></canvas>
+                        <div id="chartEmptyMsg">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9.2"/><path d="M12 11v5.5M12 7.6v.2"/></svg>
+                            กดคำนวณเพื่อแสดงกราฟ
                         </div>
                     </div>
                 </div>
-                <div class="col-md-6">
-                    <div class="card shadow-sm bg-light border-0 h-100">
-                        <div class="card-body">
-                            <h3 class="text-success fw-bold mb-2 small h6"><i class="fa-solid fa-barcode me-1" aria-hidden="true"></i> ข้อความสำหรับ Acrobat / PDF</h3>
-                            <div class="copy-area user-select-all bg-white shadow-sm text-center">
-                                <div class="text-start mb-2">
-                                    <table class="w-100" style="font-size:0.85rem;">
-                                        <tbody>
-                                            <tr><td colspan="2">ไม่พบประวัติการซ่อม</td></tr>
-                                            <tr><td colspan="2">นางสาวบุษกร ล้วนลอย</td></tr>
-                                            <tr><td colspan="2" class="fw-bold" id="acrobatDate">-</td></tr>
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            </section>
         </div>
     </div>
 
-    <div class="card shadow-sm mt-4" id="scheduleCard">
-        <div class="card-header bg-white py-3 border-bottom">
-            <h2 class="mb-0 fw-bold h6"><i class="fa-solid fa-table me-2 text-secondary" aria-hidden="true"></i>ตารางค่าเสื่อมราคาแยกตามปีปฏิทิน (Full Schedule)</h2>
+    <!-- ---------- วิธีคำนวณ ---------- -->
+    <section class="card t-peach e6 d-print-none" aria-label="วิธีคำนวณ">
+        <button class="collapse-head" type="button" id="calcMethodToggle" aria-expanded="false" aria-controls="calcMethodCollapse">
+            <span style="display:flex;align-items:center;gap:9px;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12h3.2l2.6 7.5L13 4.5l2.2 5.2h5.8"/></svg>
+                แสดงวิธีคำนวณทีละขั้น
+            </span>
+            <svg class="chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 9l7 7 7-7"/></svg>
+        </button>
+        <div class="collapse-body" id="calcMethodCollapse">
+            <div class="calc-method-box" id="calcMethodBody">กดคำนวณเพื่อแสดงวิธีคิด</div>
         </div>
-        <div class="table-responsive">
-            <table class="table table-hover table-striped align-middle mb-0" id="depreciationTable">
+    </section>
+
+    <!-- ---------- คัดลอก ---------- -->
+    <div class="two-col d-print-none">
+        <section class="card t-mist copy-card">
+            <h3>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8.5" y="8.5" width="12" height="12" rx="2.6"/><path d="M15.5 5.5H6a2.5 2.5 0 0 0-2.5 2.5v9.5"/></svg>
+                สรุปข้อมูล (คลิกเพื่อคัดลอก)
+            </h3>
+            <div class="copy-area">
+                <table>
+                    <tbody>
+                        <tr><td>รหัสครุภัณฑ์</td><td class="n"><span id="copyAssetCode">-</span></td></tr>
+                        <tr><td>รายการ</td><td><span id="copyAssetName">-</span></td></tr>
+                        <tr><td>ราคาทุน</td><td class="n"><span id="copyCost">-</span> บาท</td></tr>
+                        <tr><td>อายุการใช้งาน</td><td><span id="copyDuration">-</span></td></tr>
+                        <tr><td>ค่าเสื่อมสะสม</td><td class="n" style="color:#b5316e;"><span id="copyAccumulated">-</span> บาท</td></tr>
+                        <tr><td>มูลค่าคงเหลือ</td><td class="n" style="color:#1f6f36;"><span id="copyBookValue">-</span> บาท</td></tr>
+                        <tr><td>สถานะการใช้งาน</td><td><span id="copyOperStatus">-</span></td></tr>
+                        <tr><td>แหล่งงบ</td><td><span id="copyBudget">-</span></td></tr>
+                        <tr><td>เลขที่เอกสาร</td><td class="n"><span id="copyDocRef">-</span></td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+        <section class="card t-peach copy-card">
+            <h3>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true"><path d="M3.5 4.5v15M6.5 4.5v15M9.5 4.5v15M13 4.5v15M16.5 4.5v15M20.5 4.5v15"/></svg>
+                ข้อความสำหรับ Acrobat / PDF
+            </h3>
+            <div class="copy-area" style="text-align:left;">
+                <table>
+                    <tbody>
+                        <tr><td colspan="2" style="text-align:left;">ไม่พบประวัติการซ่อม</td></tr>
+                        <tr><td colspan="2" style="text-align:left;">นางสาวบุษกร ล้วนลอย</td></tr>
+                        <tr><td colspan="2" style="text-align:left;font-weight:700;" id="acrobatDate">-</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </div>
+
+    <!-- ---------- ตารางค่าเสื่อม ---------- -->
+    <section class="card table-card" id="scheduleCard">
+        <div class="table-head">
+            <h2>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.2" y="4.2" width="17.6" height="15.6" rx="2.6"/><path d="M3.2 9.4h17.6M9.4 9.4v10.4"/></svg>
+                ตารางค่าเสื่อมราคาแยกตามปีปฏิทิน
+            </h2>
+        </div>
+        <div class="table-scroll">
+            <table class="sched" id="depreciationTable">
                 <caption class="visually-hidden-live">ตารางค่าเสื่อมราคาแยกตามปีปฏิทิน แสดงช่วงวันที่ จำนวนวัน ค่าเสื่อมประจำช่วง ค่าเสื่อมสะสม มูลค่าสุทธิ และประเภทข้อมูล</caption>
-                <thead class="table-light">
+                <thead>
                     <tr>
                         <th scope="col" class="text-center">ลำดับ</th>
                         <th scope="col" class="text-center">ปี พ.ศ.</th>
@@ -638,60 +889,38 @@ tr.row-total td { border-top: 2px solid #444746 !important; font-weight: 700; ba
                         <th scope="col" class="text-center">จำนวนวัน</th>
                         <th scope="col" class="text-end">ค่าเสื่อมประจำช่วง</th>
                         <th scope="col" class="text-end">ค่าเสื่อมสะสม ณ สิ้นช่วง</th>
-                        <th scope="col" class="text-end text-success fw-bold">มูลค่าสุทธิ</th>
+                        <th scope="col" class="text-end">มูลค่าสุทธิ</th>
                         <th scope="col" class="text-center">ประเภทข้อมูล</th>
                     </tr>
                 </thead>
                 <tbody id="depreciationTableBody">
-                    <tr><td colspan="8" class="text-center py-5 text-muted">กรุณากดคำนวณเพื่อแสดงข้อมูล</td></tr>
+                    <tr><td colspan="8" class="text-center" style="padding:44px 0;color:#8a9197;">กรุณากดคำนวณเพื่อแสดงข้อมูล</td></tr>
                 </tbody>
             </table>
         </div>
-        <div class="card-body">
-            <p id="tableLegend" class="table-legend mb-3"></p>
+        <div class="table-foot">
+            <p id="tableLegend" class="table-legend"></p>
             <div id="reconBox" class="recon-box recon-ok" style="display:none;"></div>
-            <div id="selfTestBox" class="selftest-box mt-3" style="display:none;"></div>
+            <div id="selfTestBox" class="selftest-box" style="display:none;"></div>
         </div>
-    </div>
+    </section>
 
-    <div class="print-signature justify-content-between mt-5 pt-4">
-        <div class="text-center" style="width:45%;">
-            <div style="border-bottom:1px dotted #333; height:40px;"></div>
-            <div class="small mt-1">ผู้จัดทำ</div>
-            <div class="small mt-3">วันที่ ....../....../..........</div>
-        </div>
-        <div class="text-center" style="width:45%;">
-            <div style="border-bottom:1px dotted #333; height:40px;"></div>
-            <div class="small mt-1">ผู้ตรวจสอบ</div>
-            <div class="small mt-3">วันที่ ....../....../..........</div>
-        </div>
+    <div class="print-signature print-only">
+        <div class="sig"><div class="rule"></div><div>ผู้จัดทำ</div><div style="margin-top:12px;">วันที่ ....../....../..........</div></div>
+        <div class="sig"><div class="rule"></div><div>ผู้ตรวจสอบ</div><div style="margin-top:12px;">วันที่ ....../....../..........</div></div>
     </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-<script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-<script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/l10n/th.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <script>
-/* ===================== js/utils-money.js ===================== */
-/* utils-money.js — จำนวนเงินเป็นจำนวนเต็มสตางค์ และเลขตรรกยะแบบ BigInt (ไม่ใช้ floating point) */
-
-// ขอบเขตที่ระบบรองรับ (ข้อ 6): 9,999,999,999.99 บาท
+/* ===================== utils-money.js ===================== */
 const MAX_COST_CENTS = 999999999999;
 const MAX_LIFE_YEARS = 100;
 
-function toCents(amount) {
-    return Math.round(amount * 100);
-}
-
 function formatMoney(cents) {
-    return new Intl.NumberFormat('en-US', {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2
-    }).format(cents / 100);
+    return new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(cents / 100);
 }
-
-/** แปลงข้อความเป็นจำนวนสตางค์ (integer) คืน null ถ้าไม่ถูกต้องหรือเกินขอบเขตที่ปลอดภัย */
 function parseMoneyToCents(str) {
     if (str === null || str === undefined) return null;
     const raw = String(str).replace(/,/g, '').trim();
@@ -702,23 +931,13 @@ function parseMoneyToCents(str) {
     if (!Number.isSafeInteger(cents)) return null;
     return cents;
 }
-
-/* ---------- เลขตรรกยะแบบ BigInt (ข้อ 5) ----------
- * อัตราค่าเสื่อมต่อวัน = depreciableCents / (lifeYears * daysInYear)
- * เก็บเป็นเศษส่วนแท้ ไม่แปลงเป็นทศนิยมจนกว่าจะปัดเป็นสตางค์
- */
 function gcdBig(a, b) {
     let x = a < 0n ? -a : a;
     let y = b < 0n ? -b : b;
     while (y) { const t = x % y; x = y; y = t; }
     return x;
 }
-
-function zeroFraction() {
-    return { n: 0n, d: 1n };
-}
-
-/** คืนเศษส่วนใหม่ = f + (n/d) โดยลดทอนเศษส่วนทุกครั้งเพื่อไม่ให้ตัวเลขโตเกินจำเป็น */
+function zeroFraction() { return { n: 0n, d: 1n }; }
 function addFraction(f, n, d) {
     const nb = BigInt(n);
     const db = BigInt(d);
@@ -730,42 +949,19 @@ function addFraction(f, n, d) {
     if (g2 > 1n) return { n: num / g2, d: den / g2 };
     return { n: num, d: den };
 }
-
-/** ปัดเศษส่วน (ไม่ติดลบ) เป็นจำนวนเต็มแบบครึ่งขึ้น */
 function roundFractionToInt(f) {
     if (f.n < 0n) throw new Error('ไม่รองรับค่าติดลบ');
     return Number((2n * f.n + f.d) / (2n * f.d));
 }
-
-/** ใช้แสดงผลเท่านั้น */
-function fractionToNumber(f) {
-    return Number(f.n) / Number(f.d);
-}
-
-/* ---------- ข้อความ ---------- */
-function escapeHtml(value) {
-    return String(value)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#039;');
-}
-
 function csvCell(value) {
-    return `"${String(value).replace(/"/g, '""').replace(/\r?\n/g, ' ')}"`;
+    return '"' + String(value).replace(/"/g, '""').replace(/\r?\n/g, ' ') + '"';
 }
-
 function safeFileName(value) {
-    return String(value).replace(/[<>:"/\\|?*\u0000-\u001F]/g, '_').slice(0, 80) || 'report';
+    return String(value).replace(/[<>:"/\\|?*]+/g, '_').trim().slice(0, 80) || 'report';
 }
 
-/* ===================== js/utils-date.js ===================== */
-/* utils-date.js — วันที่ พ.ศ. และนโยบายวันครบอายุ */
-
+/* ===================== utils-date.js ===================== */
 const MS_PER_DAY = 1000 * 60 * 60 * 24;
-
-// ขอบเขตปี พ.ศ. ที่ระบบยอมรับ (ข้อ 7) ปรับได้ตามระเบียบของหน่วยงาน
 const MIN_YEAR_BE = 2400;
 const MAX_YEAR_BE = 2700;
 
@@ -773,64 +969,45 @@ const isGregorianLeapYear = (y) => (y % 4 === 0 && y % 100 !== 0) || (y % 400 ==
 const getDaysInGregorianYear = (adYear, basis) =>
     basis === 'fixed365' ? 365 : (isGregorianLeapYear(adYear) ? 366 : 365);
 
-/** ใช้ UTC เพื่อหลีกเลี่ยงผลกระทบจาก DST */
 function utcDayNumber(date) {
     return Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()) / MS_PER_DAY;
 }
-
-function diffDaysInclusive(start, end) {
-    return utcDayNumber(end) - utcDayNumber(start) + 1;
-}
-
+function diffDaysInclusive(start, end) { return utcDayNumber(end) - utcDayNumber(start) + 1; }
 function addDays(date, n) {
     const d = new Date(date.getFullYear(), date.getMonth(), date.getDate());
     d.setDate(d.getDate() + n);
     return d;
 }
-
 function sameDay(a, b) {
-    return a.getFullYear() === b.getFullYear()
-        && a.getMonth() === b.getMonth()
-        && a.getDate() === b.getDate();
+    return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
 }
-
-function startOfDay(date) {
-    return new Date(date.getFullYear(), date.getMonth(), date.getDate());
-}
+function startOfDay(date) { return new Date(date.getFullYear(), date.getMonth(), date.getDate()); }
 
 function formatDateThai(dateObj) {
     if (!dateObj || isNaN(dateObj)) return '';
     const d = String(dateObj.getDate()).padStart(2, '0');
     const m = String(dateObj.getMonth() + 1).padStart(2, '0');
-    return `${d}/${m}/${dateObj.getFullYear() + 543}`;
+    return d + '/' + m + '/' + (dateObj.getFullYear() + 543);
 }
-
 function formatDateThaiShort(dateObj) {
     if (!dateObj || isNaN(dateObj)) return '-';
     const months = ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."];
-    return `${dateObj.getDate()} ${months[dateObj.getMonth()]} ${dateObj.getFullYear() + 543}`;
+    return dateObj.getDate() + ' ' + months[dateObj.getMonth()] + ' ' + (dateObj.getFullYear() + 543);
 }
-
 function formatDateThaiLong(dateObj) {
     if (!dateObj || isNaN(dateObj)) return '-';
     const months = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
-    return `${dateObj.getDate()} ${months[dateObj.getMonth()]} ${dateObj.getFullYear() + 543}`;
+    return dateObj.getDate() + ' ' + months[dateObj.getMonth()] + ' ' + (dateObj.getFullYear() + 543);
 }
-
 function calculateDuration(a, b) {
     if (b < a) return '0 ปี 0 เดือน 0 วัน';
     let years = b.getFullYear() - a.getFullYear();
     let months = b.getMonth() - a.getMonth();
     let days = b.getDate() - a.getDate();
-    if (days < 0) {
-        months--;
-        days += new Date(b.getFullYear(), b.getMonth(), 0).getDate();
-    }
+    if (days < 0) { months--; days += new Date(b.getFullYear(), b.getMonth(), 0).getDate(); }
     if (months < 0) { years--; months += 12; }
-    return `${years} ปี ${months} เดือน ${days} วัน`;
+    return years + ' ปี ' + months + ' เดือน ' + days + ' วัน';
 }
-
-/** แปลง วว/ดด/ปปปป (พ.ศ.) เป็น Date คืน null ถ้าไม่ถูกต้องหรือปีอยู่นอกช่วงที่รองรับ (ข้อ 7) */
 function parseThaiDateString(dateStr) {
     if (!dateStr || dateStr.length !== 10) return null;
     if (!/^\d{2}\/\d{2}\/\d{4}$/.test(dateStr)) return null;
@@ -845,57 +1022,30 @@ function parseThaiDateString(dateStr) {
     return dateObj;
 }
 
-/* ============================================================
- * นโยบายวันครบอายุ (ข้อ 1)
- * ------------------------------------------------------------
- * เรื่องนี้เป็น "นโยบายทางบัญชีของหน่วยงาน" ไม่ใช่กฎสากล
- * ระบบจึงแยกออกมาเป็นตัวเลือกที่ผู้ใช้กำหนดได้ และมี test กำกับทั้งสองแบบ
- *
- * วันครบรอบ (anniversary) = วันเริ่มใช้ + N ปี
- *   ถ้าวันดังกล่าวไม่มีจริงในปีปลายทาง (เช่น 29 ก.พ. -> ปีที่ไม่ใช่อธิกสุรทิน)
- *   จะถูกปรับลงเป็นวันสุดท้ายของเดือนนั้น (28 ก.พ.) เรียกว่า "clamped"
- *
- * A) anniversaryMinusOneDay  (ค่าเริ่มต้น)
- *    วันครบอายุ = วันครบรอบ - 1 วัน ทุกกรณี
- *    เริ่ม 29/02/2567 อายุ 5 ปี -> ครบรอบ 28/02/2572 -> ครบอายุ 27/02/2572
- *    ข้อดี: สูตรเดียวใช้ได้ทุกกรณี  ข้อเสีย: กรณี 29 ก.พ. สั้นกว่าที่คาด 1 วัน
- *
- * B) clampedAnniversaryAsLastDay  (ข้อยกเว้นกรณี 29 ก.พ.)
- *    ถ้าวันครบรอบถูกปรับลง ให้ถือ "วันครบรอบนั้นเอง" เป็นวันสุดท้ายของอายุการใช้งาน
- *    เริ่ม 29/02/2567 อายุ 5 ปี -> ครบอายุ 28/02/2572
- *    กรณีอื่นเหมือนนโยบาย A ทุกประการ
- * ============================================================ */
-
+/* นโยบายวันครบอายุ — เป็นนโยบายทางบัญชีของหน่วยงาน ไม่ใช่กฎสากล */
 const EOL_POLICIES = {
     anniversaryMinusOneDay: {
         id: 'anniversaryMinusOneDay',
-        label: 'วันก่อนวันครบรอบ (ใช้สูตรเดียวทุกกรณี)',
-        describe: () => 'วันครบอายุ = วันครบรอบการใช้งาน ลบ 1 วัน ทุกกรณี'
+        label: 'วันก่อนวันครบรอบ (ใช้สูตรเดียวทุกกรณี)'
     },
     clampedAnniversaryAsLastDay: {
         id: 'clampedAnniversaryAsLastDay',
-        label: 'กรณี 29 ก.พ. ให้ใช้วันสิ้นเดือนกุมภาพันธ์เป็นวันครบอายุ',
-        describe: () => 'ปกติใช้วันครบรอบ ลบ 1 วัน แต่ถ้าวันครบรอบถูกปรับลงเพราะไม่มีวันนั้นจริง ให้ถือวันครบรอบนั้นเป็นวันครบอายุ'
+        label: 'กรณี 29 ก.พ. ให้ใช้วันสิ้นเดือนกุมภาพันธ์เป็นวันครบอายุ'
     }
 };
-
 const DEFAULT_EOL_POLICY = 'anniversaryMinusOneDay';
 
-/** วันครบรอบ ปรับลงเป็นวันสุดท้ายของเดือนถ้าวันที่ไม่มีจริง */
 function addYearsClamped(date, years) {
     const targetYear = date.getFullYear() + years;
     const targetMonth = date.getMonth();
     const lastDay = new Date(targetYear, targetMonth + 1, 0).getDate();
     return new Date(targetYear, targetMonth, Math.min(date.getDate(), lastDay));
 }
-
-/** วันครบรอบถูกปรับลงหรือไม่ (เช่น 29 ก.พ. ในปีที่ไม่ใช่อธิกสุรทิน) */
 function isAnniversaryClamped(date, years) {
     const targetYear = date.getFullYear() + years;
     const lastDay = new Date(targetYear, date.getMonth() + 1, 0).getDate();
     return date.getDate() > lastDay;
 }
-
 function getEndOfLifeInfo(startDate, lifeYears, policyId = DEFAULT_EOL_POLICY) {
     const policy = EOL_POLICIES[policyId] ? policyId : DEFAULT_EOL_POLICY;
     const anniversary = addYearsClamped(startDate, lifeYears);
@@ -905,39 +1055,14 @@ function getEndOfLifeInfo(startDate, lifeYears, policyId = DEFAULT_EOL_POLICY) {
         : addDays(anniversary, -1);
     return { endOfLifeDate, anniversary, clamped, policy };
 }
-
 function getEndOfLifeDate(startDate, lifeYears, policyId = DEFAULT_EOL_POLICY) {
     return getEndOfLifeInfo(startDate, lifeYears, policyId).endOfLifeDate;
 }
 
-/* ===================== js/depreciation-model.js ===================== */
-/* depreciation-model.js — การคำนวณล้วน ไม่แตะ DOM
- *
- * หลักการ (แก้ข้อ 4 และ 5)
- *  - ยอดสะสม ณ วันใด ๆ คำนวณจากฟังก์ชัน accumulatedUntilDate() โดยตรง
- *    ไม่ได้อ่านย้อนจากตาราง ตารางเป็นเพียงผลลัพธ์ที่ derive ออกมา
- *  - อัตราค่าเสื่อมเก็บเป็นเศษส่วน BigInt ไม่ใช้ floating point
- *      ค่าเสื่อมสะสมทางทฤษฎีถึงวันที่ D = Σ (วันในช่วง × depreciableCents) / (lifeYears × วันในปีนั้น)
- *    แล้วจึงปัดครึ่งขึ้นเป็นสตางค์ครั้งเดียวตอนท้าย
- *  - ค่าเสื่อมของแต่ละแถว = ยอดสะสมเป้าหมายสิ้นแถว − ยอดสะสมเป้าหมายต้นแถว
- *    จึงไม่มีทางสะสมความคลาดเคลื่อนจากการปัดเศษ
- *  - ช่วงสุดท้ายถูกบังคับให้ยอดรวม = (ราคาทุน − มูลค่าซาก) พอดี
- */
+/* ===================== depreciation-model.js ===================== */
+const ROW_TYPE = { ACTUAL: 'actual', SNAPSHOT: 'snapshot', PROJECTION: 'projection' };
+const ROW_TYPE_LABEL = { actual: 'เกิดขึ้นจริง', snapshot: 'Snapshot', projection: 'ประมาณการ' };
 
-
-const ROW_TYPE = {
-    ACTUAL: 'actual',        // เกิดขึ้นจริงแล้ว ณ วันที่คำนวณ
-    SNAPSHOT: 'snapshot',    // แถวที่สิ้นสุดพอดีที่วันที่คำนวณ
-    PROJECTION: 'projection' // ประมาณการหลังวันที่คำนวณ
-};
-
-const ROW_TYPE_LABEL = {
-    actual: 'เกิดขึ้นจริง',
-    snapshot: 'Snapshot',
-    projection: 'ประมาณการ'
-};
-
-/** แบ่งช่วงอายุการใช้งานออกเป็นช่วงตามปีปฏิทิน */
 function buildCalendarSegments(startDate, endOfLifeDate, yearBasis) {
     const segments = [];
     let cursor = startOfDay(startDate);
@@ -958,17 +1083,11 @@ function buildCalendarSegments(startDate, endOfLifeDate, yearBasis) {
     }
     return segments;
 }
-
-/**
- * ยอดค่าเสื่อมสะสม (สตางค์) ตั้งแต่วันเริ่มใช้จนถึงและรวมวันที่ targetDate
- * คำนวณจากนิยามโดยตรง ไม่พึ่งพาโครงสร้างตาราง (ข้อ 4)
- */
 function accumulatedUntilDate(params, targetDate) {
     const { startDate, endOfLifeDate, depreciableCents, lifeYears, yearBasis } = params;
     const target = startOfDay(targetDate);
     if (target < startOfDay(startDate)) return 0;
-    if (target >= startOfDay(endOfLifeDate)) return depreciableCents; // ครบอายุ = ตัดครบพอดี
-
+    if (target >= startOfDay(endOfLifeDate)) return depreciableCents;
     let acc = zeroFraction();
     const segments = buildCalendarSegments(startDate, endOfLifeDate, yearBasis);
     for (const seg of segments) {
@@ -982,30 +1101,25 @@ function accumulatedUntilDate(params, targetDate) {
 
 function buildDepreciationModel(input) {
     const {
-        costCents,
-        salvageCents,
-        lifeYears,
-        yearBasis,
-        startDate: rawStart,
-        currentDate: rawCurrent,
+        costCents, salvageCents, lifeYears, yearBasis,
+        startDate: rawStart, currentDate: rawCurrent,
         eolPolicy = DEFAULT_EOL_POLICY
     } = input;
 
     const startDate = startOfDay(rawStart);
     const currentDate = startOfDay(rawCurrent);
     const depreciableCents = costCents - salvageCents;
+
     const eolInfo = getEndOfLifeInfo(startDate, lifeYears, eolPolicy);
     const endOfLifeDate = eolInfo.endOfLifeDate;
 
     const calcParams = { startDate, endOfLifeDate, depreciableCents, lifeYears, yearBasis };
     const segments = buildCalendarSegments(startDate, endOfLifeDate, yearBasis);
 
-    // ยอดสะสม ณ วันที่คำนวณ — คำนวณจาก model โดยตรง (แหล่งข้อมูลหลัก)
     const snapshotAccumulatedCents = accumulatedUntilDate(calcParams, currentDate);
     const snapshotBookValueCents = costCents - snapshotAccumulatedCents;
     const snapshotAfterLife = currentDate > endOfLifeDate;
 
-    // ---- สร้างแถวสำหรับแสดงผล/ส่งออก ----
     const displayRows = [];
     const chartLabels = ['เริ่ม'];
     const chartBook = [costCents];
@@ -1031,11 +1145,9 @@ function buildDepreciationModel(input) {
             firstDailyRate = {
                 year: seg.year,
                 days: seg.daysInYear,
-                // แสดงผลเท่านั้น การคำนวณจริงใช้เศษส่วน
                 ratePerDay: depreciableCents / (lifeYears * seg.daysInYear)
             };
         }
-
         const accBefore = accumulatedUntilDate(calcParams, addDays(seg.start, -1));
         const accAfter = seg.isFinal ? depreciableCents : accumulatedUntilDate(calcParams, seg.end);
         const segmentDepCents = accAfter - accBefore;
@@ -1044,13 +1156,11 @@ function buildDepreciationModel(input) {
         totalDepAllCents += segmentDepCents;
 
         const splitHere = currentDate >= seg.start && currentDate < seg.end;
-
         if (splitHere) {
             const firstDays = diffDaysInclusive(seg.start, currentDate);
             const firstDep = snapshotAccumulatedCents - accBefore;
             snapshotLabel = formatDateThaiShort(currentDate);
             snapshotIndex = chartLabels.length;
-
             pushRow({
                 seq, year: seg.year,
                 start: new Date(seg.start), end: new Date(currentDate),
@@ -1104,7 +1214,6 @@ function buildDepreciationModel(input) {
         snapshotLabel = formatDateThaiShort(currentDate) + ' (หลังครบอายุ)';
     }
 
-    // ---- ค่าเสื่อมของปีที่คำนวณ แยก actual / projection (ข้อ 3) ----
     const snapshotYear = currentDate.getFullYear();
     const rowsThisYear = displayRows.filter(r => r.year === snapshotYear);
     const actualThroughSnapshotCents = rowsThisYear
@@ -1113,9 +1222,9 @@ function buildDepreciationModel(input) {
     const projectedAfterSnapshotCents = rowsThisYear
         .filter(r => r.rowType === ROW_TYPE.PROJECTION)
         .reduce((s, r) => s + r.depCents, 0);
-
     const firstRowThisYear = rowsThisYear[0];
     const lastRowThisYear = rowsThisYear[rowsThisYear.length - 1];
+
     const thisYear = {
         actualThroughSnapshotCents,
         projectedAfterSnapshotCents,
@@ -1157,12 +1266,10 @@ function buildDepreciationModel(input) {
             snapshotIndex, snapshotLabel
         }
     };
-
     model.recon = reconcileModel(model);
     return model;
 }
 
-/** ตรวจความต่อเนื่องของช่วงวัน (ข้อ 6 รอบก่อน) */
 function validateDisplayRows(rows, startDate, endOfLifeDate) {
     const problems = [];
     if (rows.length === 0) return ['ไม่มีแถวค่าเสื่อม'];
@@ -1170,32 +1277,29 @@ function validateDisplayRows(rows, startDate, endOfLifeDate) {
     if (!sameDay(rows[rows.length - 1].end, endOfLifeDate)) problems.push('แถวสุดท้ายไม่ได้สิ้นสุดที่วันครบอายุ');
     for (let i = 0; i < rows.length; i++) {
         const row = rows[i];
-        if (row.start > row.end) problems.push(`แถวที่ ${i + 1}: ช่วงวันที่กลับด้าน`);
-        if (row.days <= 0) problems.push(`แถวที่ ${i + 1}: จำนวนวันเป็นศูนย์หรือติดลบ`);
-        if (row.days !== diffDaysInclusive(row.start, row.end)) problems.push(`แถวที่ ${i + 1}: จำนวนวันไม่ตรงกับช่วงวันที่`);
-        if (row.depCents < 0) problems.push(`แถวที่ ${i + 1}: ค่าเสื่อมติดลบ`);
+        if (row.start > row.end) problems.push('แถวที่ ' + (i + 1) + ': ช่วงวันที่กลับด้าน');
+        if (row.days <= 0) problems.push('แถวที่ ' + (i + 1) + ': จำนวนวันเป็นศูนย์หรือติดลบ');
+        if (row.days !== diffDaysInclusive(row.start, row.end)) problems.push('แถวที่ ' + (i + 1) + ': จำนวนวันไม่ตรงกับช่วงวันที่');
+        if (row.depCents < 0) problems.push('แถวที่ ' + (i + 1) + ': ค่าเสื่อมติดลบ');
         if (i > 0 && !sameDay(row.start, addDays(rows[i - 1].end, 1))) {
-            problems.push(`แถวที่ ${i + 1}: ช่วงวันที่ไม่ต่อเนื่องกับแถวก่อนหน้า`);
+            problems.push('แถวที่ ' + (i + 1) + ': ช่วงวันที่ไม่ต่อเนื่องกับแถวก่อนหน้า');
         }
     }
     return problems;
 }
 
-/** ตรวจสอบผลลัพธ์จริง ไม่ใช่ identity ที่สร้างเอง */
 function reconcileModel(model) {
     const { displayRows, totals, snapshot, depreciableCents, input, endOfLifeDate } = model;
-    const { costCents, salvageCents, startDate, currentDate } = input;
+    const { salvageCents, startDate } = input;
 
     const rowsDepSum = displayRows.reduce((s, r) => s + r.depCents, 0);
     const rowsDaySum = displayRows.reduce((s, r) => s + r.days, 0);
     const expectedDays = diffDaysInclusive(startDate, endOfLifeDate);
 
-    // ยอดสะสมถึง Snapshot จากแถว (ไม่รวมแถวประมาณการ) ต้องตรงกับที่คำนวณจาก model โดยตรง
     const actualRows = displayRows.filter(r => r.rowType !== ROW_TYPE.PROJECTION);
     const accumulatedFromRows = actualRows.reduce((s, r) => s + r.depCents, 0);
     const lastActualAccum = actualRows.length ? actualRows[actualRows.length - 1].accumulatedCents : 0;
 
-    // ตรวจซ้ำด้วยการเดินวันแบบอิสระที่จุดสุ่ม เพื่อยืนยันว่ายอดสะสมของทุกแถวสอดคล้องกับนิยาม
     const calcParams = { startDate, endOfLifeDate, depreciableCents, lifeYears: input.lifeYears, yearBasis: input.yearBasis };
     let rowAccumMismatch = 0;
     for (const row of displayRows) {
@@ -1212,54 +1316,32 @@ function reconcileModel(model) {
         snapshotLastRowDiff: Math.abs(lastActualAccum - snapshot.accumulatedCents),
         rowAccumMismatch
     };
-
     const continuityProblems = validateDisplayRows(displayRows, startDate, endOfLifeDate);
     const maxDiff = Math.max(...Object.values(checks));
 
-    return {
-        checks,
-        continuityProblems,
-        rowsDepSum,
-        rowsDaySum,
-        expectedDays,
-        accumulatedFromRows,
-        ok: maxDiff === 0 && continuityProblems.length === 0
-    };
+    return { checks, continuityProblems, rowsDepSum, rowsDaySum, expectedDays, accumulatedFromRows, ok: maxDiff === 0 && continuityProblems.length === 0 };
 }
 
-/* ===================== js/validation.js ===================== */
-/* validation.js — อ่านค่าจากฟอร์มและตรวจสอบก่อนคำนวณ */
-
-
+/* ===================== validation.js ===================== */
 function clearErrors() {
     document.querySelectorAll('.is-invalid-custom').forEach(el => {
         el.classList.remove('is-invalid-custom');
         el.removeAttribute('aria-invalid');
     });
     document.querySelectorAll('.error-msg').forEach(el => { el.style.display = 'none'; el.textContent = ''; });
-    const box = document.getElementById('formAlertBox');
-    box.style.display = 'none';
+    document.getElementById('formAlertBox').style.display = 'none';
     document.getElementById('formAlertList').textContent = '';
 }
-
 function showError(elementId, msg) {
     const el = document.getElementById(elementId);
     const errDiv = document.getElementById(elementId + 'Error');
-    if (el) {
-        el.classList.add('is-invalid-custom');
-        el.setAttribute('aria-invalid', 'true');
-    }
-    if (errDiv) {
-        errDiv.textContent = msg;      // textContent เสมอ ไม่ใช้ innerHTML (ข้อ 10)
-        errDiv.style.display = 'block';
-    }
+    if (el) { el.classList.add('is-invalid-custom'); el.setAttribute('aria-invalid', 'true'); }
+    if (errDiv) { errDiv.textContent = msg; errDiv.style.display = 'block'; }
     const li = document.createElement('li');
     li.textContent = msg;
     document.getElementById('formAlertList').appendChild(li);
     document.getElementById('formAlertBox').style.display = 'block';
 }
-
-/** คืน {input, meta} ถ้าผ่าน หรือ null ถ้าไม่ผ่าน (พร้อมแสดงข้อความและย้าย focus) */
 function readAndValidateForm() {
     clearErrors();
     const val = (id) => document.getElementById(id).value;
@@ -1281,10 +1363,7 @@ function readAndValidateForm() {
     const currentDateStr = val('currentDate');
 
     let firstErrorId = null;
-    const fail = (id, msg) => {
-        if (!firstErrorId) firstErrorId = id;
-        showError(id, msg);
-    };
+    const fail = (id, msg) => { if (!firstErrorId) firstErrorId = id; showError(id, msg); };
 
     if (!startDateStr || startDateStr.length < 10) fail('startDate', 'กรุณาระบุวันที่เริ่มใช้งาน');
     if (!currentDateStr || currentDateStr.length < 10) fail('currentDate', 'กรุณาระบุวันที่คำนวณ');
@@ -1293,35 +1372,31 @@ function readAndValidateForm() {
     const currentDate = currentDateStr.length === 10 ? parseThaiDateString(currentDateStr) : null;
 
     if (startDateStr.length === 10 && !startDate) {
-        fail('startDate', `รูปแบบวันที่ไม่ถูกต้อง หรือปี พ.ศ. อยู่นอกช่วง ${MIN_YEAR_BE}-${MAX_YEAR_BE}`);
+        fail('startDate', 'รูปแบบวันที่ไม่ถูกต้อง หรือปี พ.ศ. อยู่นอกช่วง ' + MIN_YEAR_BE + '-' + MAX_YEAR_BE);
     }
     if (currentDateStr.length === 10 && !currentDate) {
-        fail('currentDate', `รูปแบบวันที่ไม่ถูกต้อง หรือปี พ.ศ. อยู่นอกช่วง ${MIN_YEAR_BE}-${MAX_YEAR_BE}`);
+        fail('currentDate', 'รูปแบบวันที่ไม่ถูกต้อง หรือปี พ.ศ. อยู่นอกช่วง ' + MIN_YEAR_BE + '-' + MAX_YEAR_BE);
     }
     if (startDate && currentDate && startDate > currentDate) {
         fail('currentDate', 'วันที่คำนวณต้องอยู่ในวันเดียวกันหรือหลังวันที่เริ่มใช้งาน');
     }
-
     if (costCents === null || costCents <= 0) {
         fail('cost', 'ราคาทุนต้องเป็นตัวเลขที่ถูกต้องและมากกว่า 0');
     } else if (costCents > MAX_COST_CENTS) {
-        fail('cost', `ราคาทุนสูงเกินขอบเขตที่ระบบรองรับ (สูงสุด ${formatMoney(MAX_COST_CENTS)} บาท)`);
+        fail('cost', 'ราคาทุนสูงเกินขอบเขตที่ระบบรองรับ (สูงสุด ' + formatMoney(MAX_COST_CENTS) + ' บาท)');
     }
-
     if (salvageCents === null || salvageCents < 0) {
         fail('salvage', 'มูลค่าซากต้องเป็นตัวเลขที่ถูกต้องและไม่ติดลบ');
     } else if (costCents !== null && salvageCents > costCents) {
         fail('salvage', 'มูลค่าซากต้องไม่สูงกว่าราคาทุน');
     }
-
     if (!Number.isInteger(rawLife) || rawLife <= 0) {
         fail('lifeYears', 'อายุการใช้งานต้องเป็นจำนวนเต็มมากกว่า 0');
     } else if (rawLife > MAX_LIFE_YEARS) {
-        fail('lifeYears', `อายุการใช้งานต้องไม่เกิน ${MAX_LIFE_YEARS} ปี`);
+        fail('lifeYears', 'อายุการใช้งานต้องไม่เกิน ' + MAX_LIFE_YEARS + ' ปี');
     }
-
     if (startDate && rawLife > 0 && (startDate.getFullYear() + rawLife + 543) > MAX_YEAR_BE) {
-        fail('lifeYears', `วันครบอายุเกินปี พ.ศ. ${MAX_YEAR_BE} ที่ระบบรองรับ`);
+        fail('lifeYears', 'วันครบอายุเกินปี พ.ศ. ' + MAX_YEAR_BE + ' ที่ระบบรองรับ');
     }
 
     if (firstErrorId) {
@@ -1329,24 +1404,18 @@ function readAndValidateForm() {
         if (el && typeof el.focus === 'function') el.focus({ preventScroll: false });
         return null;
     }
-
-    return {
-        input: { costCents, salvageCents, lifeYears: rawLife, yearBasis, startDate, currentDate, eolPolicy },
-        meta
-    };
+    return { input: { costCents, salvageCents, lifeYears: rawLife, yearBasis, startDate, currentDate, eolPolicy }, meta };
 }
 
 function computeDepStatus(accumulatedCents, depreciableCents, bookValueCents) {
-    if (depreciableCents === 0) return { text: 'ไม่มีค่าเสื่อม (มูลค่าซาก = ราคาทุน)', cls: 'status-neutral', icon: 'fa-circle-minus' };
-    if (accumulatedCents <= 0) return { text: 'ยังไม่เริ่มคิดค่าเสื่อม', cls: 'status-neutral', icon: 'fa-hourglass-start' };
-    if (depreciableCents - accumulatedCents > 0) return { text: 'อยู่ระหว่างคิดค่าเสื่อม', cls: 'status-warn', icon: 'fa-hourglass-half' };
-    if (bookValueCents > 0) return { text: 'ครบค่าเสื่อม (มีมูลค่าซาก)', cls: 'status-done', icon: 'fa-circle-check' };
-    return { text: 'ครบค่าเสื่อม', cls: 'status-done', icon: 'fa-circle-check' };
+    if (depreciableCents === 0) return { text: 'ไม่มีค่าเสื่อม (มูลค่าซาก = ราคาทุน)', cls: 'status-neutral' };
+    if (accumulatedCents <= 0) return { text: 'ยังไม่เริ่มคิดค่าเสื่อม', cls: 'status-neutral' };
+    if (depreciableCents - accumulatedCents > 0) return { text: 'อยู่ระหว่างคิดค่าเสื่อม', cls: 'status-warn' };
+    if (bookValueCents > 0) return { text: 'ครบค่าเสื่อม (มีมูลค่าซาก)', cls: 'status-done' };
+    return { text: 'ครบค่าเสื่อม', cls: 'status-done' };
 }
 
-/* ===================== js/chart.js ===================== */
-/* chart.js — กราฟแนวโน้ม (Chart.js) */
-
+/* ===================== chart.js ===================== */
 const snapshotLinePlugin = {
     id: 'snapshotLine',
     afterDraw(chart) {
@@ -1359,22 +1428,24 @@ const snapshotLinePlugin = {
         const ctx = chart.ctx;
         ctx.save();
         ctx.beginPath();
-        ctx.strokeStyle = '#ea4335';
+        ctx.strokeStyle = '#b5316e';
         ctx.setLineDash([4, 4]);
         ctx.lineWidth = 1.5;
         ctx.moveTo(xPos, top);
         ctx.lineTo(xPos, bottom);
         ctx.stroke();
-        ctx.fillStyle = '#ea4335';
-        ctx.font = '10px sans-serif';
+        ctx.fillStyle = '#b5316e';
+        ctx.font = "600 10px 'Google Sans', 'Sarabun', sans-serif";
         ctx.textAlign = 'center';
-        ctx.fillText(opts.label || 'วันนี้', xPos, top - 4);
+        ctx.fillText(opts.label || 'วันนี้', xPos, top - 5);
         ctx.restore();
     }
 };
-
 if (typeof Chart !== 'undefined') {
     Chart.register(snapshotLinePlugin);
+    Chart.defaults.font.family = "'Google Sans', 'Sarabun', sans-serif";
+    Chart.defaults.font.size = 11;
+    Chart.defaults.color = '#5c656b';
 }
 
 let depChartInstance = null;
@@ -1385,28 +1456,31 @@ function destroyChart() {
     if (depChartInstance) { depChartInstance.destroy(); depChartInstance = null; }
     lastChartData = null;
 }
-
-function resizeChart() {
-    if (depChartInstance) depChartInstance.resize();
-}
+function resizeChart() { if (depChartInstance) depChartInstance.resize(); }
 
 function setChartMetric(metric) {
     const allowed = ['book', 'accum', 'annual'];
     if (!allowed.includes(metric)) metric = 'book';
     currentChartMetric = metric;
-
     document.querySelectorAll('.chart-toggle .btn').forEach(btn => {
-        btn.classList.remove('btn-primary', 'active');
-        btn.classList.add('btn-outline-primary');
-        btn.setAttribute('aria-pressed', 'false');
+        const on = btn.dataset.metric === metric;
+        btn.classList.toggle('active', on);
+        btn.setAttribute('aria-pressed', on ? 'true' : 'false');
     });
-    const button = document.querySelector(`.chart-toggle button[data-metric="${metric}"]`);
-    if (button) {
-        button.classList.add('btn-primary', 'active');
-        button.classList.remove('btn-outline-primary');
-        button.setAttribute('aria-pressed', 'true');
-    }
     if (lastChartData) renderChart(lastChartData);
+}
+
+/* ไล่สีทองไปเขียวจากล่างขึ้นบน ใช้กับกราฟแท่ง */
+function goldGreenGradient(context) {
+    const chart = context.chart;
+    const area = chart.chartArea;
+    if (!area) return '#6a8f33';
+    const g = chart.ctx.createLinearGradient(0, area.bottom, 0, area.top);
+    g.addColorStop(0, '#3d7a3e');
+    g.addColorStop(0.42, '#6a8f33');
+    g.addColorStop(0.72, '#a8a422');
+    g.addColorStop(1, '#f2b705');
+    return g;
 }
 
 function renderChart(data) {
@@ -1422,59 +1496,73 @@ function renderChart(data) {
     canvas.style.display = 'block';
 
     const seriesMap = {
-        book: { label: 'มูลค่าตามบัญชี', data: data.book, color: '#1a73e8' },
-        accum: { label: 'ค่าเสื่อมสะสม', data: data.accum, color: '#d93025' },
-        annual: { label: 'ค่าเสื่อมตามช่วง', data: data.annual, color: '#0b8793' }
+        book: { label: 'มูลค่าตามบัญชี', data: data.book, color: '#3d7a3e' },
+        accum: { label: 'ค่าเสื่อมสะสม', data: data.accum, color: '#b5316e' },
+        annual: { label: 'ค่าเสื่อมตามช่วง', data: data.annual, color: '#6a8f33' }
     };
     const series = seriesMap[currentChartMetric];
+    const isBar = currentChartMetric === 'annual';
 
     if (depChartInstance) depChartInstance.destroy();
     depChartInstance = new Chart(canvas.getContext('2d'), {
-        type: currentChartMetric === 'annual' ? 'bar' : 'line',
+        type: isBar ? 'bar' : 'line',
         data: {
             labels: data.labels,
             datasets: [{
                 label: series.label,
                 data: series.data,
                 borderColor: series.color,
-                backgroundColor: currentChartMetric === 'annual' ? series.color + 'aa' : series.color + '22',
-                fill: currentChartMetric !== 'annual',
-                tension: 0.25,
-                pointRadius: 4,
-                pointBackgroundColor: series.color,
-                borderWidth: 2
+                backgroundColor: isBar ? goldGreenGradient : series.color + '1f',
+                borderRadius: isBar ? 7 : 0,
+                borderSkipped: false,
+                fill: !isBar,
+                tension: 0.3,
+                pointRadius: 3.4,
+                pointHoverRadius: 6,
+                pointBackgroundColor: '#fff',
+                pointBorderColor: series.color,
+                pointBorderWidth: 2,
+                borderWidth: isBar ? 0 : 2.4
             }]
         },
         options: {
             responsive: true,
-            maintainAspectRatio: true,
-            aspectRatio: 1.8,
-            layout: { padding: { top: 18 } },
+            maintainAspectRatio: false,
+            layout: { padding: { top: 20 } },
             plugins: {
                 legend: { display: false },
+                tooltip: {
+                    backgroundColor: 'rgba(20,20,20,.92)',
+                    padding: 10,
+                    cornerRadius: 10,
+                    displayColors: false,
+                    titleFont: { weight: '700' },
+                    callbacks: {
+                        label: (c) => series.label + ' ' + formatMoney(Math.round(c.parsed.y * 100)) + ' บาท'
+                    }
+                },
                 snapshotLine: { index: data.snapshotIndex, label: data.snapshotLabel }
             },
             scales: {
-                y: { beginAtZero: true, ticks: { callback: (v) => (v >= 1000 ? (v / 1000) + 'k' : v) } }
+                x: { grid: { display: false }, ticks: { maxRotation: 0, autoSkipPadding: 12 } },
+                y: {
+                    beginAtZero: true,
+                    border: { display: false },
+                    grid: { color: 'rgba(30,40,60,.09)' },
+                    ticks: { callback: (v) => (v >= 1000 ? (v / 1000) + 'k' : v) }
+                }
             }
         }
     });
 }
 
-/* ===================== js/render.js ===================== */
-/* render.js — แปลง model เป็น DOM
- * กฎ: ข้อมูลทุกชิ้นใส่ผ่าน textContent เท่านั้น ใช้ innerHTML เฉพาะ markup คงที่ที่เขียนไว้ในโค้ด (ข้อ 10)
- */
-
-
-/* ---------- helper ---------- */
+/* ===================== render.js ===================== */
 function td(text, className) {
     const el = document.createElement('td');
     if (className) el.className = className;
     el.textContent = text;
     return el;
 }
-
 function pillCell(text, style) {
     const cell = document.createElement('td');
     cell.className = 'text-center';
@@ -1485,12 +1573,10 @@ function pillCell(text, style) {
     cell.appendChild(span);
     return cell;
 }
-
 function setText(id, text) {
     const el = document.getElementById(id);
     if (el) el.textContent = text;
 }
-
 function line(parent, text, className) {
     const div = document.createElement('div');
     if (className) div.className = className;
@@ -1498,7 +1584,6 @@ function line(parent, text, className) {
     parent.appendChild(div);
     return div;
 }
-
 function formulaBlock(parent, text) {
     const div = document.createElement('div');
     div.className = 'formula';
@@ -1508,18 +1593,16 @@ function formulaBlock(parent, text) {
 }
 
 const ROW_PILL_STYLE = {
-    [ROW_TYPE.SNAPSHOT]: { background: '#1a73e8', color: '#fff' },
+    [ROW_TYPE.SNAPSHOT]: { background: 'linear-gradient(135deg,#3d7a3e,#5f8b3e)', color: '#fff' },
     [ROW_TYPE.ACTUAL]: { background: '#e6f4ea', color: '#137333' },
     [ROW_TYPE.PROJECTION]: { background: '#ede7f6', color: '#5b3fa8' }
 };
-
 function rowStatusText(row) {
     if (row.rowType === ROW_TYPE.SNAPSHOT) return 'Snapshot';
     if (row.rowType === ROW_TYPE.PROJECTION) return row.isFinal ? 'ประมาณการ (ครบอายุ)' : 'ประมาณการ';
     return row.isFinal ? 'เกิดขึ้นจริง (ครบอายุ)' : 'เกิดขึ้นจริง';
 }
 
-/* ---------- ตาราง ---------- */
 function renderScheduleTable(model) {
     const tbody = document.getElementById('depreciationTableBody');
     tbody.textContent = '';
@@ -1528,12 +1611,12 @@ function renderScheduleTable(model) {
     const startTr = document.createElement('tr');
     startTr.appendChild(td('0', 'text-center'));
     startTr.appendChild(td(String(input.startDate.getFullYear() + 543), 'text-center'));
-    startTr.appendChild(td(`จุดเริ่มต้น (${formatDateThai(input.startDate)})`));
+    startTr.appendChild(td('จุดเริ่มต้น (' + formatDateThai(input.startDate) + ')'));
     startTr.appendChild(td('0', 'text-center'));
     startTr.appendChild(td(formatMoney(0), 'text-end'));
     startTr.appendChild(td(formatMoney(0), 'text-end'));
     startTr.appendChild(td(formatMoney(input.costCents), 'text-end text-success fw-bold'));
-    startTr.appendChild(pillCell('เริ่มต้น', { background: '#e8eaed', color: '#444746' }));
+    startTr.appendChild(pillCell('เริ่มต้น', { background: '#eceef0', color: '#4a5157' }));
     tbody.appendChild(startTr);
 
     displayRows.forEach(row => {
@@ -1544,7 +1627,7 @@ function renderScheduleTable(model) {
 
         const seqCell = document.createElement('td');
         seqCell.className = 'text-center';
-        seqCell.textContent = row.isContinuation ? `${row.seq} (ต่อ)` : String(row.seq);
+        seqCell.textContent = row.isContinuation ? row.seq + ' (ต่อ)' : String(row.seq);
         if (row.isCurrentYear) {
             const tag = document.createElement('span');
             tag.className = 'current-year-tag';
@@ -1553,7 +1636,7 @@ function renderScheduleTable(model) {
         }
         tr.appendChild(seqCell);
         tr.appendChild(td(String(row.year + 543), 'text-center'));
-        tr.appendChild(td(`${formatDateThai(row.start)} - ${formatDateThai(row.end)}`));
+        tr.appendChild(td(formatDateThai(row.start) + ' – ' + formatDateThai(row.end)));
         tr.appendChild(td(row.days.toLocaleString(), 'text-center'));
         tr.appendChild(td(formatMoney(row.depCents), 'text-end'));
         tr.appendChild(td(formatMoney(row.accumulatedCents), 'text-end'));
@@ -1574,14 +1657,12 @@ function renderScheduleTable(model) {
     totalTr.appendChild(td('-', 'text-center'));
     tbody.appendChild(totalTr);
 
-    // คำอธิบายประเภทแถว (ข้อ 2)
     setText('tableLegend',
-        `เกิดขึ้นจริง = ช่วงที่สิ้นสุดไม่เกินวันที่คำนวณ (${formatDateThai(input.currentDate)}) • ` +
-        `Snapshot = ช่วงที่สิ้นสุดพอดีที่วันที่คำนวณ • ` +
-        `ประมาณการ = ช่วงหลังวันที่คำนวณ ยังไม่เกิดขึ้นจริง จึงไม่ถูกนับเป็นค่าเสื่อมสะสมถึงวันที่คำนวณ`);
+        'เกิดขึ้นจริง = ช่วงที่สิ้นสุดไม่เกินวันที่คำนวณ (' + formatDateThai(input.currentDate) + ') • ' +
+        'Snapshot = ช่วงที่สิ้นสุดพอดีที่วันที่คำนวณ • ' +
+        'ประมาณการ = ช่วงหลังวันที่คำนวณ ยังไม่เกิดขึ้นจริง จึงไม่ถูกนับเป็นค่าเสื่อมสะสมถึงวันที่คำนวณ');
 }
 
-/* ---------- Reconciliation ---------- */
 function renderReconciliation(model) {
     const { recon, totals, depreciableCents, snapshot, input } = model;
     const box = document.getElementById('reconBox');
@@ -1589,92 +1670,90 @@ function renderReconciliation(model) {
     box.style.display = 'block';
 
     const head = document.createElement('div');
-    head.className = 'fw-bold mb-2';
+    head.className = 'fw-bold';
+    head.style.marginBottom = '6px';
     head.textContent = recon.ok ? '✓ ตรวจสอบสมการสำเร็จ' : '✗ พบความคลาดเคลื่อน';
     box.appendChild(head);
 
     if (recon.ok) {
         box.className = 'recon-box recon-ok';
-        line(box, `ค่าเสื่อมรวมจากแถวจริง: ${formatMoney(recon.rowsDepSum)} บาท (ควรเป็น ${formatMoney(depreciableCents)} บาท)`, 'formula-line');
-        line(box, `จำนวนวันรวมจากแถวจริง: ${recon.rowsDaySum.toLocaleString()} วัน (ควรเป็น ${recon.expectedDays.toLocaleString()} วัน)`, 'formula-line');
-        line(box, `มูลค่าสุดท้าย: ${formatMoney(totals.finalBookValueCents)} บาท (ควรเป็น ${formatMoney(input.salvageCents)} บาท)`, 'formula-line');
-        line(box, `ค่าเสื่อมจากแถวที่เกิดขึ้นจริงถึงวันที่คำนวณ: ${formatMoney(recon.accumulatedFromRows)} บาท (ตรงกับยอดที่คำนวณจากนิยามโดยตรง ${formatMoney(snapshot.accumulatedCents)} บาท)`, 'formula-line');
+        line(box, 'ค่าเสื่อมรวมจากแถวจริง: ' + formatMoney(recon.rowsDepSum) + ' บาท (ควรเป็น ' + formatMoney(depreciableCents) + ' บาท)', 'formula-line');
+        line(box, 'จำนวนวันรวมจากแถวจริง: ' + recon.rowsDaySum.toLocaleString() + ' วัน (ควรเป็น ' + recon.expectedDays.toLocaleString() + ' วัน)', 'formula-line');
+        line(box, 'มูลค่าสุดท้าย: ' + formatMoney(totals.finalBookValueCents) + ' บาท (ควรเป็น ' + formatMoney(input.salvageCents) + ' บาท)', 'formula-line');
+        line(box, 'ค่าเสื่อมจากแถวที่เกิดขึ้นจริงถึงวันที่คำนวณ: ' + formatMoney(recon.accumulatedFromRows) + ' บาท (ตรงกับยอดที่คำนวณจากนิยามโดยตรง ' + formatMoney(snapshot.accumulatedCents) + ' บาท)', 'formula-line');
         line(box, 'ยอดสะสมทุกแถวตรงกับการคำนวณอิสระ และช่วงวันที่ต่อเนื่องครบถ้วน', 'formula-line');
     } else {
         box.className = 'recon-box recon-fail';
         const c = recon.checks;
         const msgs = [
-            [c.scheduleDiff, `ค่าเสื่อมรวมคลาดเคลื่อน ${formatMoney(c.scheduleDiff)} บาท`],
-            [c.rowsVsSegmentsDiff, `ผลรวมแถวไม่ตรงกับผลรวมช่วง คลาดเคลื่อน ${formatMoney(c.rowsVsSegmentsDiff)} บาท`],
-            [c.dayDiff, `จำนวนวันคลาดเคลื่อน ${c.dayDiff} วัน`],
-            [c.finalBookDiff, `มูลค่าสุดท้ายคลาดเคลื่อน ${formatMoney(c.finalBookDiff)} บาท`],
-            [c.snapshotRowsDiff, `ค่าเสื่อมจากแถวถึงวันที่คำนวณคลาดเคลื่อน ${formatMoney(c.snapshotRowsDiff)} บาท`],
-            [c.snapshotLastRowDiff, `ยอดสะสมแถวสุดท้ายก่อนวันที่คำนวณคลาดเคลื่อน ${formatMoney(c.snapshotLastRowDiff)} บาท`],
-            [c.rowAccumMismatch, `ยอดสะสมของบางแถวไม่ตรงกับการคำนวณอิสระ คลาดเคลื่อน ${formatMoney(c.rowAccumMismatch)} บาท`]
+            [c.scheduleDiff, 'ค่าเสื่อมรวมคลาดเคลื่อน ' + formatMoney(c.scheduleDiff) + ' บาท'],
+            [c.rowsVsSegmentsDiff, 'ผลรวมแถวไม่ตรงกับผลรวมช่วง คลาดเคลื่อน ' + formatMoney(c.rowsVsSegmentsDiff) + ' บาท'],
+            [c.dayDiff, 'จำนวนวันคลาดเคลื่อน ' + c.dayDiff + ' วัน'],
+            [c.finalBookDiff, 'มูลค่าสุดท้ายคลาดเคลื่อน ' + formatMoney(c.finalBookDiff) + ' บาท'],
+            [c.snapshotRowsDiff, 'ค่าเสื่อมจากแถวถึงวันที่คำนวณคลาดเคลื่อน ' + formatMoney(c.snapshotRowsDiff) + ' บาท'],
+            [c.snapshotLastRowDiff, 'ยอดสะสมแถวสุดท้ายก่อนวันที่คำนวณคลาดเคลื่อน ' + formatMoney(c.snapshotLastRowDiff) + ' บาท'],
+            [c.rowAccumMismatch, 'ยอดสะสมของบางแถวไม่ตรงกับการคำนวณอิสระ คลาดเคลื่อน ' + formatMoney(c.rowAccumMismatch) + ' บาท']
         ];
         msgs.filter(([v]) => v > 0).forEach(([, text]) => line(box, text, 'formula-line'));
         recon.continuityProblems.forEach(p => line(box, p, 'formula-line'));
     }
 }
 
-/* ---------- วิธีคำนวณ ---------- */
 function renderCalcMethod(model, meta) {
     const { input, endOfLifeDate, eolInfo, firstDailyRate, thisYear, snapshot, depreciableCents } = model;
     const box = document.getElementById('calcMethodBody');
     box.textContent = '';
+    box.className = 'calc-method-box';
 
     const basisLabel = input.yearBasis === 'fixed365' ? '365 วันคงที่ทุกปี' : 'ตามจริง (365/366 วัน ตามปีอธิกสุรทิน)';
 
-    line(box, `ราคาทุน = ${formatMoney(input.costCents)} บาท`);
-    line(box, `มูลค่าซาก = ${formatMoney(input.salvageCents)} บาท`);
-    line(box, `อายุการใช้งานตามบัญชี = ${input.lifeYears} ปี (${formatDateThai(input.startDate)} ถึง ${formatDateThai(endOfLifeDate)})`);
-    line(box, `หลักเกณฑ์ปีฐาน = ${basisLabel}`);
-    line(box, `นโยบายวันครบอายุ = ${EOL_POLICIES[eolInfo.policy].label}`);
+    line(box, 'ราคาทุน = ' + formatMoney(input.costCents) + ' บาท');
+    line(box, 'มูลค่าซาก = ' + formatMoney(input.salvageCents) + ' บาท');
+    line(box, 'อายุการใช้งานตามบัญชี = ' + input.lifeYears + ' ปี (' + formatDateThai(input.startDate) + ' ถึง ' + formatDateThai(endOfLifeDate) + ')');
+    line(box, 'หลักเกณฑ์ปีฐาน = ' + basisLabel);
+    line(box, 'นโยบายวันครบอายุ = ' + EOL_POLICIES[eolInfo.policy].label);
 
     formulaBlock(box,
-`ค่าเสื่อมราคาต่อปี (เส้นตรง)
-= (ราคาทุน - มูลค่าซาก) ÷ อายุการใช้งาน
-= (${formatMoney(input.costCents)} - ${formatMoney(input.salvageCents)}) ÷ ${input.lifeYears}
-= ${formatMoney(Math.round(depreciableCents / input.lifeYears))} บาท/ปี (ค่าปัดเศษเพื่อแสดงผล)`);
+'ค่าเสื่อมราคาต่อปี (เส้นตรง)\n' +
+'= (ราคาทุน - มูลค่าซาก) ÷ อายุการใช้งาน\n' +
+'= (' + formatMoney(input.costCents) + ' - ' + formatMoney(input.salvageCents) + ') ÷ ' + input.lifeYears + '\n' +
+'= ' + formatMoney(Math.round(depreciableCents / input.lifeYears)) + ' บาท/ปี (ค่าปัดเศษเพื่อแสดงผล)');
 
     if (firstDailyRate) {
         formulaBlock(box,
-`ค่าเสื่อมต่อวัน (ปี พ.ศ. ${firstDailyRate.year + 543})
-= (ราคาทุน - มูลค่าซาก) ÷ (อายุการใช้งาน × จำนวนวันในปี)
-= ${formatMoney(depreciableCents)} ÷ (${input.lifeYears} × ${firstDailyRate.days})
-= ${(firstDailyRate.ratePerDay / 100).toFixed(6)} บาท/วัน (ระบบคำนวณจริงด้วยเศษส่วนแบบ exact ไม่ปัดกลางทาง)`);
+'ค่าเสื่อมต่อวัน (ปี พ.ศ. ' + (firstDailyRate.year + 543) + ')\n' +
+'= (ราคาทุน - มูลค่าซาก) ÷ (อายุการใช้งาน × จำนวนวันในปี)\n' +
+'= ' + formatMoney(depreciableCents) + ' ÷ (' + input.lifeYears + ' × ' + firstDailyRate.days + ')\n' +
+'= ' + (firstDailyRate.ratePerDay / 100).toFixed(6) + ' บาท/วัน (ระบบคำนวณจริงด้วยเศษส่วนแบบ exact ไม่ปัดกลางทาง)');
     }
 
     if (snapshot.afterLife && !thisYear.hasRowsThisYear) {
         formulaBlock(box,
-`ค่าเสื่อมของปีที่คำนวณ
-= 0.00 บาท
-สินทรัพย์ครบอายุการใช้งานแล้วเมื่อ ${formatDateThai(endOfLifeDate)} จึงไม่มีค่าเสื่อมในปีนี้`);
+'ค่าเสื่อมของปีที่คำนวณ\n= 0.00 บาท\n' +
+'สินทรัพย์ครบอายุการใช้งานแล้วเมื่อ ' + formatDateThai(endOfLifeDate) + ' จึงไม่มีค่าเสื่อมในปีนี้');
     } else {
         formulaBlock(box,
-`ค่าเสื่อมของปี พ.ศ. ${input.currentDate.getFullYear() + 543}
-
-1) เกิดขึ้นจริงถึงวันที่คำนวณ = ${formatMoney(thisYear.actualThroughSnapshotCents)} บาท
-2) ประมาณการหลังวันที่คำนวณถึงสิ้นช่วงในปีนี้ = ${formatMoney(thisYear.projectedAfterSnapshotCents)} บาท
-3) รวมทั้งปีตามช่วงที่สินทรัพย์มีสิทธิคิดค่าเสื่อม = ${formatMoney(thisYear.periodTotalCents)} บาท${thisYear.coversFullCalendarYear ? ' (ครบปีปฏิทินพอดี)' : ' (ไม่ครบปีปฏิทิน เพราะเริ่มใช้หรือครบอายุกลางปี)'}
-4) เต็มปีตามอัตราบัญชี (อ้างอิง) = ${formatMoney(thisYear.theoreticalFullYearCents)} บาท
-
-เฉพาะข้อ 1 เท่านั้นที่ถือเป็นค่าเสื่อมที่เกิดขึ้นแล้ว ณ วันที่คำนวณ`);
+'ค่าเสื่อมของปี พ.ศ. ' + (input.currentDate.getFullYear() + 543) + '\n' +
+'1) เกิดขึ้นจริงถึงวันที่คำนวณ = ' + formatMoney(thisYear.actualThroughSnapshotCents) + ' บาท\n' +
+'2) ประมาณการหลังวันที่คำนวณถึงสิ้นช่วงในปีนี้ = ' + formatMoney(thisYear.projectedAfterSnapshotCents) + ' บาท\n' +
+'3) รวมทั้งปีตามช่วงที่สินทรัพย์มีสิทธิคิดค่าเสื่อม = ' + formatMoney(thisYear.periodTotalCents) + ' บาท' +
+(thisYear.coversFullCalendarYear ? ' (ครบปีปฏิทินพอดี)' : ' (ไม่ครบปีปฏิทิน เพราะเริ่มใช้หรือครบอายุกลางปี)') + '\n' +
+'4) เต็มปีตามอัตราบัญชี (อ้างอิง) = ' + formatMoney(thisYear.theoreticalFullYearCents) + ' บาท\n' +
+'เฉพาะข้อ 1 เท่านั้นที่ถือเป็นค่าเสื่อมที่เกิดขึ้นแล้ว ณ วันที่คำนวณ');
     }
 
-    line(box, 'การปัดเศษ: ระบบคำนวณยอดสะสมทางทฤษฎีด้วยเศษส่วนจำนวนเต็ม (BigInt) แล้วปัดครึ่งขึ้นเป็นสตางค์เฉพาะตอนสรุปยอดสะสม ค่าเสื่อมของแต่ละช่วงคือผลต่างของยอดสะสม จึงไม่มีการสะสมความคลาดเคลื่อน งวดสุดท้ายรับเศษทั้งหมดเพื่อให้ยอดรวมเท่ากับ (ราคาทุน - มูลค่าซาก) พอดี', 'text-muted small');
-    line(box, `หมายเหตุ: สถานะการใช้งาน (${meta.operStatus}) ไม่มีผลต่อการคำนวณค่าเสื่อมในระบบนี้`, 'text-muted small mt-2');
+    line(box, 'การปัดเศษ: ระบบคำนวณยอดสะสมทางทฤษฎีด้วยเศษส่วนจำนวนเต็ม (BigInt) แล้วปัดครึ่งขึ้นเป็นสตางค์เฉพาะตอนสรุปยอดสะสม ค่าเสื่อมของแต่ละช่วงคือผลต่างของยอดสะสม จึงไม่มีการสะสมความคลาดเคลื่อน งวดสุดท้ายรับเศษทั้งหมดเพื่อให้ยอดรวมเท่ากับ (ราคาทุน - มูลค่าซาก) พอดี', 'text-muted');
+    line(box, 'หมายเหตุ: สถานะการใช้งาน (' + meta.operStatus + ') ไม่มีผลต่อการคำนวณค่าเสื่อมในระบบนี้', 'text-muted');
 
     if (eolInfo.clamped) {
         line(box,
-            `หมายเหตุนโยบายวันที่: วันที่เริ่มใช้งานคือวันที่ ${input.startDate.getDate()} ซึ่งไม่มีอยู่ในเดือนเดียวกันของปีปลายทาง ` +
-            `ระบบจึงใช้ ${formatDateThai(eolInfo.anniversary)} เป็นวันครบรอบ และได้วันครบอายุเป็น ${formatDateThai(endOfLifeDate)} ตามนโยบายที่เลือกไว้ ` +
-            `หากระเบียบของหน่วยงานกำหนดต่างจากนี้ ให้เปลี่ยนตัวเลือก "นโยบายวันครบอายุ" ในฟอร์ม`,
-            'text-muted small mt-2');
+            'หมายเหตุนโยบายวันที่: วันที่เริ่มใช้งานคือวันที่ ' + input.startDate.getDate() + ' ซึ่งไม่มีอยู่ในเดือนเดียวกันของปีปลายทาง ' +
+            'ระบบจึงใช้ ' + formatDateThai(eolInfo.anniversary) + ' เป็นวันครบรอบ และได้วันครบอายุเป็น ' + formatDateThai(endOfLifeDate) + ' ตามนโยบายที่เลือกไว้ ' +
+            'หากระเบียบของหน่วยงานกำหนดต่างจากนี้ ให้เปลี่ยนตัวเลือก "นโยบายวันครบอายุ" ในฟอร์ม',
+            'text-muted');
     }
 }
 
-/* ---------- ผลลัพธ์รวม ---------- */
 function renderResults(model, meta) {
     const { input, snapshot, thisYear, endOfLifeDate, depreciableCents } = model;
 
@@ -1685,7 +1764,7 @@ function renderResults(model, meta) {
     const durationText = calculateDuration(input.startDate, input.currentDate);
     const remainingText = input.currentDate <= endOfLifeDate
         ? calculateDuration(input.currentDate, endOfLifeDate)
-        : 'เกินอายุการใช้งานแล้ว ' + calculateDuration(endOfLifeDate, input.currentDate);
+        : 'เกินอายุแล้ว ' + calculateDuration(endOfLifeDate, input.currentDate);
     const depStatus = computeDepStatus(snapshot.accumulatedCents, depreciableCents, snapshot.bookValueCents);
     model.depStatusText = depStatus.text;
 
@@ -1695,7 +1774,7 @@ function renderResults(model, meta) {
 
     if (snapshot.afterLife && !thisYear.hasRowsThisYear) {
         setText('resThisYear', '0.00');
-        setText('resThisYearProjected', 'ครบอายุแล้ว ไม่มีค่าเสื่อมในปีที่คำนวณ');
+        setText('resThisYearProjected', 'ครบอายุแล้ว');
         setText('resThisYearPeriod', '-');
         setText('resThisYearRate', '-');
     } else {
@@ -1718,11 +1797,10 @@ function renderResults(model, meta) {
     depStatusEl.textContent = depStatus.text;
     depStatusEl.className = 'status-badge ' + depStatus.cls;
 
-    setText('resDateRange', `${formatDateThai(input.startDate)} - ${formatDateThai(input.currentDate)}`);
+    setText('resDateRange', formatDateThai(input.startDate) + ' – ' + formatDateThai(input.currentDate));
     setText('resBudgetDisplay', meta.budget);
     setText('resAssetCodeDisplay', meta.assetCode);
 
-    // Progress bars
     const totalLifeDays = diffDaysInclusive(input.startDate, endOfLifeDate);
     const ageDays = Math.min(totalLifeDays, Math.max(0, diffDaysInclusive(input.startDate, input.currentDate)));
     const agePct = totalLifeDays > 0 ? Math.min(100, (ageDays / totalLifeDays) * 100) : 100;
@@ -1732,19 +1810,18 @@ function renderResults(model, meta) {
     const depBar = document.getElementById('depProgressBar');
     ageBar.style.width = agePct.toFixed(1) + '%';
     ageBar.setAttribute('aria-valuenow', agePct.toFixed(1));
-    ageBar.classList.toggle('bg-danger', input.currentDate > endOfLifeDate);
-    ageBar.classList.toggle('bg-primary', input.currentDate <= endOfLifeDate);
+    ageBar.classList.toggle('over', input.currentDate > endOfLifeDate);
     setText('ageProgressLabel', agePct.toFixed(1) + '%');
+
     depBar.style.width = depPct.toFixed(1) + '%';
     depBar.setAttribute('aria-valuenow', depPct.toFixed(1));
     setText('depProgressLabel', depPct.toFixed(1) + '%');
-    setText('depProgressCaption', `ค่าเสื่อม ${depPct.toFixed(3)}% • เหลือมูลค่าตามบัญชี ${formatMoney(snapshot.bookValueCents)} บาท`);
+    setText('depProgressCaption', 'ค่าเสื่อม ' + depPct.toFixed(3) + '% • เหลือมูลค่าตามบัญชี ' + formatMoney(snapshot.bookValueCents) + ' บาท');
 
     setText('kpiStart', formatDateThaiShort(input.startDate));
     setText('kpiEndOfLife', formatDateThaiShort(endOfLifeDate));
     setText('kpiRemaining', remainingText);
 
-    // Copy area
     setText('copyAssetCode', meta.assetCode);
     setText('copyAssetName', meta.assetName);
     setText('copyCost', formatMoney(input.costCents));
@@ -1756,8 +1833,8 @@ function renderResults(model, meta) {
     setText('copyDocRef', meta.docRef);
     setText('acrobatDate', formatDateThaiShort(input.currentDate));
 
-    // Print area
     setText('printDocRef', meta.docRef);
+    setText('heroDocRef', meta.docRef);
     setText('printAssetCode', meta.assetCode);
     setText('printAssetName', meta.assetName);
     setText('printCost', formatMoney(input.costCents) + ' บาท');
@@ -1766,18 +1843,18 @@ function renderResults(model, meta) {
     setText('printStartDate', formatDateThaiLong(input.startDate));
     setText('printCurrentDate', formatDateThaiLong(input.currentDate));
     setText('printEndOfLife', formatDateThaiLong(endOfLifeDate));
-    setText('printDuration', durationText);              // เพิ่ม
-setText('printRemaining', remainingText);            // เพิ่ม
-setText('printThisYearActual', formatMoney(thisYear.actualThroughSnapshotCents) + ' บาท'); // เพิ่ม
+    setText('printDuration', durationText);
+    setText('printRemaining', remainingText);
+    setText('printThisYearActual', formatMoney(thisYear.actualThroughSnapshotCents) + ' บาท');
     setText('printAccumulated2', formatMoney(snapshot.accumulatedCents) + ' บาท');
     setText('printBookValue2', formatMoney(snapshot.bookValueCents) + ' บาท');
     setText('printOperStatus', meta.operStatus);
     setText('printDepStatus', depStatus.text);
-    document.querySelectorAll('.print-signature').forEach(el => el.style.display = 'flex');
+    setText('printBudget', meta.budget);
 
     setText('resultStatusLive',
-        `คำนวณเสร็จแล้ว ค่าเสื่อมสะสมถึงวันที่ ${formatDateThai(input.currentDate)} เท่ากับ ${formatMoney(snapshot.accumulatedCents)} บาท ` +
-        `มูลค่าตามบัญชี ${formatMoney(snapshot.bookValueCents)} บาท สถานะ ${depStatus.text}`);
+        'คำนวณเสร็จแล้ว ค่าเสื่อมสะสมถึงวันที่ ' + formatDateThai(input.currentDate) + ' เท่ากับ ' + formatMoney(snapshot.accumulatedCents) + ' บาท ' +
+        'มูลค่าตามบัญชี ' + formatMoney(snapshot.bookValueCents) + ' บาท สถานะ ' + depStatus.text);
 
     renderChart({
         labels: model.chart.labels,
@@ -1789,41 +1866,33 @@ setText('printThisYearActual', formatMoney(thisYear.actualThroughSnapshotCents) 
     });
 }
 
-
-/* ===================== js/export.js ===================== */
-/* export.js — CSV / Excel / PDF สร้างจาก model ไม่อ่านจาก DOM */
-
-
+/* ===================== export.js ===================== */
 const SCHEDULE_HEADER = [
     'ลำดับ', 'ปี พ.ศ.', 'ช่วงวันที่ (พ.ศ.)', 'จำนวนวัน',
     'ค่าเสื่อมประจำช่วง', 'ค่าเสื่อมสะสม', 'มูลค่าสุทธิ',
     'ประเภทข้อมูล', 'หมายเหตุ'
 ];
-
 const EXPORT_ROW_TYPE = {
     [ROW_TYPE.ACTUAL]: 'Actual',
     [ROW_TYPE.SNAPSHOT]: 'Snapshot',
     [ROW_TYPE.PROJECTION]: 'Projection'
 };
 
-/** numeric=true สำหรับ Excel (เก็บเป็นตัวเลขจริง), false สำหรับ CSV */
 function buildScheduleAoA(model, numeric) {
     const money = (cents) => numeric ? cents / 100 : (cents / 100).toFixed(2);
     const rows = [];
-
     rows.push([
         0,
         model.input.startDate.getFullYear() + 543,
-        `จุดเริ่มต้น (${formatDateThai(model.input.startDate)})`,
+        'จุดเริ่มต้น (' + formatDateThai(model.input.startDate) + ')',
         0, money(0), money(0), money(model.input.costCents),
         'Opening', 'ยอดยกมา'
     ]);
-
     model.displayRows.forEach(row => {
         rows.push([
-            row.isContinuation ? `${row.seq} (ต่อ)` : row.seq,
+            row.isContinuation ? row.seq + ' (ต่อ)' : row.seq,
             row.year + 543,
-            `${formatDateThai(row.start)} - ${formatDateThai(row.end)}`,
+            formatDateThai(row.start) + ' - ' + formatDateThai(row.end),
             row.days,
             money(row.depCents),
             money(row.accumulatedCents),
@@ -1832,7 +1901,6 @@ function buildScheduleAoA(model, numeric) {
             ROW_TYPE_LABEL[row.rowType] + (row.isFinal ? ' / ครบอายุ' : '')
         ]);
     });
-
     rows.push([
         'รวมตลอดอายุการใช้งาน', '', '',
         model.totals.totalDaysAll,
@@ -1841,7 +1909,6 @@ function buildScheduleAoA(model, numeric) {
         money(model.totals.finalBookValueCents),
         'Total', 'รวมช่วงประมาณการด้วย'
     ]);
-
     return rows;
 }
 
@@ -1872,22 +1939,17 @@ function buildInfoRows(model, meta) {
         []
     ];
 }
-
-// แถว info ที่เป็นจำนวนเงิน (index 0-based ใน buildInfoRows)
 const INFO_MONEY_ROWS = [4, 5, 10, 11, 12, 13, 14, 15];
 
 function exportToCSV(model, meta) {
-    let csv = '\uFEFF';
+    let csv = '﻿';
     csv += SCHEDULE_HEADER.map(csvCell).join(',') + '\n';
-    buildScheduleAoA(model, false).forEach(row => {
-        csv += row.map(csvCell).join(',') + '\n';
-    });
-
+    buildScheduleAoA(model, false).forEach(row => { csv += row.map(csvCell).join(',') + '\n'; });
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `depreciation_${safeFileName(meta.assetCode)}.csv`;
+    a.download = 'depreciation_' + safeFileName(meta.assetCode) + '.csv';
     a.click();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
@@ -1903,7 +1965,6 @@ function exportToExcel(model, meta) {
     const ws = XLSX.utils.aoa_to_sheet(wsData);
     ws['!cols'] = [{ wch: 38 }, { wch: 12 }, { wch: 28 }, { wch: 12 },
                    { wch: 18 }, { wch: 18 }, { wch: 18 }, { wch: 14 }, { wch: 22 }];
-
     const setFormat = (r, c) => {
         const addr = XLSX.utils.encode_cell({ r, c });
         if (ws[addr] && ws[addr].t === 'n') ws[addr].z = '#,##0.00';
@@ -1913,10 +1974,9 @@ function exportToExcel(model, meta) {
     for (let r = firstDataRow; r < firstDataRow + scheduleRows.length; r++) {
         [4, 5, 6].forEach(c => setFormat(r, c));
     }
-
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Depreciation');
-    XLSX.writeFile(wb, `depreciation_${safeFileName(meta.assetCode)}.xlsx`);
+    XLSX.writeFile(wb, 'depreciation_' + safeFileName(meta.assetCode) + '.xlsx');
 }
 
 function exportToPDF() {
@@ -1924,10 +1984,7 @@ function exportToPDF() {
     window.print();
 }
 
-/* ===================== js/selftest.js ===================== */
-/* selftest.js — ชุดทดสอบภายใน ใช้ข้อมูลจำลอง ไม่กระทบข้อมูลในฟอร์ม */
-
-
+/* ===================== selftest.js ===================== */
 function d(y, m, day) { return new Date(y, m - 1, day); }
 
 function runSelfTests() {
@@ -1947,7 +2004,6 @@ function runSelfTests() {
         const sum = m.displayRows.filter(r => r.rowType !== ROW_TYPE.PROJECTION).reduce((s, r) => s + r.depCents, 0);
         return { ok: sum === m.snapshot.accumulatedCents && m.recon.ok, detail: formatMoney(sum) };
     });
-
     check('Snapshot ปีที่ 2: ค่าเสื่อมปีนี้นับเฉพาะ 1 ม.ค. ถึงวันที่คำนวณ', () => {
         const m = buildDepreciationModel({ ...base, startDate: d(2023, 4, 10), currentDate: d(2024, 6, 30) });
         const rows = m.displayRows.filter(r => r.year === 2024 && r.rowType !== ROW_TYPE.PROJECTION);
@@ -1955,7 +2011,6 @@ function runSelfTests() {
             && m.thisYear.actualThroughSnapshotCents === rows.reduce((s, r) => s + r.depCents, 0);
         return { ok, detail: formatMoney(m.thisYear.actualThroughSnapshotCents) };
     });
-
     check('แยกค่าเสื่อมจริงกับประมาณการในปีเดียวกัน', () => {
         const m = buildDepreciationModel({ ...base, startDate: d(2023, 1, 1), currentDate: d(2024, 6, 30) });
         const proj = m.displayRows.filter(r => r.year === 2024 && r.rowType === ROW_TYPE.PROJECTION);
@@ -1963,9 +2018,8 @@ function runSelfTests() {
             && proj.length === 1 && proj[0].start > m.input.currentDate
             && m.thisYear.periodTotalCents === m.thisYear.actualThroughSnapshotCents + m.thisYear.projectedAfterSnapshotCents
             && m.snapshot.accumulatedCents < m.thisYear.periodTotalCents + m.displayRows[0].depCents;
-        return { ok, detail: `จริง ${formatMoney(m.thisYear.actualThroughSnapshotCents)} / ประมาณการ ${formatMoney(m.thisYear.projectedAfterSnapshotCents)}` };
+        return { ok, detail: 'จริง ' + formatMoney(m.thisYear.actualThroughSnapshotCents) + ' / ประมาณการ ' + formatMoney(m.thisYear.projectedAfterSnapshotCents) };
     });
-
     check('ยอดสะสมไม่รวมแถวประมาณการ', () => {
         const m = buildDepreciationModel({ ...base, startDate: d(2022, 3, 1), currentDate: d(2023, 8, 10) });
         const independent = accumulatedUntilDate({
@@ -1974,18 +2028,15 @@ function runSelfTests() {
         }, m.input.currentDate);
         return { ok: independent === m.snapshot.accumulatedCents, detail: formatMoney(independent) };
     });
-
     check('Snapshot ตรงวันเริ่ม segment: ไม่มีแถวว่าง', () => {
         const m = buildDepreciationModel({ ...base, startDate: d(2023, 6, 1), currentDate: d(2024, 1, 1) });
-        return { ok: !m.displayRows.some(r => r.days <= 0) && m.recon.ok, detail: `แถวทั้งหมด ${m.displayRows.length}` };
+        return { ok: !m.displayRows.some(r => r.days <= 0) && m.recon.ok, detail: 'แถวทั้งหมด ' + m.displayRows.length };
     });
-
     check('Snapshot ตรงวันสิ้น segment: ไม่มีช่วง 0 วัน', () => {
         const m = buildDepreciationModel({ ...base, startDate: d(2023, 3, 15), currentDate: d(2023, 12, 31) });
         const snapRows = m.displayRows.filter(r => r.rowType === ROW_TYPE.SNAPSHOT);
-        return { ok: !m.displayRows.some(r => r.days <= 0) && snapRows.length === 1 && m.recon.ok, detail: `แถว Snapshot ${snapRows.length}` };
+        return { ok: !m.displayRows.some(r => r.days <= 0) && snapRows.length === 1 && m.recon.ok, detail: 'แถว Snapshot ' + snapRows.length };
     });
-
     check('Snapshot หลังหมดอายุหลายปี: ค่าเสื่อมปีนี้ = 0', () => {
         const m = buildDepreciationModel({ ...base, startDate: d(2010, 1, 1), currentDate: d(2026, 5, 20) });
         return {
@@ -1994,48 +2045,39 @@ function runSelfTests() {
             detail: 'สะสม ' + formatMoney(m.snapshot.accumulatedCents)
         };
     });
-
     check('เริ่มใช้ 31 ธันวาคม: งวดแรกมี 1 วัน', () => {
         const m = buildDepreciationModel({ ...base, startDate: d(2023, 12, 31), currentDate: d(2024, 6, 1) });
-        return { ok: m.segments[0].days === 1, detail: `${m.segments[0].days} วัน` };
+        return { ok: m.segments[0].days === 1, detail: m.segments[0].days + ' วัน' };
     });
-
     check('นโยบาย A (29 ก.พ.): ครบอายุ 27/02/2572', () => {
         const eol = getEndOfLifeDate(d(2024, 2, 29), 5, 'anniversaryMinusOneDay');
         return { ok: eol.getFullYear() === 2029 && eol.getMonth() === 1 && eol.getDate() === 27, detail: formatDateThai(eol) };
     });
-
     check('นโยบาย B (29 ก.พ.): ครบอายุ 28/02/2572', () => {
         const eol = getEndOfLifeDate(d(2024, 2, 29), 5, 'clampedAnniversaryAsLastDay');
         return { ok: eol.getFullYear() === 2029 && eol.getMonth() === 1 && eol.getDate() === 28, detail: formatDateThai(eol) };
     });
-
     check('นโยบาย B ไม่กระทบกรณีปกติ', () => {
         const a = getEndOfLifeDate(d(2023, 5, 17), 5, 'anniversaryMinusOneDay');
         const b = getEndOfLifeDate(d(2023, 5, 17), 5, 'clampedAnniversaryAsLastDay');
         return { ok: a.getTime() === b.getTime(), detail: formatDateThai(a) };
     });
-
     check('นโยบาย B: ยอดรวมยังตรงพอดี', () => {
         const m = buildDepreciationModel({ ...base, startDate: d(2024, 2, 29), currentDate: d(2026, 7, 1), eolPolicy: 'clampedAnniversaryAsLastDay' });
-        return { ok: m.recon.ok && m.totals.totalDepAllCents === m.depreciableCents, detail: `ครบอายุ ${formatDateThai(m.endOfLifeDate)}` };
+        return { ok: m.recon.ok && m.totals.totalDepAllCents === m.depreciableCents, detail: 'ครบอายุ ' + formatDateThai(m.endOfLifeDate) };
     });
-
     check('มูลค่าซากเท่าราคาทุน: ค่าเสื่อมทุกช่วงเป็น 0', () => {
         const m = buildDepreciationModel({ costCents: 5000000, salvageCents: 5000000, lifeYears: 5, yearBasis: 'actual', startDate: d(2023, 1, 1), currentDate: d(2024, 6, 1) });
-        return { ok: m.displayRows.every(r => r.depCents === 0) && m.recon.ok, detail: `รวม ${formatMoney(m.totals.totalDepAllCents)}` };
+        return { ok: m.displayRows.every(r => r.depCents === 0) && m.recon.ok, detail: 'รวม ' + formatMoney(m.totals.totalDepAllCents) };
     });
-
     check('ค่าเสื่อมมีเศษสตางค์: งวดสุดท้ายทำให้ยอดรวมตรงพอดี', () => {
         const m = buildDepreciationModel({ costCents: 1000000, salvageCents: 100, lifeYears: 3, yearBasis: 'actual', startDate: d(2023, 5, 17), currentDate: d(2024, 8, 9) });
-        return { ok: m.totals.totalDepAllCents === m.depreciableCents && m.recon.ok, detail: `${formatMoney(m.totals.totalDepAllCents)}` };
+        return { ok: m.totals.totalDepAllCents === m.depreciableCents && m.recon.ok, detail: formatMoney(m.totals.totalDepAllCents) };
     });
-
     check('จำนวนเงินสูงและอายุยาว (30 ปี): ยอดรวมยังตรงพอดี', () => {
         const m = buildDepreciationModel({ costCents: MAX_COST_CENTS - 7, salvageCents: 1, lifeYears: 30, yearBasis: 'actual', startDate: d(2020, 2, 29), currentDate: d(2035, 6, 15) });
         return { ok: m.recon.ok && m.totals.totalDepAllCents === m.depreciableCents, detail: formatMoney(m.totals.totalDepAllCents) };
     });
-
     check('ยอดสะสมเพิ่มขึ้นทีละวันแบบไม่ถอยหลัง', () => {
         const start = d(2023, 11, 20);
         const p = { startDate: start, endOfLifeDate: getEndOfLifeDate(start, 2), depreciableCents: 123457, lifeYears: 2, yearBasis: 'actual' };
@@ -2045,27 +2087,23 @@ function runSelfTests() {
             if (v < prev) { ok = false; break; }
             prev = v;
         }
-        return { ok: ok && prev === 123457, detail: `ยอดสุดท้าย ${formatMoney(prev)}` };
+        return { ok: ok && prev === 123457, detail: 'ยอดสุดท้าย ' + formatMoney(prev) };
     });
-
     check('ปีฐานคงที่ 365 วัน: ยอดรวมยังตรงพอดี', () => {
         const m = buildDepreciationModel({ ...base, yearBasis: 'fixed365', startDate: d(2024, 2, 29), currentDate: d(2027, 3, 1) });
-        return { ok: m.recon.ok, detail: `รวม ${formatMoney(m.totals.totalDepAllCents)}` };
+        return { ok: m.recon.ok, detail: 'รวม ' + formatMoney(m.totals.totalDepAllCents) };
     });
-
     check('Snapshot = วันเริ่มใช้งาน: ค่าเสื่อม 1 วัน', () => {
         const m = buildDepreciationModel({ ...base, startDate: d(2024, 7, 1), currentDate: d(2024, 7, 1) });
         const first = m.displayRows[0];
         return { ok: first.days === 1 && m.snapshot.accumulatedCents === first.depCents && m.recon.ok, detail: formatMoney(m.snapshot.accumulatedCents) };
     });
-
     check('ปี พ.ศ. นอกช่วงถูกปฏิเสธ', () => {
         const ok = parseThaiDateString('01/01/0001') === null
             && parseThaiDateString('01/01/9999') === null
             && parseThaiDateString('01/01/2568') !== null;
         return { ok, detail: 'ช่วงที่รองรับ 2400-2700' };
     });
-
     check('จำนวนเงินผิดรูปแบบหรือเกินขอบเขตถูกปฏิเสธ', () => {
         const ok = parseMoneyToCents('1.234') === null
             && parseMoneyToCents('-5') === null
@@ -2074,7 +2112,6 @@ function runSelfTests() {
             && parseMoneyToCents('1,234.50') === 123450;
         return { ok, detail: 'ตรวจ 5 กรณี' };
     });
-
     check('ความต่อเนื่องของช่วงวัน (หลายกรณี)', () => {
         const cases = [
             { s: d(2021, 1, 1), c: d(2023, 7, 4) },
@@ -2083,16 +2120,12 @@ function runSelfTests() {
             { s: d(2023, 12, 31), c: d(2028, 12, 30) }
         ];
         const bad = cases.filter(cs => !buildDepreciationModel({ ...base, startDate: cs.s, currentDate: cs.c }).recon.ok);
-        return { ok: bad.length === 0, detail: `ผ่าน ${cases.length - bad.length}/${cases.length}` };
+        return { ok: bad.length === 0, detail: 'ผ่าน ' + (cases.length - bad.length) + '/' + cases.length };
     });
-
     return results;
 }
 
-/* ===================== js/app.js ===================== */
-/* app.js — state, event binding, การทำงานของหน้าจอ */
-
-
+/* ===================== app.js ===================== */
 const appState = { model: null, meta: null };
 let isDirty = false;
 let isCalculating = false;
@@ -2105,29 +2138,26 @@ function setDirty(flag) {
     const notice = document.getElementById('dirtyNotice');
     if (notice) notice.style.display = (flag && appState.model) ? 'block' : 'none';
 }
-
 function setCalcLoading(loading) {
     isCalculating = loading;
     const btn = document.getElementById('calcBtn');
     const label = document.getElementById('calcBtnLabel');
     btn.disabled = loading;
     btn.setAttribute('aria-busy', loading ? 'true' : 'false');
-    label.textContent = loading ? 'กำลังคำนวณ...' : '✓ คำนวณผลลัพธ์';
+    label.textContent = loading ? 'กำลังคำนวณ...' : 'คำนวณผลลัพธ์';
 }
 
-/** คำนวณ: ใช้ try/finally ปุ่มจึงกลับมาใช้งานได้เสมอแม้เกิดข้อผิดพลาด (ข้อ 12) */
 async function calculateDepreciation() {
     if (isCalculating) return;
     setCalcLoading(true);
     try {
         const form = readAndValidateForm();
         if (!form) return;
-
         const model = buildDepreciationModel(form.input);
         renderResults(model, form.meta);
         appState.model = model;
         appState.meta = form.meta;
-        window._lastCalc = appState;   // สำหรับตรวจสอบผ่าน console
+        window._lastCalc = appState;
         saveSettings();
         setDirty(false);
     } catch (error) {
@@ -2140,18 +2170,11 @@ async function calculateDepreciation() {
 }
 
 function guardOutput(actionLabel) {
-    if (!appState.model) {
-        alert('กรุณาคำนวณข้อมูลก่อน' + actionLabel);
-        return false;
-    }
-    if (isDirty) {
-        alert('ข้อมูลมีการเปลี่ยนแปลงหลังคำนวณ กรุณากดคำนวณใหม่ก่อน' + actionLabel);
-        return false;
-    }
+    if (!appState.model) { alert('กรุณาคำนวณข้อมูลก่อน' + actionLabel); return false; }
+    if (isDirty) { alert('ข้อมูลมีการเปลี่ยนแปลงหลังคำนวณ กรุณากดคำนวณใหม่ก่อน' + actionLabel); return false; }
     return true;
 }
 
-/* ---------- การตั้งค่าที่จำไว้ ---------- */
 function saveSettings() {
     try {
         localStorage.setItem('dep_settings', JSON.stringify({
@@ -2162,11 +2185,8 @@ function saveSettings() {
             salvage: document.getElementById('salvage').value,
             operStatus: document.getElementById('operStatus').value
         }));
-    } catch (e) {
-        console.warn('ไม่สามารถบันทึกการตั้งค่าได้', e);
-    }
+    } catch (e) { /* โหมดส่วนตัวหรือปิด storage ไว้ ไม่ถือเป็นข้อผิดพลาด */ }
 }
-
 function loadSettings() {
     try {
         const saved = localStorage.getItem('dep_settings');
@@ -2175,12 +2195,9 @@ function loadSettings() {
         ['budget', 'lifeYears', 'yearBasis', 'eolPolicy', 'salvage', 'operStatus'].forEach(id => {
             if (s[id]) document.getElementById(id).value = s[id];
         });
-    } catch (e) {
-        console.warn('ไม่สามารถโหลดการตั้งค่าได้', e);
-    }
+    } catch (e) { /* ค่าเสียหาย ใช้ค่าเริ่มต้นแทน */ }
 }
 
-/* ---------- ล้างข้อมูล / ตัวอย่าง ---------- */
 function resetForm() {
     ['assetCode', 'assetName', 'cost', 'docRef'].forEach(id => document.getElementById(id).value = '');
     document.getElementById('salvage').value = '1.00';
@@ -2189,12 +2206,12 @@ function resetForm() {
     document.getElementById('eolPolicy').value = DEFAULT_EOL_POLICY;
     document.getElementById('operStatus').value = 'ใช้งานอยู่';
     document.getElementById('budget').selectedIndex = 2;
-    document.getElementById('printDocRef').textContent = '-';
+    setText('printDocRef', '-');
+    setText('heroDocRef', '-');
 
     const today = new Date();
-    if (window.startPicker) window.startPicker.clear();
-    if (window.currentPicker) window.currentPicker.setDate(today, true);
-    else document.getElementById('currentDate').value = formatDateThai(today);
+    document.getElementById('startDate').value = '';
+    document.getElementById('currentDate').value = formatDateThai(today);
 
     clearErrors();
 
@@ -2203,16 +2220,18 @@ function resetForm() {
     const tr = document.createElement('tr');
     const cell = document.createElement('td');
     cell.colSpan = 8;
-    cell.className = 'text-center py-5 text-muted';
+    cell.className = 'text-center';
+    cell.style.padding = '44px 0';
+    cell.style.color = '#8a9197';
     cell.textContent = 'กรุณากดคำนวณเพื่อแสดงข้อมูล';
     tr.appendChild(cell);
     tbody.appendChild(tr);
-    document.getElementById('tableLegend').textContent = '';
+    setText('tableLegend', '');
 
     ['resCost', 'resAccumulated', 'resBookValue', 'resThisYear', 'resThisYearProjected',
      'resThisYearPeriod', 'resThisYearRate', 'resDuration', 'resRemaining', 'resDateRange',
      'resBudgetDisplay', 'resAssetCodeDisplay', 'kpiStart', 'kpiEndOfLife', 'kpiRemaining']
-        .forEach(id => document.getElementById(id).textContent = '-');
+        .forEach(id => setText(id, '-'));
 
     const operEl = document.getElementById('resOperStatus');
     operEl.textContent = '-'; operEl.className = 'status-badge status-neutral';
@@ -2220,19 +2239,18 @@ function resetForm() {
     depEl.textContent = '-'; depEl.className = 'status-badge status-neutral';
 
     document.getElementById('ageProgressBar').style.width = '0%';
-    document.getElementById('ageProgressLabel').textContent = '0%';
+    setText('ageProgressLabel', '0%');
     document.getElementById('depProgressBar').style.width = '0%';
-    document.getElementById('depProgressLabel').textContent = '0%';
-    document.getElementById('depProgressCaption').textContent = 'เหลือมูลค่าตามบัญชี -';
+    setText('depProgressLabel', '0%');
+    setText('depProgressCaption', 'เหลือมูลค่าตามบัญชี -');
 
     const calcBody = document.getElementById('calcMethodBody');
     calcBody.textContent = 'กดคำนวณเพื่อแสดงวิธีคิด';
-    calcBody.className = 'calc-method-box text-muted';
+    calcBody.className = 'calc-method-box';
 
     document.getElementById('reconBox').style.display = 'none';
     document.getElementById('selfTestBox').style.display = 'none';
-    document.getElementById('resultStatusLive').textContent = 'ล้างข้อมูลแล้ว';
-    document.querySelectorAll('.print-signature').forEach(el => el.style.display = 'none');
+    setText('resultStatusLive', 'ล้างข้อมูลแล้ว');
 
     destroyChart();
     document.getElementById('chartEmptyMsg').style.display = 'flex';
@@ -2254,20 +2272,18 @@ function loadExample() {
     document.getElementById('operStatus').value = 'ใช้งานอยู่';
     document.getElementById('budget').value = 'งบรายได้วิทยาลัยแพทยศาสตร์นานาชาติจุฬาภรณ์';
     document.getElementById('docRef').value = '000';
-    document.getElementById('printDocRef').textContent = '000';
+    setText('printDocRef', '000');
+    setText('heroDocRef', '000');
 
     const today = new Date();
     const past = new Date(today.getFullYear() - 1, today.getMonth(), today.getDate());
-    if (window.startPicker) window.startPicker.setDate(past, true);
-    else document.getElementById('startDate').value = formatDateThai(past);
-    if (window.currentPicker) window.currentPicker.setDate(today, true);
-    else document.getElementById('currentDate').value = formatDateThai(today);
+    document.getElementById('startDate').value = formatDateThai(past);
+    document.getElementById('currentDate').value = formatDateThai(today);
 
     setDirty(true);
     calculateDepreciation();
 }
 
-/* ---------- Self-test ---------- */
 function renderSelfTests() {
     const results = runSelfTests();
     const box = document.getElementById('selfTestBox');
@@ -2275,64 +2291,63 @@ function renderSelfTests() {
     box.style.display = 'block';
 
     const head = document.createElement('div');
-    head.className = 'fw-bold mb-2';
+    head.className = 'fw-bold';
+    head.style.marginBottom = '6px';
     const passed = results.filter(r => r.ok).length;
-    head.textContent = `ผลการตรวจสอบระบบ (self-test): ผ่าน ${passed}/${results.length}`;
+    head.textContent = 'ผลการตรวจสอบระบบ (self-test): ผ่าน ' + passed + '/' + results.length;
     box.appendChild(head);
 
     results.forEach(r => {
         const div = document.createElement('div');
         div.className = r.ok ? 't-pass' : 't-fail';
-        div.textContent = `${r.ok ? '✓' : '✗'} ${r.name}${r.detail ? ' — ' + r.detail : ''}`;
+        div.textContent = (r.ok ? '✓ ' : '✗ ') + r.name + (r.detail ? ' — ' + r.detail : '');
         box.appendChild(div);
     });
-
     const note = document.createElement('div');
-    note.className = 'text-muted mt-2';
+    note.className = 'text-muted';
+    note.style.marginTop = '8px';
     note.textContent = 'การตรวจสอบนี้ใช้ข้อมูลจำลอง ไม่กระทบข้อมูลที่กรอกไว้';
     box.appendChild(note);
     box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     return results;
 }
 
-/* ---------- Date pickers ---------- */
-function initDatePickers() {
-    if (typeof flatpickr === 'undefined') return;
-    const thaiLocale = (window.flatpickr.l10ns && window.flatpickr.l10ns.th) || 'default';
-    const commonConfig = {
-        locale: thaiLocale,
-        dateFormat: 'd/m/Y',
-        disableMobile: 'true',
-        allowInput: true,
-        onChange: () => setDirty(true),
-        formatDate: (date) => {
-            const day = String(date.getDate()).padStart(2, '0');
-            const month = String(date.getMonth() + 1).padStart(2, '0');
-            return `${day}/${month}/${date.getFullYear() + 543}`;
-        },
-        parseDate: (dateStr) => {
-            if (!dateStr) return null;
-            const parts = dateStr.split('/');
-            if (parts.length !== 3) return null;
-            const day = parseInt(parts[0], 10);
-            const month = parseInt(parts[1], 10) - 1;
-            const yearAD = parseInt(parts[2], 10) - 543;
-            const date = new Date(yearAD, month, day);
-            if (date.getFullYear() !== yearAD || date.getMonth() !== month || date.getDate() !== day) return null;
-            return date;
-        }
-    };
-    window.startPicker = flatpickr('#startDate', commonConfig);
-    window.currentPicker = flatpickr('#currentDate', commonConfig);
+/* ---------- ช่องวันที่: เติม / อัตโนมัติ ---------- */
+function initDateInputs() {
+    document.querySelectorAll('.date-input').forEach(input => {
+        input.addEventListener('input', (e) => {
+            const el = e.target;
+            const digits = el.value.replace(/\D/g, '').slice(0, 8);
+            let out = digits;
+            if (digits.length > 4) out = digits.slice(0, 2) + '/' + digits.slice(2, 4) + '/' + digits.slice(4);
+            else if (digits.length > 2) out = digits.slice(0, 2) + '/' + digits.slice(2);
+            el.value = out;
+            setDirty(true);
+        });
+    });
 }
 
-/* ---------- Event binding ---------- */
+/* ---------- คัดลอกกล่องสรุป ---------- */
+function initCopyAreas() {
+    document.querySelectorAll('.copy-area').forEach(area => {
+        area.addEventListener('click', () => {
+            const text = area.innerText.trim();
+            if (!text || !navigator.clipboard) return;
+            navigator.clipboard.writeText(text).then(() => {
+                const prev = area.style.boxShadow;
+                area.style.boxShadow = '0 0 0 3px rgba(61,122,62,.45)';
+                setTimeout(() => { area.style.boxShadow = prev; }, 700);
+            }).catch(() => { /* เบราว์เซอร์ไม่อนุญาต ผู้ใช้ยังเลือกคัดลอกเองได้ */ });
+        });
+    });
+}
+
 function init() {
     const today = new Date();
-    initDatePickers();
-    if (window.currentPicker) window.currentPicker.setDate(today, true);
-    else document.getElementById('currentDate').value = formatDateThai(today);
-    document.getElementById('printDate').textContent = formatDateThai(today);
+    initDateInputs();
+    initCopyAreas();
+    document.getElementById('currentDate').value = formatDateThai(today);
+    setText('printDate', formatDateThai(today));
 
     DIRTY_IDS.forEach(id => {
         const el = document.getElementById(id);
@@ -2342,7 +2357,9 @@ function init() {
     });
 
     document.getElementById('docRef').addEventListener('input', (e) => {
-        document.getElementById('printDocRef').textContent = e.target.value.trim() || '-';
+        const v = e.target.value.trim() || '-';
+        setText('printDocRef', v);
+        setText('heroDocRef', v);
     });
 
     document.querySelectorAll('.currency-input').forEach(input => {
@@ -2355,7 +2372,6 @@ function init() {
         input.addEventListener('keypress', (e) => { if (e.key === 'Enter') e.target.blur(); });
     });
 
-    // กด Enter ในฟอร์มให้คำนวณ (ปุ่มถูกล็อกระหว่างคำนวณอยู่แล้ว)
     document.getElementById('assetForm').addEventListener('keydown', (e) => {
         if (e.key === 'Enter' && e.target.tagName === 'INPUT' && !e.target.classList.contains('currency-input')) {
             e.preventDefault();
@@ -2367,6 +2383,11 @@ function init() {
     document.getElementById('btnReset').addEventListener('click', resetForm);
     document.getElementById('btnExample').addEventListener('click', loadExample);
     document.getElementById('btnSelfTest').addEventListener('click', renderSelfTests);
+    document.getElementById('btnToday').addEventListener('click', () => {
+        document.getElementById('currentDate').value = formatDateThai(new Date());
+        setDirty(true);
+    });
+
     document.getElementById('btnCSV').addEventListener('click', () => {
         if (guardOutput('ส่งออก')) exportToCSV(appState.model, appState.meta);
     });
@@ -2384,15 +2405,27 @@ function init() {
         btn.addEventListener('click', function () { setChartMetric(this.dataset.metric); });
     });
 
+    const collapseToggle = document.getElementById('calcMethodToggle');
+    const collapseBody = document.getElementById('calcMethodCollapse');
+    collapseToggle.addEventListener('click', () => {
+        const open = collapseBody.classList.toggle('open');
+        collapseToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+    });
+
     window.addEventListener('beforeprint', resizeChart);
     window.addEventListener('afterprint', resizeChart);
+    if (window.matchMedia) {
+        const printMq = window.matchMedia('print');
+        const onPrintChange = () => setTimeout(resizeChart, 0);
+        if (printMq.addEventListener) printMq.addEventListener('change', onPrintChange);
+        else if (printMq.addListener) printMq.addListener(onPrintChange);
+    }
 
     document.getElementById('chartEmptyMsg').style.display = 'flex';
     document.getElementById('depChart').style.display = 'none';
 
     loadSettings();
     setDirty(false);
-
     window.runSelfTests = runSelfTests;
 }
 
@@ -2402,6 +2435,29 @@ if (document.readyState === 'loading') {
     init();
 }
 
+/* ---------- Entrance: เล่นครั้งเดียวแล้วถอด animation ออก ---------- */
+(function () {
+    const root = document.documentElement;
+    const reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduced || window.__entrancePlayed) {
+        clearTimeout(window.__entranceFailSafe);
+        root.classList.remove('motion-pending', 'entrance-run');
+        return;
+    }
+    window.__entrancePlayed = true;
+
+    const start = () => {
+        clearTimeout(window.__entranceFailSafe);
+        root.classList.remove('motion-pending');
+        root.classList.add('entrance-run');
+        setTimeout(() => root.classList.remove('entrance-run'), 1850);
+    };
+
+    let done = false;
+    const once = () => { if (!done) { done = true; start(); } };
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(once);
+    setTimeout(once, 700);
+})();
 </script>
 
 </body>
