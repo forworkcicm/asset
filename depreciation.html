@@ -273,11 +273,11 @@ input.money { text-align: right; font-weight: 500; }
 .meta-row .k { color: #5c656b; }
 .meta-row .v { font-weight: 700; text-align: right; color: #1a2024; }
 .chart-container {
-    position: relative; height: 300px; padding: 10px;
+    position: relative; height: auto; min-height: 200px; padding: 10px;
     background: rgba(255,255,255,.78); border-radius: 16px; box-shadow: var(--ring);
     display: flex; align-items: center; justify-content: center; overflow: hidden;
 }
-.chart-container canvas { width: 100% !important; height: 100% !important; }
+.chart-container canvas { max-width: 100%; }
 #chartEmptyMsg { font-size: 13px; color: #6f767c; display: flex; align-items: center; gap: 7px; }
 
 /* ---------- Collapsible ---------- */
@@ -447,8 +447,16 @@ tr.row-total td { border-top: 2px solid #2a3236 !important; font-weight: 700; ba
     .d-print-none, .hero, .stat-grid { display: none !important; }
     .print-only { display: block !important; }
     .card { box-shadow: none !important; border: 1px solid #ddd !important; background: #fff !important; border-radius: 10px; }
-    .chart-container { height: 200px !important; box-shadow: none; border: 1px solid #ccc; background: #fff; }
-    .chart-container canvas { width: 100% !important; height: 100% !important; }
+    .chart-container {
+        width: 120mm !important; max-width: 120mm !important;
+        height: auto !important; min-height: 0 !important; max-height: 75mm;
+        box-shadow: none; border: 1px solid #ccc; background: #fff;
+        padding: 4px; margin: 0 auto; overflow: hidden; page-break-inside: avoid;
+    }
+    .chart-container canvas {
+        width: auto !important; height: auto !important;
+        max-width: 100% !important; max-height: 100% !important;
+    }
     .table-scroll { overflow: visible !important; }
     table.sched { font-size: 9px; min-width: 0; table-layout: fixed; }
     table.sched th, table.sched td { padding: 5px 4px; }
@@ -509,8 +517,8 @@ tr.row-total td { border-top: 2px solid #2a3236 !important; font-weight: 700; ba
     <!-- ===================== HERO ===================== -->
     <header class="card t-lime hero e1">
         <div class="hero-copy">
-            <h1><span class="g">ค่าเสื่อมราคา</span>ครุภัณฑ์</h1>
-         
+            <h1><span class="g">ค่าเสื่อมราคา</span>ครุภัณฑ์<br>คำนวณรายวัน ตรงทุกสตางค์</h1>
+            <p class="sub">วิธีเส้นตรง คิดค่าเสื่อมเป็นรายวันด้วยเศษส่วนจำนวนเต็ม (BigInt) ไม่ปัดเศษกลางทาง ยอดรวมตลอดอายุการใช้งานเท่ากับ (ราคาทุน − มูลค่าซาก) พอดีเสมอ</p>
         </div>
         <div class="hero-side d-print-none">
             <div class="docpill">ลำดับที่เอกสาร <b id="heroDocRef">-</b></div>
@@ -544,8 +552,8 @@ tr.row-total td { border-top: 2px solid #2a3236 !important; font-weight: 700; ba
                 <tr><td class="k">อายุตามบัญชี</td><td id="printLife">-</td><td class="k">วันที่เริ่มใช้งาน</td><td id="printStartDate">-</td></tr>
                 <tr><td class="k">วันที่คำนวณ</td><td id="printCurrentDate">-</td><td class="k">ครบอายุการใช้งาน</td><td id="printEndOfLife">-</td></tr>
                 <tr><td class="k">อายุการใช้งานจริง</td><td id="printDuration">-</td><td class="k">อายุคงเหลือ</td><td id="printRemaining">-</td></tr>
-                <tr><td class="k">ค่าเสื่อมสะสมที่เกิดขึ้นจริง</td><td id="printAccumulated2">-</td><td class="k">มูลค่าตามบัญชี</td><td id="printBookValue2">-</td></tr>
-                <tr><td class="k">ค่าเสื่อมปีนี้ (ถึงวันคำนวณ)</td><td id="printThisYearActual">-</td><td class="k">สถานะค่าเสื่อม</td><td id="printDepStatus">-</td></tr>
+                <tr><td class="k">ค่าเสื่อมสะสมที่เกิดขึ้นจริง (ถึงวันคำนวณ)</td><td id="printAccumulated2">-</td><td class="k">มูลค่าตามบัญชี</td><td id="printBookValue2">-</td></tr>
+                <tr><td class="k">ค่าเสื่อมปีนี้ เกิดขึ้นจริงถึงวันคำนวณ</td><td id="printThisYearActual">-</td><td class="k">สถานะค่าเสื่อม</td><td id="printDepStatus">-</td></tr>
                 <tr><td class="k">สถานะการใช้งาน</td><td id="printOperStatus">-</td><td class="k">แหล่งงบประมาณ</td><td id="printBudget">-</td></tr>
             </tbody>
         </table>
@@ -1527,7 +1535,8 @@ function renderChart(data) {
         },
         options: {
             responsive: true,
-            maintainAspectRatio: false,
+            maintainAspectRatio: true,
+            aspectRatio: 1.8,
             layout: { padding: { top: 20 } },
             plugins: {
                 legend: { display: false },
@@ -2414,12 +2423,6 @@ function init() {
 
     window.addEventListener('beforeprint', resizeChart);
     window.addEventListener('afterprint', resizeChart);
-    if (window.matchMedia) {
-        const printMq = window.matchMedia('print');
-        const onPrintChange = () => setTimeout(resizeChart, 0);
-        if (printMq.addEventListener) printMq.addEventListener('change', onPrintChange);
-        else if (printMq.addListener) printMq.addListener(onPrintChange);
-    }
 
     document.getElementById('chartEmptyMsg').style.display = 'flex';
     document.getElementById('depChart').style.display = 'none';
