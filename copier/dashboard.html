@@ -487,7 +487,6 @@ tbody tr:hover{background:var(--surface-2)}
 
 <div class="kpis" id="kpis"></div>
 
-<!-- แก้ไขการ์ดแนวโน้มรายเดือนแยกตามประเภทงานพิมพ์ -->
 <div class="card">
   <h2>แนวโน้มการใช้งานรายเดือน แยกตามประเภทงานพิมพ์</h2>
   <p class="q">เปรียบเทียบแนวโน้มปริมาณการใช้งานในแต่ละเดือนแยกตามประเภทงานพิมพ์ · หน่วยเป็นยอดใช้สุทธิ (แผ่น) · เรียงตามปีงบประมาณ ต.ค. ถึง ก.ย.</p>
@@ -518,12 +517,6 @@ tbody tr:hover{background:var(--surface-2)}
     </div>
     <div class="chart" id="c-mc"></div>
   </div>
-</div>
-
-<div class="card">
-  <h2>ผลต่างที่ควรตรวจสอบก่อน</h2>
-  <p class="q">เรียงตามผลต่างสัมบูรณ์สูงสุด · ใบแจ้งหนี้ลบด้วยยอดเบิกคำนวณ · เส้นกลางคือศูนย์</p>
-  <div class="chart" id="c-var"></div>
 </div>
 
 <div class="grid">
@@ -699,7 +692,6 @@ function monthsSorted(list){
 }
 
 /* ---------- charts ---------- */
-/* ปรับปรุงฟังก์ชัน drawTrend ให้แสดงแยกตาม 3 ประเภทงานพิมพ์ */
 function drawTrend(){
   const host=$('#c-trend'), ms=monthsSorted(VIEW);
   if(!ms.length){ host.innerHTML='<p class="empty">ไม่มีข้อมูลตามตัวกรองที่เลือก</p>'; return; }
@@ -730,7 +722,7 @@ function drawTrend(){
   const step=w/Math.max(1,agg.length-1||1);
   const X=i=>agg.length===1?L+w/2:L+i*step, Y=v=>T+h-(v/max)*h;
 
-  // วาด 3 เส้นคนละประเภท
+  // 3 เส้นแยกตามประเภทงานพิมพ์
   [0, 1, 2].forEach(typeIdx=>{
     let d='';
     agg.forEach((a,i)=>{
@@ -739,7 +731,7 @@ function drawTrend(){
     E('path',{d, fill:'none', stroke:cols[typeIdx], 'stroke-width':2.5, 'stroke-linejoin':'round', 'stroke-linecap':'round'}, s);
   });
 
-  // วาดจุด Interaction Dots & Labels
+  // จุดโต้ตอบ (Interactive Dots)
   agg.forEach((a,i)=>{
     [0, 1, 2].forEach(typeIdx=>{
       const cy = Y(a.v[typeIdx]);
@@ -795,33 +787,6 @@ function drawMachines(){
     const rc=E('rect',{x:L,y:y+7,width:bw,height:rowH-16,rx:3,fill:a.color?cssv('--s3'):cssv('--s1')},s);
     tp(rc,`${a.dept}\n${a.place}\nรหัสเครื่อง ${a.k}\n${a.model} · ${a.color?'เครื่องสี':'เครื่องขาว-ดำ'}\nยอดใช้สุทธิ ${f0(a.net)} แผ่น\nยอดเบิกคำนวณ ${f2(a.calc)} บาท`);
     txt(s,L+bw+8,y+rowH/2+4,f0(a.net),{anchor:'start',size:11,fill:cssv('--ink'),w:600});
-  });
-}
-
-function drawVariance(){
-  const host=$('#c-var');
-  const arr=VIEW.filter(r=>Math.abs(r.diff)>=0.01)
-    .sort((a,b)=>Math.abs(b.diff)-Math.abs(a.diff)).slice(0,12);
-  if(!arr.length){ host.innerHTML='<p class="empty">ไม่พบรายการที่ยอดใบแจ้งหนี้ต่างจากยอดคำนวณ ทุกรายการตรงกันทั้งหมด</p>'; return; }
-  const rowH=30, L=300, R=130, W=980, H=arr.length*rowH+30, w=W-L-R, mid=L+w/2;
-  const s=svg(host,W,H);
-  const max=Math.max(...arr.map(a=>Math.abs(a.diff)),1);
-  E('line',{x1:mid,x2:mid,y1:6,y2:H-24,stroke:cssv('--line-2'),'stroke-width':1.5},s);
-  txt(s,mid,H-8,'0',{size:10.5});
-  txt(s,mid-w/4,H-8,'ใบแจ้งหนี้ต่ำกว่ายอดคำนวณ',{size:10.5,fill:cssv('--good')});
-  txt(s,mid+w/4,H-8,'ใบแจ้งหนี้สูงกว่ายอดคำนวณ',{size:10.5,fill:cssv('--bad')});
-  arr.forEach((r,i)=>{
-    const y=6+i*rowH;
-    const lab=`${mlab(r.month)} · ${r.serial}`;
-    txt(s,L-12,y+rowH/2+4,lab.length>36?lab.slice(0,35)+'…':lab,{anchor:'end',size:11,fill:cssv('--ink')});
-    const bw=Math.abs(r.diff)/max*(w/2-4);
-    const pos=r.diff>0;
-    const rc=E('rect',{x:pos?mid:mid-bw,y:y+8,width:Math.max(2,bw),height:rowH-18,rx:3,
-      fill:pos?cssv('--bad'):cssv('--good')},s);
-    const pct=r.calc?(r.diff/r.calc*100):0;
-    tp(rc,`${mlab(r.month)} · ${r.serial}\n${r.dept}\n${r.type}\nยอดเบิกคำนวณ ${f2(r.calc)} บาท\nใบแจ้งหนี้ ${f2(r.inv)} บาท\nผลต่าง ${f2(r.diff)} บาท (${pct.toFixed(1)}%)\nสถานะ ${r.chk}`);
-    txt(s,pos?mid+bw+8:mid-bw-8,y+rowH/2+4,`${f2(r.diff)} (${pct.toFixed(1)}%)`,
-      {anchor:pos?'start':'end',size:11,fill:pos?cssv('--bad'):cssv('--good'),w:600});
   });
 }
 
@@ -939,7 +904,7 @@ function drawTable(){
   });
 }
 
-function draw(){ drawKpis(); drawTrend(); drawDept(); drawMachines(); drawVariance(); drawMix(); drawHeat(); drawTable(); }
+function draw(){ drawKpis(); drawTrend(); drawDept(); drawMachines(); drawMix(); drawHeat(); drawTable(); }
 
 /* ---------- export ---------- */
 $('#exp').onclick=()=>{
