@@ -156,7 +156,7 @@ header button:hover{background:var(--orange-soft);border-color:var(--orange)}
 }
 .fl{display:flex;flex-direction:column;gap:4px}
 .fl label{font-size:11.5px;font-weight:600;color:var(--muted);letter-spacing:-.01em}
-.fl select,.fl input{
+.fl select{
   font:inherit;
   font-size:13px;
   color:var(--ink);
@@ -168,9 +168,7 @@ header button:hover{background:var(--orange-soft);border-color:var(--orange)}
   max-width:230px;
   transition:border-color .2s, box-shadow .2s;
 }
-.fl select:focus,.fl input:focus{border-color:var(--orange);outline:none;box-shadow:0 0 0 3px rgba(255,105,0,0.12)}
-.fl.grow{flex:1;min-width:150px}
-.fl.grow input{min-width:100%;max-width:none}
+.fl select:focus{border-color:var(--orange);outline:none;box-shadow:0 0 0 3px rgba(255,105,0,0.12)}
 #clr{
   margin-left:auto;
   align-self:flex-end;
@@ -357,7 +355,7 @@ tbody tr:hover{background:var(--surface-2)}
 .err b{display:block;font-size:15px;margin-bottom:4px}
 .err code{background:var(--surface);padding:2px 6px;border-radius:6px;font-size:12.5px}
 
-/* Custom Scrollbars for charts & tables */
+/* Custom Scrollbars */
 .chart::-webkit-scrollbar, .tbl::-webkit-scrollbar {
   height: 6px;
   width: 6px;
@@ -371,9 +369,7 @@ tbody tr:hover{background:var(--surface-2)}
   border-radius: 99px;
 }
 
-/* ========================================================
-   RESPONSIVE DESIGN (MOBILE & TABLET ADAPTATION)
-   ======================================================== */
+/* Mobile & Tablet Adaptation */
 @media (max-width: 900px) {
   .grid { grid-template-columns: 1fr; }
 }
@@ -401,14 +397,11 @@ tbody tr:hover{background:var(--surface-2)}
     flex: 1 1 calc(50% - 4px);
     min-width: 120px;
   }
-  .fl select, .fl input {
+  .fl select {
     min-width: 100%;
     max-width: 100%;
     font-size: 13.5px;
     padding: 8px 10px;
-  }
-  .fl.grow {
-    flex: 1 1 100%;
   }
   #clr {
     width: 100%;
@@ -444,7 +437,7 @@ tbody tr:hover{background:var(--surface-2)}
   .card .q { font-size: 11.5px; margin-bottom: 12px; }
   
   .chart svg {
-    min-width: 540px; /* ยืด SVG ให้อ่านง่ายบนมือถือ พร้อมเลื่อนแนวนอน */
+    min-width: 540px;
   }
   
   .rowhead {
@@ -488,7 +481,6 @@ tbody tr:hover{background:var(--surface-2)}
   <div class="fl"><label for="f-dept">หน่วยงาน</label><select id="f-dept"></select></div>
   <div class="fl"><label for="f-type">ประเภทงานพิมพ์</label><select id="f-type"></select></div>
   <div class="fl"><label for="f-chk">สถานะตรวจสอบ</label><select id="f-chk"></select></div>
-  <div class="fl grow"><label for="f-q">ค้นหารหัสเครื่อง / รุ่น</label><input id="f-q" type="search" placeholder="เช่น 0A3H หรือ SL-K7500LX" autocomplete="off"></div>
   <span class="fcount" id="fcount"></span>
   <button id="clr" type="button">ล้างตัวกรอง</button>
 </div>
@@ -668,10 +660,8 @@ function fillFilters(){
   });
 }
 function applyFilters(){
-  const q=$('#f-q').value.trim().toLowerCase();
   VIEW=RAW.filter(r=>{
     for(const [id,key] of FS) { const v=$('#'+id).value; if(v!=='' && String(r[key])!==v) return false; }
-    if(q && !(r.serial.toLowerCase().includes(q)||r.model.toLowerCase().includes(q))) return false;
     return true;
   });
   $('#fcount').textContent=`แสดง ${f0(VIEW.length)} จาก ${f0(RAW.length)} รายการ`;
@@ -952,9 +942,8 @@ $('#exp').onclick=()=>{
   a.href=URL.createObjectURL(blob); a.download='copier-detail.csv';
   document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href),2000);
 };
-$('#clr').onclick=()=>{ FS.forEach(([id])=>$('#'+id).value=''); $('#f-q').value=''; applyFilters(); };
+$('#clr').onclick=()=>{ FS.forEach(([id])=>$('#'+id).value=''); applyFilters(); };
 FS.forEach(([id])=>$('#'+id).addEventListener('change',applyFilters));
-$('#f-q').addEventListener('input',applyFilters);
 $('#reload').onclick=()=>load(true);
 
 /* ---------- load ---------- */
