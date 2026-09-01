@@ -240,15 +240,14 @@ body {
     transform: scale(1.15, 1);
     transform-origin: center;
 }
-#bgOval {
-    background: #FFFFFF;
+/* แสงนวลหลังภาพประกอบ — แทนวงรีทึบเดิมที่ไปบังตัวอักษร e-GP
+   (วงรีทึบมีหน้าที่เฉพาะตอนคำพื้นหลังมีรูตรงกลาง เช่น เลข 0 ในหน้า 404) */
+#bgGlow {
+    width: clamp(260px, 40vw, 620px);
+    height: clamp(260px, 40vw, 620px);
     border-radius: 9999px;
-    height: 60vh;
-    width: clamp(150px, 23vw, 420px);
-    transform-origin: center;
+    background: radial-gradient(circle, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0.22) 45%, transparent 72%);
 }
-@media (min-width: 640px) { #bgOval { height: 66vh; } }
-@media (min-width: 768px) { #bgOval { height: 72vh; } }
 
 .hero-visual {
     position: absolute; inset: 0;
@@ -591,7 +590,7 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 <header class="hero" id="top">
     <div class="bg-layer">
         <div class="bg-center"><div id="bgWord">e-GP</div></div>
-        <div class="bg-center"><div id="bgOval"></div></div>
+        <div class="bg-center"><div id="bgGlow"></div></div>
     </div>
 
     <div class="hero-visual">
@@ -1410,7 +1409,6 @@ function generateSignature(){
 // 🧭 เปลือกหน้าเว็บ — hero, แถบนำทาง, เมนู overlay
 // ==========================================================
 const elWord = document.getElementById("bgWord");
-const elOval = document.getElementById("bgOval");
 const hero = document.getElementById("top");
 const mainNav = document.getElementById("mainNav");
 const overlay = document.getElementById("menuOverlay");
