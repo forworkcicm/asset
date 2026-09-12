@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ประชุมตรวจสอบและตรวจนับพัสดุ ประจำปี 2569 (ครั้งที่ 1) | CICM</title>
+<meta name="description" content="หนังสืออิเล็กทรอนิกส์ เอกสารประกอบการประชุมตรวจสอบและตรวจนับพัสดุ ประจำปี 2569 ครั้งที่ 1 งานยุทธศาสตร์และงบประมาณ (พัสดุ) วิทยาลัยแพทยศาสตร์นานาชาติจุฬาภรณ์ มหาวิทยาลัยธรรมศาสตร์">
+<meta property="og:title" content="ประชุมตรวจสอบและตรวจนับพัสดุ ประจำปี 2569 (ครั้งที่ 1)">
+<meta property="og:image" content="pages/slide-01.jpg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Google+Sans+Code:wght@400;500;700&family=Noto+Sans+Thai:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23F16524'/%3E%3Crect x='8' y='9' width='16' height='3' rx='1.5' fill='white'/%3E%3Crect x='8' y='15' width='16' height='3' rx='1.5' fill='white' opacity='.75'/%3E%3Crect x='8' y='21' width='10' height='3' rx='1.5' fill='white' opacity='.5'/%3E%3C/svg%3E">
+<style>
+/* ---------- ตัวแปรสีชุดเดียว (Sunrise) ---------- */
+:root{
+  --hero-top:#FF8233;
+  --hero-bottom:#FDAC55;
+  --accent:#F16524;
+  --accent-deep:#D8531A;
+  --menu-top:#FF6B1A;
+  --menu-bottom:#FF9642;
+  --page-bg:#FFF4EB;
+  --surface:rgba(255,255,255,.92);
+  --surface-2:#FFF7F1;
+  --text:#2B1A10;
+  --text-muted:#8A6A57;
+  --border:rgba(43,26,16,.10);
+  --success:#2F9E5B;
+  --shadow:0 18px 44px rgba(43,26,16,.16);
+  --paper:#FFFDFB;
+  --nav-h:64px;
+  --flip-ms:820ms;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --page-bg:#150E09;
+    --surface:rgba(38,26,19,.92);
+    --surface-2:#211710;
+    --text:#FBEFE6;
+    --text-muted:#C0A28E;
+    --border:rgba(251,239,230,.14);
+    --shadow:0 18px 44px rgba(0,0,0,.55);
+    --paper:#F0E6DD;
+  }
+}
+
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;
+  background:var(--page-bg);
+  color:var(--text);
+  font-family:"Google Sans","Noto Sans Thai",system-ui,-apple-system,"Segoe UI",sans-serif;
+  -webkit-font-smoothing:antialiased;
+  overflow:hidden;
+}
+button{font-family:inherit;color:inherit;cursor:pointer}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+@media (prefers-reduced-motion: reduce){ :root{--flip-ms:1ms} }
+
+/* ---------- แถบนำทางด้านบน ---------- */
+.nav{
+  position:fixed;top:0;left:0;right:0;height:var(--nav-h);z-index:40;
+  display:flex;align-items:center;gap:14px;
+  padding:0 clamp(12px,2.5vw,26px);
+  background:linear-gradient(100deg,var(--hero-top),var(--hero-bottom));
+  color:#fff;box-shadow:0 6px 20px rgba(43,26,16,.16);
+}
+.brand{display:flex;align-items:center;gap:10px;min-width:0}
+.dots{display:grid;grid-template-columns:repeat(2,7px);gap:4px;flex:none}
+.dots i{width:7px;height:7px;border-radius:50%;background:#fff;display:block}
+.dots i:nth-child(2){opacity:.75}
+.dots i:nth-child(3){opacity:.55}
+.dots i:nth-child(4){opacity:.35}
+.brand-text{min-width:0}
+.brand-text b{display:block;font-size:15px;font-weight:700;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.brand-text span{display:block;font-size:11.5px;opacity:.85;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nav-spacer{flex:1}
+.pill{
+  display:inline-flex;align-items:center;gap:7px;
+  height:38px;padding:0 16px;border-radius:9999px;border:0;
+  background:rgba(255,255,255,.96);color:var(--accent-deep);
+  font-size:14px;font-weight:500;text-decoration:none;white-space:nowrap;
+  transition:transform .18s ease, box-shadow .18s ease;
+}
+.pill:hover{transform:translateY(-1px);box-shadow:0 8px 18px rgba(43,26,16,.2)}
+.menu-btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  height:38px;padding:0 16px;border-radius:9999px;border:0;
+  background:var(--accent-deep);color:#fff;font-size:14px;font-weight:500;
+}
+.hide-sm{display:inline-flex}
+
+/* ---------- เวทีหนังสือ ---------- */
+.stage{
+  position:relative;height:100dvh;
+  padding:calc(var(--nav-h) + 14px) clamp(58px,5vw,86px) 92px;
+  display:flex;align-items:center;justify-content:center;
+}
+.rotor{position:relative;width:100%;display:flex;justify-content:center;align-items:center}
+
+/* กล่องหนังสือ — โหมดกางสองหน้า */
+.book{
+  position:relative;
+  width:min(100%, calc((100dvh - var(--nav-h) - 120px) * 32 / 9));
+  aspect-ratio:32/9;
+  perspective:2800px;
+  perspective-origin:50% 45%;
+  touch-action:none;
+  cursor:pointer;
+}
+.book.single{
+  width:min(100%, calc((100dvh - var(--nav-h) - 120px) * 16 / 9));
+  aspect-ratio:16/9;
+}
+/* กระดาษพื้นใต้เล่ม + เงาเล่ม */
+.book::before{
+  content:"";position:absolute;inset:0;border-radius:6px;
+  background:var(--paper);
+  box-shadow:0 22px 44px rgba(43,26,16,.30), inset 0 0 0 1px var(--border);
+}
+/* เงาสันหนังสือกลางเล่ม */
+.book::after{
+  content:"";position:absolute;top:0;bottom:0;left:50%;width:60px;
+  transform:translateX(-50%);pointer-events:none;z-index:30;
+  background:linear-gradient(to right,rgba(0,0,0,0),rgba(0,0,0,.22),rgba(0,0,0,.05),rgba(0,0,0,.22),rgba(0,0,0,0));
+}
+.book.single::after{display:none}
+
+/* ---------- แผ่นกระดาษแต่ละใบ ---------- */
+.leaf{
+  position:absolute;top:0;right:0;width:50%;height:100%;
+  transform-origin:left center;
+  transform-style:preserve-3d;
+  transition:transform var(--flip-ms) cubic-bezier(.36,.14,.26,1);
+  will-change:transform;
+}
+.book.single .leaf{width:100%}
+.leaf.flipped{transform:rotateY(-180deg)}
+/* โหมดหน้าเดียว: แผ่นที่พลิกไปแล้วจางหายเมื่อพลิกจบ */
+.book.single .leaf{opacity:1;transition:transform var(--flip-ms) cubic-bezier(.36,.14,.26,1), opacity .1s linear}
+.book.single .leaf.flipped{opacity:0;transition:transform var(--flip-ms) cubic-bezier(.36,.14,.26,1), opacity .18s linear calc(var(--flip-ms) - 120ms)}
+
+.face{
+  position:absolute;inset:0;overflow:hidden;
+  backface-visibility:hidden;-webkit-backface-visibility:hidden;
+  background:var(--paper);
+}
+.face.back{transform:rotateY(180deg)}
+.face img{width:100%;height:100%;display:block;object-fit:contain;background:#fff;user-select:none}
+.face.blank{background:var(--paper)}
+.face.blank::after{
+  content:"";position:absolute;inset:0;
+  background:repeating-linear-gradient(115deg,rgba(43,26,16,.035) 0 14px,transparent 14px 28px);
+}
+.face::before{
+  content:"";position:absolute;inset:0;pointer-events:none;z-index:3;
+  box-shadow:inset 0 0 0 1px rgba(43,26,16,.08);
+}
+/* เงาไล่ระดับตอนพลิก */
+.shade{position:absolute;inset:0;pointer-events:none;z-index:4;transition:opacity var(--flip-ms) ease}
+.front .shade{background:linear-gradient(to left,rgba(0,0,0,.45),rgba(0,0,0,.14) 38%,rgba(0,0,0,0) 72%);opacity:0}
+.back  .shade{background:linear-gradient(to right,rgba(0,0,0,.45),rgba(0,0,0,.14) 38%,rgba(0,0,0,0) 72%);opacity:.9}
+.leaf.flipped .front .shade{opacity:.85}
+.leaf.flipped .back .shade{opacity:0}
+/* มุมกระดาษพับ ชวนให้ลากพลิก */
+.corner{
+  position:absolute;right:0;bottom:0;width:54px;height:54px;z-index:5;
+  background:linear-gradient(315deg,rgba(43,26,16,.22),rgba(43,26,16,.05) 45%,rgba(43,26,16,0) 62%);
+  opacity:0;transition:opacity .25s ease;pointer-events:none;
+}
+.book:hover .leaf.top .front .corner{opacity:1}
+
+/* ปุ่มเลื่อนซ้าย-ขวา */
+.arrow{
+  position:absolute;top:50%;z-index:36;
+  width:46px;height:46px;border-radius:50%;border:1px solid var(--border);
+  background:var(--surface);backdrop-filter:blur(8px);
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 8px 20px rgba(43,26,16,.18);
+  transition:opacity .18s ease;
+}
+.arrow[disabled]{opacity:.28;cursor:not-allowed}
+.arrow.prev{left:0;transform:translate(-115%,-50%)}
+.arrow.next{right:0;transform:translate(115%,-50%)}
+
+/* ลิงก์แทนการสแกน QR */
+.qr-link{
+  position:absolute;left:50%;bottom:7%;transform:translateX(-50%);z-index:6;
+  display:inline-flex;align-items:center;gap:6px;
+  height:clamp(26px,3.2vw,38px);padding:0 clamp(9px,1.3vw,18px);border-radius:9999px;
+  background:var(--accent);color:#fff;text-decoration:none;
+  font-size:clamp(9.5px,1vw,14px);font-weight:500;white-space:nowrap;
+  box-shadow:0 10px 24px rgba(241,101,36,.45);
+}
+
+/* ---------- แถบควบคุมด้านล่าง ---------- */
+.dock{
+  position:fixed;left:50%;bottom:16px;transform:translateX(-50%);z-index:38;
+  display:flex;align-items:center;gap:6px;
+  padding:7px 10px;border-radius:9999px;
+  background:var(--surface);backdrop-filter:blur(10px);
+  border:1px solid var(--border);box-shadow:var(--shadow);
+  max-width:calc(100vw - 20px);
+}
+.dock button{
+  width:38px;height:38px;border-radius:50%;border:0;background:transparent;
+  display:flex;align-items:center;justify-content:center;flex:none;
+  transition:background .15s ease;
+}
+.dock button:hover{background:var(--surface-2)}
+.dock button[disabled]{opacity:.3;cursor:not-allowed}
+.dock button.on{background:var(--accent);color:#fff}
+.dock .counter{
+  font-family:"Google Sans Code","Google Sans",monospace;
+  font-size:14px;font-variant-numeric:tabular-nums;
+  padding:0 10px;white-space:nowrap;color:var(--text-muted);
+}
+.dock .counter b{color:var(--text);font-weight:700}
+.dock .sep{width:1px;height:24px;background:var(--border);flex:none;margin:0 2px}
+.dock .title{
+  font-size:13.5px;color:var(--text-muted);max-width:28vw;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:0 6px;
+}
+
+/* ---------- แถบภาพย่อ ---------- */
+.thumbs{
+  position:fixed;left:0;right:0;bottom:0;z-index:37;
+  padding:14px 14px 78px;
+  background:linear-gradient(to top,var(--page-bg) 62%,transparent);
+  display:flex;gap:10px;overflow-x:auto;overflow-y:hidden;
+  transform:translateY(115%);transition:transform .38s cubic-bezier(.16,1,.3,1);
+  scrollbar-width:thin;
+}
+.thumbs.open{transform:translateY(0)}
+.thumbs button{
+  flex:none;width:148px;padding:0;border:2px solid transparent;border-radius:12px;
+  overflow:hidden;background:#fff;box-shadow:0 6px 14px rgba(43,26,16,.14);
+  transition:transform .18s ease,border-color .18s ease;
+}
+.thumbs button:hover{transform:translateY(-3px)}
+.thumbs button.active{border-color:var(--accent)}
+.thumbs img{width:100%;display:block;aspect-ratio:16/9;object-fit:cover}
+
+/* ---------- เมนู overlay ---------- */
+.scrim{
+  position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.4);backdrop-filter:blur(3px);
+  opacity:0;pointer-events:none;transition:opacity .4s ease;
+}
+.scrim.open{opacity:1;pointer-events:auto}
+.drawer{
+  position:fixed;top:0;right:0;bottom:0;width:min(420px,88vw);z-index:60;
+  background:linear-gradient(160deg,var(--menu-top),var(--menu-bottom));
+  color:#fff;padding:22px 22px 30px;overflow-y:auto;
+  transform:translateX(100%);transition:transform .5s cubic-bezier(.16,1,.3,1);
+  box-shadow:-18px 0 50px rgba(0,0,0,.28);
+}
+.drawer.open{transform:translateX(0)}
+.drawer-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.drawer-head h2{font-size:20px;margin:0;font-weight:700}
+.drawer-head button{background:rgba(255,255,255,.2);border:0;border-radius:50%;width:38px;height:38px;display:flex;align-items:center;justify-content:center;color:#fff}
+.drawer p.sub{margin:0 0 16px;font-size:13px;opacity:.9}
+.toc{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.toc li{opacity:0;transform:translateX(18px);transition:opacity .4s ease,transform .4s ease}
+.drawer.open .toc li{opacity:1;transform:none}
+.toc button{
+  width:100%;display:flex;align-items:flex-start;gap:12px;text-align:left;
+  background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.22);
+  border-radius:16px;padding:11px 14px;color:#fff;font-size:14.5px;line-height:1.4;
+  transition:background .18s ease;
+}
+.toc button:hover{background:rgba(255,255,255,.26)}
+.toc button.active{background:#fff;color:var(--accent-deep);border-color:#fff;font-weight:500}
+.toc .num{
+  font-family:"Google Sans Code","Google Sans",monospace;font-size:12.5px;
+  flex:none;min-width:24px;height:24px;border-radius:8px;
+  background:rgba(255,255,255,.28);display:flex;align-items:center;justify-content:center;
+}
+.toc button.active .num{background:var(--accent);color:#fff}
+.drawer .foot{margin-top:20px;font-size:12.5px;opacity:.9;line-height:1.6;border-top:1px solid rgba(255,255,255,.26);padding-top:14px}
+.drawer .foot a{color:#fff}
+
+/* ---------- ฮินต์ ---------- */
+.hint{
+  position:fixed;left:50%;bottom:74px;transform:translateX(-50%);z-index:35;
+  font-size:12.5px;color:var(--text-muted);background:var(--surface);
+  border:1px solid var(--border);border-radius:9999px;padding:5px 14px;
+  box-shadow:0 6px 16px rgba(43,26,16,.12);
+  transition:opacity .5s ease;
+}
+.hint.gone{opacity:0;pointer-events:none}
+
+/* ---------- โหมดหมุนจอ (มือถือแนวตั้ง) ---------- */
+body.rotated{background:#0d0906}
+body.rotated .nav,
+body.rotated .dock,
+body.rotated .hint,
+body.rotated .thumbs,
+body.rotated .arrow{display:none}
+body.rotated .stage{padding:0}
+body.rotated .rotor{
+  position:fixed;left:50%;top:50%;z-index:35;
+  width:min(100dvh, calc(100vw * 16 / 9));
+  transform:translate(-50%,-50%) rotate(90deg);
+}
+body.rotated .book{width:100%}
+.exit-rot{
+  display:none;position:fixed;top:12px;right:12px;z-index:45;
+  height:38px;padding:0 15px;border-radius:9999px;border:0;
+  background:var(--surface);color:var(--text);font-size:13.5px;
+  align-items:center;gap:7px;box-shadow:var(--shadow);
+}
+body.rotated .exit-rot{display:inline-flex}
+#rotBtn{display:none}
+@media (max-width:900px) and (orientation:portrait){ #rotBtn{display:flex} }
+
+@media (max-width:760px){
+  :root{--nav-h:58px}
+  .hide-sm{display:none}
+  .dock .title{display:none}
+  .arrow{width:40px;height:40px}
+  .arrow.prev{transform:translate(-8%,-50%)}
+  .arrow.next{transform:translate(8%,-50%)}
+  .stage{padding-left:8px;padding-right:8px}
+  .thumbs button{width:118px}
+}
+</style>
+</head>
+<body>
+
+<!-- ============ แถบนำทาง ============ -->
+<header class="nav">
+  <div class="brand">
+    <span class="dots" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+    <span class="brand-text">
+      <b>ตรวจสอบและตรวจนับพัสดุ ประจำปี 2569</b>
+      <span>งานยุทธศาสตร์และงบประมาณ (พัสดุ) · CICM มธ.</span>
+    </span>
+  </div>
+  <div class="nav-spacer"></div>
+  <a class="pill hide-sm" href="inventory-2569.pdf" download>
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+    ดาวน์โหลด PDF
+  </a>
+  <button class="menu-btn" id="menuOpen" aria-haspopup="dialog">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></svg>
+    สารบัญ
+  </button>
+</header>
+
+<!-- ============ เวทีหนังสือ ============ -->
+<main class="stage">
+ <div class="rotor" id="rotor">
+  <button class="arrow prev" id="prevBtn" aria-label="พลิกกลับหน้าก่อน">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+  </button>
+
+  <div class="book" id="book"></div>
+
+  <button class="arrow next" id="nextBtn" aria-label="พลิกไปหน้าถัดไป">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+  </button>
+ </div>
+</main>
+
+<button class="exit-rot" id="exitRot">
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg>
+  ออกจากโหมดเต็มจอ
+</button>
+
+<div class="hint" id="hint">ลากมุมกระดาษเพื่อพลิกหน้า หรือกดลูกศร ← →</div>
+
+<!-- ============ แถบภาพย่อ ============ -->
+<nav class="thumbs" id="thumbs" aria-label="ภาพย่อทุกหน้า"></nav>
+
+<!-- ============ แถบควบคุม ============ -->
+<div class="dock">
+  <button id="dockPrev" aria-label="พลิกกลับหน้าก่อน">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+  </button>
+  <span class="counter" id="counter"></span>
+  <button id="dockNext" aria-label="พลิกไปหน้าถัดไป">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+  </button>
+  <span class="sep"></span>
+  <span class="title" id="dockTitle"></span>
+  <span class="sep"></span>
+  <button id="modeBtn" aria-label="สลับมุมมองหนังสือสองหน้า / หน้าเดียว">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v15"/><path d="M3 6.5a14 14 0 0 1 9-1.5 14 14 0 0 1 9 1.5V19a14 14 0 0 0-9-1.5A14 14 0 0 0 3 19z"/></svg>
+  </button>
+  <button id="thumbBtn" aria-label="แสดงภาพย่อทุกหน้า">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="7" height="6" rx="1"/><rect x="14" y="4" width="7" height="6" rx="1"/><rect x="3" y="14" width="7" height="6" rx="1"/><rect x="14" y="14" width="7" height="6" rx="1"/></svg>
+  </button>
+  <button id="rotBtn" aria-label="ดูเต็มจอแบบหมุนจอ">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="10" height="20" rx="2"/><path d="M17 10a5 5 0 0 1 0 4"/><path d="M20 8a8 8 0 0 1 0 8"/></svg>
+  </button>
+  <button id="fsBtn" aria-label="เต็มจอ">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M16 3h3a2 2 0 0 1 2 2v3"/><path d="M8 21H5a2 2 0 0 1-2-2v-3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></svg>
+  </button>
+</div>
+
+<!-- ============ เมนู overlay ============ -->
+<div class="scrim" id="scrim"></div>
+<aside class="drawer" id="drawer" role="dialog" aria-modal="true" aria-label="สารบัญ">
+  <div class="drawer-head">
+    <h2>สารบัญ</h2>
+    <button id="menuClose" aria-label="ปิดเมนู">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg>
+    </button>
+  </div>
+  <p class="sub">ประชุมตรวจสอบและตรวจนับพัสดุ ประจำปี 2569 (ครั้งที่ 1) · 14 กันยายน 2569</p>
+  <ul class="toc" id="toc"></ul>
+  <div class="foot">
+    งานยุทธศาสตร์และงบประมาณ (พัสดุ)<br>
+    วิทยาลัยแพทยศาสตร์นานาชาติจุฬาภรณ์ มหาวิทยาลัยธรรมศาสตร์<br>
+    <a href="inventory-2569.pdf" download>ดาวน์โหลดไฟล์ PDF ต้นฉบับ</a>
+  </div>
+</aside>
+
+<script>
+/* ================= ข้อมูลหน้าทั้งหมด ================= */
+const PAGES = [
+  {file:"slide-01.jpg", title:"ปก — ประชุมตรวจสอบและตรวจนับพัสดุ ประจำปี 2569"},
+  {file:"slide-02.jpg", title:"การตรวจสอบพัสดุประจำปี (ระเบียบฯ ข้อ 213)"},
+  {file:"slide-03.jpg", title:"ขั้นตอนการตรวจสอบพัสดุประจำปี (ข้อ 213–214)"},
+  {file:"slide-04.jpg", title:"พัสดุชำรุด เสื่อมสภาพ หรือสูญไป (ข้อ 214)"},
+  {file:"slide-05.jpg", title:"การจำหน่ายพัสดุ (ข้อ 215 และ 217)"},
+  {file:"slide-06.jpg", title:"ขั้นตอนการดำเนินการและกำหนดการ"},
+  {file:"slide-07.jpg", title:"วิธีใช้ระบบ ขั้นที่ 1–3 เข้าระบบ เลือกเมนู ค้นหาครุภัณฑ์"},
+  {file:"slide-08.jpg", title:"วิธีใช้ระบบ ขั้นที่ 4–5 บันทึกผลและดูรายละเอียด"},
+  {file:"slide-09.jpg", title:"รายการตรวจนับและรายชื่อคณะกรรมการ"},
+  {file:"slide-10.jpg", title:"QR เอกสารตรวจนับพัสดุ ประจำปี 2569"},
+  {file:"slide-11.jpg", title:"ปิดท้าย — CICM Thammasat University"}
+];
+const N = PAGES.length;
+const QR_PAGE = 10;
+const QR_URL = "https://tuipied-my.sharepoint.com/:f:/g/personal/bussakor_tu_ac_th/IgDw3ueRir2cRZkmTpzMfCZQAUEcuvsXiEuIlwVj5K1Et-Q?e=WyIa80";
+const FLIP_MS = 820;
+
+const $ = id => document.getElementById(id);
+const book = $("book"), thumbs = $("thumbs"), toc = $("toc");
+
+let mode = "book";      /* book = กางสองหน้า, single = ทีละหน้า */
+let userMode = null;    /* ถ้าผู้ใช้เลือกเอง จะไม่สลับอัตโนมัติอีก */
+let leaves = [];
+let flipped = 0;        /* จำนวนแผ่นที่พลิกไปแล้ว */
+let busy = false;
+
+/* ================= สร้างหน้ากระดาษ ================= */
+function faceEl(kind, pageNo){
+  const f = document.createElement("div");
+  f.className = "face " + kind + (pageNo ? "" : " blank");
+  if (pageNo){
+    const img = document.createElement("img");
+    img.src = "pages/" + PAGES[pageNo - 1].file;
+    img.alt = "หน้าที่ " + pageNo + ": " + PAGES[pageNo - 1].title;
+    img.draggable = false;
+    f.appendChild(img);
+    if (pageNo === QR_PAGE){
+      const a = document.createElement("a");
+      a.className = "qr-link"; a.href = QR_URL; a.target = "_blank"; a.rel = "noopener";
+      a.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><line x1="14" y1="14" x2="21" y2="21"/></svg> เปิดโฟลเดอร์เอกสารแทนการสแกน QR';
+      f.appendChild(a);
+    }
+  }
+  const sh = document.createElement("div"); sh.className = "shade"; f.appendChild(sh);
+  const co = document.createElement("div"); co.className = "corner"; f.appendChild(co);
+  return f;
+}
+
+function build(){
+  book.innerHTML = "";
+  book.classList.toggle("single", mode === "single");
+  leaves = [];
+  const count = mode === "book" ? Math.ceil(N / 2) : N;
+  for (let k = 0; k < count; k++){
+    const leaf = document.createElement("div");
+    leaf.className = "leaf";
+    if (mode === "book"){
+      leaf.appendChild(faceEl("front", 2 * k + 1));                        /* หน้าคี่อยู่ขวา */
+      leaf.appendChild(faceEl("back", 2 * k + 2 <= N ? 2 * k + 2 : 0));    /* หน้าคู่อยู่ซ้าย */
+    } else {
+      leaf.appendChild(faceEl("front", k + 1));
+      leaf.appendChild(faceEl("back", 0));                                 /* หลังกระดาษเปล่า */
+    }
+    book.appendChild(leaf);
+    leaves.push(leaf);
+  }
+}
+
+/* ================= สถานะและลำดับชั้นกระดาษ ================= */
+function applyState(){
+  leaves.forEach((lf, k) => {
+    const isFlipped = k < flipped;
+    lf.classList.toggle("flipped", isFlipped);
+    lf.classList.toggle("top", k === flipped);
+    lf.style.zIndex = isFlipped ? (k + 1) : (leaves.length - k);
+  });
+  updateUI();
+}
+
+function visiblePages(){
+  if (mode === "single") return [Math.min(flipped + 1, N)];
+  const left = 2 * flipped, right = 2 * flipped + 1, v = [];
+  if (left >= 1 && left <= N) v.push(left);
+  if (right >= 1 && right <= N) v.push(right);
+  return v.length ? v : [N];
+}
+
+function updateUI(){
+  const vis = visiblePages();
+  const main = vis[vis.length - 1];
+  $("counter").innerHTML = "<b>" + (vis.length > 1 ? vis[0] + "–" + vis[1] : vis[0]) + "</b> / " + N;
+  $("dockTitle").textContent = PAGES[main - 1].title;
+
+  const atStart = flipped <= 0, atEnd = flipped >= leaves.length;
+  [$("prevBtn"), $("dockPrev")].forEach(b => b.disabled = atStart);
+  [$("nextBtn"), $("dockNext")].forEach(b => b.disabled = atEnd);
+
+  thumbs.querySelectorAll("button").forEach((b, i) => b.classList.toggle("active", vis.includes(i + 1)));
+  toc.querySelectorAll("button").forEach((b, i) => b.classList.toggle("active", vis.includes(i + 1)));
+
+  if (location.hash !== "#p" + main) history.replaceState(null, "", "#p" + main);
+  const at = thumbs.querySelector("button.active");
+  if (at) at.scrollIntoView({block:"nearest", inline:"center", behavior:"smooth"});
+}
+
+/* ================= การพลิกหน้า ================= */
+function flipTo(target){
+  target = Math.max(0, Math.min(target, leaves.length));
+  if (target === flipped || busy) return;
+  const dir = target > flipped ? 1 : -1;
+  const steps = Math.abs(target - flipped);
+  busy = true;
+
+  /* ข้ามหลายหน้าจะพลิกไล่กันทีละแผ่นให้เห็นกระดาษไหลต่อเนื่อง */
+  const gap = steps > 1 ? Math.max(90, 250 - steps * 20) : 0;
+  for (let s = 0; s < steps; s++){
+    setTimeout(() => {
+      const k = dir === 1 ? flipped : flipped - 1;
+      const lf = leaves[k];
+      lf.style.zIndex = leaves.length + 5;       /* แผ่นที่กำลังพลิกอยู่บนสุด */
+      flipped += dir;
+      lf.classList.toggle("flipped", dir === 1);
+      updateUI();
+    }, s * gap);
+  }
+  setTimeout(() => { busy = false; applyState(); }, (steps - 1) * gap + FLIP_MS + 40);
+}
+const next = () => flipTo(flipped + 1);
+const prev = () => flipTo(flipped - 1);
+function go(p){
+  p = Math.max(1, Math.min(p, N));
+  flipTo(mode === "book" ? Math.floor(p / 2) : p - 1);
+}
+
+/* ================= ภาพย่อและสารบัญ ================= */
+PAGES.forEach((p, i) => {
+  const n = i + 1;
+  const tb = document.createElement("button");
+  tb.innerHTML = '<img src="thumbs/' + p.file + '" alt="หน้าที่ ' + n + '" loading="lazy">';
+  tb.title = n + ". " + p.title;
+  tb.onclick = () => go(n);
+  thumbs.appendChild(tb);
+
+  const li = document.createElement("li");
+  li.style.transitionDelay = "0ms";
+  const b = document.createElement("button");
+  b.innerHTML = '<span class="num">' + n + '</span><span>' + p.title + '</span>';
+  b.onclick = () => { go(n); closeMenu(); };
+  li.appendChild(b);
+  toc.appendChild(li);
+});
+
+/* ================= ลากมุมกระดาษเพื่อพลิก ================= */
+let drag = null;
+book.addEventListener("pointerdown", e => {
+  if (busy || document.body.classList.contains("rotated")) return;
+  if (e.target.closest("a")) return;
+  const r = book.getBoundingClientRect();
+  const rel = (e.clientX - r.left) / r.width;
+  const edge = mode === "book" ? 0.5 : 0.35;
+  let dir = 0, k = -1;
+  if (rel > edge && flipped < leaves.length){ dir = 1; k = flipped; }
+  else if (rel <= edge && flipped > 0){ dir = -1; k = flipped - 1; }
+  if (!dir) return;
+
+  const lf = leaves[k];
+  drag = {lf:lf, dir:dir, x0:e.clientX, pageW:(mode === "book" ? r.width / 2 : r.width), prog:0};
+  lf.style.zIndex = leaves.length + 5;
+  lf.style.transition = "none";
+  book.setPointerCapture(e.pointerId);
+});
+
+book.addEventListener("pointermove", e => {
+  if (!drag) return;
+  const d = drag.dir === 1 ? (drag.x0 - e.clientX) : (e.clientX - drag.x0);
+  const prog = Math.max(0, Math.min(1, d / drag.pageW));
+  drag.prog = prog;
+  const angle = drag.dir === 1 ? -180 * prog : -180 * (1 - prog);
+  drag.lf.style.transform = "rotateY(" + angle + "deg)";
+  /* ไล่เงาตามมุมกระดาษให้เหมือนแสงตกกระทบจริง */
+  const p2 = drag.dir === 1 ? prog : 1 - prog;
+  const fs = drag.lf.querySelector(".front .shade"), bs = drag.lf.querySelector(".back .shade");
+  if (fs){ fs.style.transition = "none"; fs.style.opacity = (p2 * 0.85).toFixed(2); }
+  if (bs){ bs.style.transition = "none"; bs.style.opacity = ((1 - p2) * 0.9).toFixed(2); }
+});
+
+function endDrag(){
+  if (!drag) return;
+  const lf = drag.lf, dir = drag.dir, prog = drag.prog;
+  lf.style.transition = ""; lf.style.transform = "";
+  [lf.querySelector(".front .shade"), lf.querySelector(".back .shade")].forEach(s => {
+    if (s){ s.style.transition = ""; s.style.opacity = ""; }
+  });
+  drag = null;
+  if (prog > 0.28) flipTo(flipped + dir);
+  else { applyState(); setTimeout(() => { lf.style.zIndex = ""; applyState(); }, FLIP_MS); }
+}
+book.addEventListener("pointerup", endDrag);
+book.addEventListener("pointercancel", endDrag);
+
+/* คลิกบนกระดาษ (ไม่ได้ลาก) ให้พลิกตามฝั่งที่คลิก */
+book.addEventListener("click", e => {
+  if (e.target.closest("a")) return;
+  const r = book.getBoundingClientRect();
+  const rel = (e.clientX - r.left) / r.width;
+  (rel > (mode === "book" ? 0.5 : 0.35)) ? next() : prev();
+});
+
+/* ================= ปุ่มต่าง ๆ ================= */
+$("prevBtn").onclick = $("dockPrev").onclick = prev;
+$("nextBtn").onclick = $("dockNext").onclick = next;
+$("thumbBtn").onclick = () => thumbs.classList.toggle("open");
+$("fsBtn").onclick = () => {
+  if (document.fullscreenElement) document.exitFullscreen();
+  else if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen();
+};
+$("rotBtn").onclick = () => { document.body.classList.add("rotated"); thumbs.classList.remove("open"); };
+$("exitRot").onclick = () => document.body.classList.remove("rotated");
+
+function rebuild(keepPage){
+  build();
+  flipped = mode === "book" ? Math.floor(keepPage / 2) : keepPage - 1;
+  flipped = Math.max(0, Math.min(flipped, leaves.length));
+  applyState();
+}
+$("modeBtn").onclick = () => {
+  const keep = visiblePages()[0];
+  mode = userMode = (mode === "book" ? "single" : "book");
+  $("modeBtn").classList.toggle("on", mode === "single");
+  rebuild(keep);
+};
+
+/* เลือกโหมดอัตโนมัติตามขนาดจอ ถ้าผู้ใช้ยังไม่ได้กดเลือกเอง */
+function autoMode(){
+  if (userMode) return;
+  const want = (innerWidth >= 1000 && innerWidth > innerHeight) ? "book" : "single";
+  if (want !== mode){ const keep = visiblePages()[0]; mode = want; rebuild(keep); }
+}
+addEventListener("resize", () => {
+  if (innerWidth > innerHeight) document.body.classList.remove("rotated");
+  autoMode();
+});
+
+/* ================= เมนู overlay ================= */
+function openMenu(){
+  $("drawer").classList.add("open"); $("scrim").classList.add("open");
+  toc.querySelectorAll("li").forEach((li, i) => li.style.transitionDelay = (150 + i * 60) + "ms");
+  $("menuClose").focus();
+}
+function closeMenu(){
+  $("drawer").classList.remove("open"); $("scrim").classList.remove("open");
+  toc.querySelectorAll("li").forEach(li => li.style.transitionDelay = "0ms");
+}
+$("menuOpen").onclick = openMenu;
+$("menuClose").onclick = closeMenu;
+$("scrim").onclick = closeMenu;
+
+/* ================= คีย์บอร์ด ================= */
+addEventListener("keydown", e => {
+  if (e.key === "Escape"){ closeMenu(); thumbs.classList.remove("open"); return; }
+  if (e.key === "ArrowRight" || e.key === "PageDown" || e.key === " "){ e.preventDefault(); next(); }
+  else if (e.key === "ArrowLeft" || e.key === "PageUp"){ e.preventDefault(); prev(); }
+  else if (e.key === "Home") flipTo(0);
+  else if (e.key === "End") flipTo(leaves.length);
+  else if (e.key === "f" || e.key === "F") $("fsBtn").click();
+  else if (e.key === "t" || e.key === "T") thumbs.classList.toggle("open");
+  else if (e.key === "b" || e.key === "B") $("modeBtn").click();
+});
+
+/* ================= เริ่มต้น ================= */
+mode = (innerWidth >= 1000 && innerWidth > innerHeight) ? "book" : "single";
+build();
+const start = parseInt((location.hash.match(/\d+/) || [1])[0], 10) || 1;
+flipped = mode === "book" ? Math.floor(start / 2) : start - 1;
+flipped = Math.max(0, Math.min(flipped, leaves.length));
+applyState();
+setTimeout(() => $("hint").classList.add("gone"), 7000);
+</script>
+</body>
+</html>
