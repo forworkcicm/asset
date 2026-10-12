@@ -3,180 +3,137 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Pivot ตรวจนับครุภัณฑ์ CICM</title>
+<title>รายงานความคืบหน้าการตรวจนับทรัพย์สิน CICM</title>
+
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Google+Sans+Code:wght@400;500&family=Noto+Sans+Thai:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
 <style>
-/* โครง: แถบหัวส้มแบบ Sunrise (ย่อ) → การ์ดอัปโหลด → ตัวเลขสรุป → ตาราง pivot แบบยุบ/ขยายได้ */
-:root{
-  --hero-top:#FF8233; --hero-bottom:#FDAC55;
-  --accent:#F16524; --accent-deep:#D8531A; --on-accent:#FFFFFF;
-  --page-bg:#FFF4EB; --surface:#FFFFFF; --surface-2:#FFF7F1;
-  --text:#2B1A10; --text-muted:#8A6A57; --border:rgba(43,26,16,.12);
-  --band:#FFE4D1; --band-line:#F4B183; --grid:rgba(43,26,16,.18);
-  --success:#2F9E5B; --warn:#B7791F; --danger:#C2412D;
-  --cell-ink:#2B1A10; --overlay:rgba(0,0,0,.4);
-  --font:'Google Sans','Noto Sans Thai',system-ui,-apple-system,'Segoe UI',sans-serif;
-  --mono:'Google Sans Code','Google Sans','Noto Sans Thai',ui-monospace,monospace;
-}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
-  --accent:#FF8A4C; --accent-deep:#FF9F6B; --on-accent:#2B1A10;
-  --page-bg:#1C120C; --surface:#271A12; --surface-2:#2F2017;
-  --text:#FBEDE2; --text-muted:#C2A18D; --border:rgba(251,237,226,.14);
-  --band:#4A2B1B; --band-line:#B8683A; --grid:rgba(251,237,226,.2);
-  --success:#59C98A; --warn:#E3B04B; --danger:#FF8A78; --overlay:rgba(0,0,0,.6);
-  color-scheme:dark}}
-:root[data-theme="dark"]{
-  --accent:#FF8A4C; --accent-deep:#FF9F6B; --on-accent:#2B1A10;
-  --page-bg:#1C120C; --surface:#271A12; --surface-2:#2F2017;
-  --text:#FBEDE2; --text-muted:#C2A18D; --border:rgba(251,237,226,.14);
-  --band:#4A2B1B; --band-line:#B8683A; --grid:rgba(251,237,226,.2);
-  --success:#59C98A; --warn:#E3B04B; --danger:#FF8A78; --overlay:rgba(0,0,0,.6);
-  color-scheme:dark}
-
+:root{--navy:#173b67;--navy-deep:#0f2c4f;--blue:#2563a9;--blue-soft:#eef5ff;--blue-line:#cfe0f5;--page:#f4f7fb;--card:#fff;--text:#1f2a37;--muted:#667085;--line:#e3e9f1;--green:#238636;--orange:#d97706;--red:#c62828;--track:#e6ecf4;--overlay:rgba(15,44,79,.45);--font:'Sarabun',system-ui,-apple-system,'Segoe UI',sans-serif;color-scheme:light}
 *{box-sizing:border-box}
-html{color-scheme:light}
-body{margin:0}
-body{background:var(--page-bg);color:var(--text);font-family:var(--font);font-size:15px;line-height:1.55;padding-inline:16px}
-button,input,select{font:inherit;color:inherit}
-svg.i{width:1.1em;height:1.1em;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
-:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
-
-.hero{margin-inline:-16px;padding:28px 16px 84px;background:linear-gradient(180deg,var(--hero-top),var(--hero-bottom));color:#fff}
-.hero-in{max-width:1200px;margin:0 auto;display:flex;gap:16px;align-items:flex-start;justify-content:space-between;flex-wrap:wrap}
-.brand{display:flex;gap:12px;align-items:center}
-.dots{display:grid;grid-template-columns:repeat(2,9px);gap:4px}
-.dots i{width:9px;height:9px;border-radius:50%;background:#fff;display:block}
-.brand b{font-weight:700;letter-spacing:.02em}
-h1{margin:14px 0 6px;font-size:clamp(26px,5vw,40px);line-height:1.15;font-weight:700;text-wrap:balance}
-.hero p{margin:0;max-width:60ch;opacity:.95}
-.theme{background:rgba(255,255,255,.22);border:0;color:#fff;border-radius:9999px;padding:8px 16px;cursor:pointer}
-
-main{max-width:1200px;margin:-56px auto 56px;display:grid;gap:20px}
-.card{background:var(--surface);border:1px solid var(--border);border-radius:28px;padding:22px;min-width:0}
-.card h2{margin:0 0 4px;font-size:18px}
-.muted{color:var(--text-muted)}
-.small{font-size:13px}
-
-.drop{display:flex;gap:16px;align-items:center;flex-wrap:wrap;border:2px dashed var(--band-line);border-radius:20px;padding:18px;background:var(--surface-2);transition:background .2s,border-color .2s}
-.drop.over{border-color:var(--accent);background:var(--band)}
-.drop-ic{width:48px;height:48px;border-radius:50%;background:var(--accent);color:var(--on-accent);display:grid;place-items:center}
-.drop-ic svg{width:22px;height:22px}
-.drop-t{flex:1 1 260px;min-width:0}
-.drop-t b{display:block}
-.btn{display:inline-flex;gap:8px;align-items:center;border:0;border-radius:9999px;padding:10px 20px;cursor:pointer;background:var(--accent);color:var(--on-accent);font-weight:500;transition:background .2s}
-.btn:hover{background:var(--accent-deep)}
-.btn.ghost{background:transparent;color:var(--text);border:1px solid var(--border)}
-.btn.ghost:hover{background:var(--band)}
-.live{display:flex;gap:10px 14px;flex-wrap:wrap;align-items:center}
-.live .dot{width:10px;height:10px;border-radius:50%;background:var(--success);box-shadow:0 0 0 0 color-mix(in srgb,var(--success) 60%,transparent);animation:pulse 2s infinite}
-.live .dot.off{background:var(--warn);animation:none}
-@keyframes pulse{70%{box-shadow:0 0 0 8px transparent}100%{box-shadow:0 0 0 0 transparent}}
-.fallback{margin-top:14px}
-.fallback summary{cursor:pointer;color:var(--text-muted);font-size:13px}
-.fallback .drop{margin-top:10px}
-.src{margin-top:14px;display:flex;gap:8px 18px;flex-wrap:wrap;font-size:13px}
-.src span{display:inline-flex;gap:6px;align-items:center}
-.pill{border-radius:9999px;padding:2px 10px;font-size:12px;font-weight:500;background:var(--band)}
-.pill.ok{color:var(--success)} .pill.warn{color:var(--warn)}
-.msg{margin-top:12px;padding:10px 14px;border-radius:14px;background:var(--surface-2);border:1px solid var(--border);font-size:13px}
-.msg.err{border-color:var(--danger);color:var(--danger)}
-
-.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
-.kpi{background:var(--surface-2);border-radius:20px;padding:14px 16px;min-width:0}
-.kpi small{color:var(--text-muted);display:block}
-.kpi b{font-family:var(--mono);font-size:26px;font-weight:500;font-variant-numeric:tabular-nums}
-.bar{height:8px;border-radius:9999px;background:var(--band);overflow:hidden;margin-top:8px}
-.bar i{display:block;height:100%;background:var(--success);width:0;transition:width .4s}
-
-.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
-.chip{border:1px solid var(--border);background:transparent;border-radius:9999px;padding:5px 12px;cursor:pointer;font-size:13px;display:inline-flex;gap:6px;align-items:center}
-.chip[aria-pressed="true"]{background:var(--accent);color:var(--on-accent);border-color:var(--accent)}
-.chip em{font-style:normal;font-family:var(--mono);opacity:.85}
-
-.tools{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:14px 0}
-.search{position:relative;flex:1 1 220px;min-width:0}
-.search svg{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--text-muted)}
-.search input{width:100%;border:1px solid var(--border);background:var(--surface-2);border-radius:14px;padding:10px 14px 10px 40px}
-.search input:focus{border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 30%,transparent);outline:0}
-
-.wrap{overflow:auto;max-height:72vh;border-radius:16px;border:1px solid var(--border)}
-table{border-collapse:separate;border-spacing:0;width:100%;min-width:620px}
-th{position:sticky;top:0;z-index:2;background:var(--band);text-align:right;font-weight:500;padding:10px 12px;white-space:nowrap}
-th:first-child{text-align:left}
-td{padding:7px 12px;border-bottom:1px solid var(--border);text-align:right;font-family:var(--mono);font-variant-numeric:tabular-nums;white-space:nowrap}
-td:first-child{text-align:left;font-family:var(--font);white-space:normal;min-width:240px}
-td+td{border-left:1px solid var(--border)}
-tr.l0 td{background:var(--band);font-weight:700;border-bottom:2px solid var(--band-line)}
-tr.l0 td:first-child{border-left:4px solid var(--accent)}
-tr.l1 td:first-child{padding-left:30px;font-weight:500}
-tr.l2 td:first-child{padding-left:54px}
-tr.tot td{background:var(--band);font-weight:700;position:sticky;bottom:0}
-.lab{display:inline-flex;gap:6px;align-items:center}
-.tg{border:0;background:transparent;cursor:pointer;padding:2px;border-radius:6px;display:inline-grid;place-items:center;color:var(--text-muted)}
-.tg svg{transition:transform .15s}
-.tg[aria-expanded="true"] svg{transform:rotate(90deg)}
-.sp{width:1.1em;display:inline-block}
-.pc{display:flex;gap:6px;align-items:center;justify-content:flex-end;padding:2px 8px;border-radius:6px;color:var(--cell-ink);font-weight:500}
-.pc svg{width:18px;height:18px}
-.go{border:0;background:transparent;color:var(--accent);cursor:pointer;padding:4px 8px;border-radius:8px;font-family:var(--font);font-size:12px;font-weight:500}
-.go:hover{background:var(--band)}
-td.ac,th.ac{text-align:center;padding-inline:6px}
-.empty{padding:32px;text-align:center;color:var(--text-muted)}
-
-.sheet-bg{position:fixed;inset:0;background:var(--overlay);display:none;z-index:50}
-.sheet-bg.on{display:block}
-.sheet{position:fixed;top:0;right:0;bottom:0;width:min(560px,100%);background:var(--surface);z-index:51;transform:translateX(100%);transition:transform .45s cubic-bezier(.16,1,.3,1);display:flex;flex-direction:column;padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--page);color:var(--text);font-family:var(--font);font-size:15px;line-height:1.5}
+button,input{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+.container{max-width:1280px;margin:0 auto;padding:28px 20px 56px}
+.page-header{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap;margin-bottom:20px}
+.page-header h1{margin:0;font-size:clamp(22px,3.4vw,30px);font-weight:700;color:var(--navy);line-height:1.25}
+.page-header p{margin:4px 0 0;color:var(--muted)}
+.header-actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.updated{display:inline-flex;gap:8px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:999px;padding:7px 14px;font-size:13px;color:var(--muted)}
+.updated .dot{width:9px;height:9px;border-radius:50%;background:var(--green);animation:pulse 2s infinite}
+.updated .dot.off{background:var(--orange);animation:none}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(35,134,54,.5)}70%{box-shadow:0 0 0 8px rgba(35,134,54,0)}100%{box-shadow:0 0 0 0 rgba(35,134,54,0)}}
+.btn{display:inline-flex;gap:8px;align-items:center;border:1px solid var(--navy);background:var(--navy);color:#fff;border-radius:10px;padding:9px 16px;cursor:pointer;font-weight:600;transition:background .15s}
+.btn:hover{background:var(--navy-deep)}
+.btn.ghost{background:#fff;color:var(--navy);border-color:var(--blue-line)}
+.btn.ghost:hover{background:var(--blue-soft)}
+.btn:disabled{opacity:.6;cursor:wait}
+.summary-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:16px;margin-bottom:20px}
+.summary-card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px 20px;box-shadow:0 1px 2px rgba(23,59,103,.05);display:flex;gap:14px;align-items:center;min-width:0}
+.summary-icon{width:46px;height:46px;border-radius:12px;display:grid;place-items:center;font-size:19px;flex:none;background:var(--blue-soft);color:var(--navy)}
+.summary-card.ok .summary-icon{background:#e8f5ec;color:var(--green)}
+.summary-card.wait .summary-icon{background:#fff3e0;color:var(--orange)}
+.summary-card small{display:block;color:var(--muted);font-size:13px}
+.summary-card b{display:block;font-size:28px;line-height:1.15;color:var(--navy);font-variant-numeric:tabular-nums}
+.summary-card .progress-track{margin-top:8px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:0 1px 2px rgba(23,59,103,.05);margin-bottom:20px;min-width:0}
+.card-pad{padding:18px 20px}
+.card h2{margin:0;font-size:17px;color:var(--navy)}
+.muted{color:var(--muted)}.small{font-size:13px}
+.src{display:flex;gap:6px 18px;flex-wrap:wrap;font-size:13px;color:var(--muted);margin-top:6px}
+.msg{margin-top:12px;padding:10px 14px;border-radius:10px;background:var(--blue-soft);border:1px solid var(--blue-line);font-size:13px}
+.msg.err{background:#fdecec;border-color:#f3b8b8;color:var(--red)}
+.fallback{margin-top:12px}.fallback summary{cursor:pointer;color:var(--muted);font-size:13px}
+.drop{margin-top:10px;display:flex;gap:14px;align-items:center;flex-wrap:wrap;border:2px dashed var(--blue-line);border-radius:12px;padding:14px;background:var(--blue-soft)}
+.drop.over{border-color:var(--blue);background:#dfeeff}
+.drop-t{flex:1 1 240px;min-width:0}.drop-t b{display:block}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.chip{border:1px solid var(--blue-line);background:#fff;border-radius:999px;padding:4px 12px;cursor:pointer;font-size:13px;display:inline-flex;gap:6px;align-items:center}
+.chip[aria-pressed="true"]{background:var(--navy);border-color:var(--navy);color:#fff}
+.chip em{font-style:normal;opacity:.8;font-variant-numeric:tabular-nums}
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;padding:16px 20px;border-bottom:1px solid var(--line)}
+.search{position:relative;flex:1 1 260px;min-width:0}
+.search i{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--muted)}
+.search input{width:100%;border:1px solid var(--line);background:#fff;border-radius:10px;padding:9px 14px 9px 38px}
+.search input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37,99,169,.15);outline:0}
+.table-wrap{overflow:auto;max-height:72vh}
+table{border-collapse:separate;border-spacing:0;width:100%;min-width:760px}
+th{position:sticky;top:0;z-index:2;background:var(--navy);color:#fff;font-weight:600;padding:12px 14px;text-align:right;white-space:nowrap}
+th:first-child{text-align:left;border-top-left-radius:0}
+td{padding:9px 14px;border-bottom:1px solid var(--line);text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap;background:#fff}
+td:first-child{text-align:left;white-space:normal;min-width:260px}
+tr:hover td{background:#f8fbff}
+tr.building-row td{background:var(--blue-soft);font-weight:700;color:var(--navy);border-bottom:1px solid var(--blue-line)}
+tr.building-row td:first-child{border-left:4px solid var(--navy)}
+tr.floor-row td{background:#f8fafd;font-weight:600}
+tr.floor-row td:first-child{padding-left:38px;border-left:4px solid var(--blue-line)}
+tr.room-row td:first-child{padding-left:70px;border-left:4px solid transparent;font-weight:400;color:#344054}
+tr.total-row td{position:sticky;bottom:0;z-index:1;background:var(--navy);color:#fff;font-weight:700;border-bottom:0}
+.lab{display:inline-flex;gap:8px;align-items:center}
+.lab .lv{color:var(--blue);font-size:14px;width:1.2em;text-align:center}
+.building-row .lab .lv{color:var(--navy)}
+.tg{border:0;background:transparent;cursor:pointer;padding:2px 4px;border-radius:6px;color:var(--muted)}
+.tg i{transition:transform .15s}.tg[aria-expanded="true"] i{transform:rotate(90deg)}
+.sp{width:1.4em;display:inline-block}
+.num-remaining{color:var(--orange);font-weight:600}.num-done{color:var(--green);font-weight:600}
+.total-row .num-remaining,.total-row .num-done{color:#fff}
+.progress-cell{display:flex;align-items:center;gap:10px;min-width:170px}
+.progress-track{flex:1;height:9px;border-radius:999px;background:var(--track);overflow:hidden}
+.progress-fill{display:block;height:100%;border-radius:999px;transition:width .4s}
+.progress-fill.is-danger{background:var(--red)}.progress-fill.is-warning{background:var(--orange)}.progress-fill.is-success{background:var(--green)}
+.progress-text{width:46px;text-align:right;font-weight:700}
+.total-row .progress-track{background:rgba(255,255,255,.25)}.total-row .progress-fill{background:#fff}
+.go{border:0;background:transparent;color:var(--blue);cursor:pointer;padding:4px 10px;border-radius:8px;font-size:13px;font-weight:600}
+.go:hover{background:var(--blue-soft)}
+.total-row .go{display:none}
+td.ac,th.ac{text-align:center;padding-inline:8px}
+.empty{padding:32px;text-align:center;color:var(--muted)}
+.legend{display:flex;gap:16px;flex-wrap:wrap;padding:12px 20px;font-size:12.5px;color:var(--muted);border-top:1px solid var(--line)}
+.legend span{display:inline-flex;gap:6px;align-items:center}.legend i{width:10px;height:10px;border-radius:50%;display:inline-block}
+.sheet-bg{position:fixed;inset:0;background:var(--overlay);display:none;z-index:50}.sheet-bg.on{display:block}
+.sheet{position:fixed;top:0;right:0;bottom:0;width:min(560px,100%);background:#fff;z-index:51;transform:translateX(100%);transition:transform .4s cubic-bezier(.16,1,.3,1);display:flex;flex-direction:column}
 .sheet.on{transform:none}
-.sh-h{display:flex;gap:12px;justify-content:space-between;align-items:flex-start;padding:18px 20px;border-bottom:1px solid var(--border)}
-.sh-h h3{margin:0;font-size:17px}
+.sh-h{display:flex;gap:12px;justify-content:space-between;align-items:flex-start;padding:18px 20px;border-bottom:1px solid var(--line);background:var(--blue-soft)}
+.sh-h h3{margin:0;font-size:17px;color:var(--navy)}
 .sh-b{overflow:auto;padding:12px 20px 24px;flex:1}
 .tabs{display:flex;gap:8px;margin:6px 0 10px;flex-wrap:wrap}
-.li{display:flex;gap:10px;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--border)}
-.li div{min-width:0}
-.li b{font-weight:500;display:block;overflow-wrap:anywhere}
-.li code{font-family:var(--mono);font-size:12px;color:var(--text-muted)}
-.tag{flex:none;border-radius:9999px;padding:2px 10px;font-size:12px;font-weight:500;background:var(--band)}
-.tag.y{color:var(--success)} .tag.n{color:var(--danger)}
-.toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translate(-50%,20px);background:var(--text);color:var(--surface);padding:10px 20px;border-radius:9999px;opacity:0;pointer-events:none;transition:.3s;z-index:60}
+.li{display:flex;gap:10px;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--line)}
+.li div{min-width:0}.li b{font-weight:600;display:block;overflow-wrap:anywhere}.li code{font-size:12px;color:var(--muted)}
+.tag{flex:none;border-radius:999px;padding:2px 10px;font-size:12px;font-weight:600;background:var(--track)}
+.tag.y{color:var(--green);background:#e8f5ec}.tag.n{color:var(--orange);background:#fff3e0}
+.toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,20px);background:var(--navy);color:#fff;padding:10px 20px;border-radius:999px;opacity:0;pointer-events:none;transition:.3s;z-index:60}
 .toast.on{opacity:1;transform:translate(-50%,0)}
-@media (prefers-reduced-motion:reduce){*{transition:none!important}}
-@media (max-width:560px){.card{padding:16px;border-radius:22px}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+@media (max-width:560px){.container{padding:18px 12px 40px}.toolbar,.card-pad{padding:14px}}
 </style>
 </head>
 <body>
 
-
-<svg width="0" height="0" style="position:absolute" aria-hidden="true">
-  <defs>
-    <linearGradient id="half"><stop offset="50%" stop-color="#E8A317"/><stop offset="50%" stop-color="transparent"/></linearGradient>
-    <symbol id="star" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></symbol>
-  </defs>
-</svg>
-
-<header class="hero">
-  <div class="hero-in">
+<div class="container">
+  <header class="page-header">
     <div>
-      <div class="brand"><span class="dots"><i></i><i></i><i></i><i></i></span><b>CICM · งานพัสดุ</b></div>
-      <h1>Pivot ตรวจนับครุภัณฑ์</h1>
-      <p>ดึงผลตรวจนับสดจาก Google Sheet แล้วสรุปตามอาคาร ชั้น และห้อง ข้อมูลครุภัณฑ์หลักฝังอยู่ในหน้านี้แล้ว</p>
+      <h1>รายงานความคืบหน้าการตรวจนับทรัพย์สิน</h1>
+      <p>คณะพาณิชยศาสตร์และการบัญชี (CICM) มหาวิทยาลัยธรรมศาสตร์ · สรุปตามอาคาร ชั้น และห้อง</p>
     </div>
-    <button class="theme" id="theme" type="button">สลับโหมดสว่าง/มืด</button>
-  </div>
-</header>
+    <div class="header-actions">
+      <span class="updated" id="updated"></span>
+      <button class="btn" id="export" type="button"><i class="fa-solid fa-file-excel"></i>ส่งออก Excel</button>
+    </div>
+  </header>
 
-<main>
-  <section class="card" id="up">
-    <h2>1. ข้อมูลตรวจนับจาก Google Sheet</h2>
-    <p class="muted small" style="margin:0 0 12px">หน้านี้อ่านชีต <b>asset_count_list</b> (แท็บ ชีต1) เองทุกครั้งที่เปิด และรีเฟรชซ้ำทุก 60 วินาที ไม่ต้องอัปโหลดไฟล์</p>
-    <div class="live" id="live"></div>
+  <section class="summary-grid" id="kpis" aria-label="สรุปภาพรวม"></section>
+
+  <section class="card card-pad" id="up">
+    <h2>แหล่งข้อมูลและเงื่อนไขสถานะ</h2>
+    <div class="live" id="live" style="display:flex;gap:10px 14px;flex-wrap:wrap;align-items:center;margin-top:8px"></div>
     <div class="src" id="src"></div>
     <div id="msg"></div>
+    <div class="chips" id="chips" role="group" aria-label="สถานะครุภัณฑ์ที่นับ"></div>
+    <p class="muted small" style="margin:10px 0 0">นับเฉพาะครุภัณฑ์ที่อยู่ในรายการตรวจนับและมีสถานะที่เลือก ค่าเริ่มต้นคือ 01 ปกติ, 02 ชำรุด, 04 รอจำหน่าย, 11 ส่งคืนพัสดุ (ตรงกับรายงานตัวอย่าง)</p>
     <details class="fallback">
       <summary>ใช้ไฟล์ CSV แทนชั่วคราว</summary>
       <div class="drop" id="drop">
-        <div class="drop-ic"><svg class="i" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></svg></div>
         <div class="drop-t"><b>ลากไฟล์ CSV มาวางที่นี่</b><span class="muted small">ใช้เมื่อเชื่อมต่อชีตไม่ได้ ระหว่างนี้การรีเฟรชอัตโนมัติจะหยุดจนกว่าจะกดกลับไปใช้ชีต</span></div>
         <button class="btn ghost" id="pick" type="button">เลือกไฟล์ CSV</button>
         <input id="file" type="file" accept=".csv,text/csv" hidden>
@@ -184,29 +141,22 @@ td.ac,th.ac{text-align:center;padding-inline:6px}
     </details>
   </section>
 
-  <section class="card">
-    <h2>2. ภาพรวม</h2>
-    <div class="kpis" id="kpis"></div>
-    <p class="muted small" style="margin:16px 0 0">นับเฉพาะครุภัณฑ์ที่อยู่ในรายการตรวจนับและมีสถานะตามที่เลือก ค่าเริ่มต้นคือ 01 ปกติ, 02 ชำรุด, 04 รอจำหน่าย, 11 ส่งคืนพัสดุ (ตรงกับรายงานตัวอย่างที่ใช้อยู่)</p>
-    <div class="chips" id="chips" role="group" aria-label="สถานะครุภัณฑ์ที่นับ"></div>
-  </section>
-
-  <section class="card">
-    <h2>3. ตารางตามอาคาร ชั้น ห้อง</h2>
-    <div class="tools">
-      <label class="search"><svg class="i" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg><input id="q" type="search" placeholder="ค้นหาอาคาร ชั้น หรือห้อง" autocomplete="off"></label>
-      <button class="btn ghost" id="exp" type="button">ขยายทั้งหมด</button>
-      <button class="btn ghost" id="col" type="button">ยุบเหลืออาคาร</button>
-      <button class="btn ghost" id="copy" type="button"><svg class="i" viewBox="0 0 24 24"><rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>คัดลอกไปวางใน Excel</button>
+  <section class="card" aria-label="ตารางความคืบหน้า">
+    <div class="toolbar">
+      <label class="search"><i class="fa-solid fa-magnifying-glass"></i><input id="q" type="search" placeholder="ค้นหาอาคาร ชั้น หรือห้อง" autocomplete="off"></label>
+      <button class="btn ghost" id="exp" type="button"><i class="fa-solid fa-angles-down"></i>ขยายทั้งหมด</button>
+      <button class="btn ghost" id="col" type="button"><i class="fa-solid fa-angles-up"></i>ยุบเหลืออาคาร</button>
+      <button class="btn ghost" id="copy" type="button"><i class="fa-regular fa-copy"></i>คัดลอก</button>
     </div>
-    <div class="wrap"><table id="tb"><thead><tr><th>Row Labels</th><th>ยังไม่ได้ตรวจนับ</th><th>ตรวจนับแล้ว</th><th>Grand Total</th><th>ความคืบหน้า</th><th class="ac"><span class="sr" style="position:absolute;left:-9999px">รายการ</span></th></tr></thead><tbody id="body"></tbody></table></div>
+    <div class="table-wrap"><table id="tb"><thead><tr><th>อาคาร / ชั้น / ห้อง</th><th>ทั้งหมด</th><th>ตรวจนับแล้ว</th><th>รอตรวจนับ</th><th style="text-align:left">ความคืบหน้า</th><th class="ac">รายการ</th></tr></thead><tbody id="body"></tbody></table></div>
+    <div class="legend"><span><i style="background:var(--green)"></i>ตั้งแต่ 80%</span><span><i style="background:var(--orange)"></i>40–79%</span><span><i style="background:var(--red)"></i>ต่ำกว่า 40%</span></div>
   </section>
-</main>
+</div>
 
 <div class="sheet-bg" id="bg"></div>
 <aside class="sheet" id="sheet" aria-hidden="true" aria-label="รายการครุภัณฑ์">
   <div class="sh-h"><div><h3 id="sh-t"></h3><div class="muted small" id="sh-s"></div></div>
-    <button class="btn ghost" id="sh-x" type="button" aria-label="ปิด"><svg class="i" viewBox="0 0 24 24"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button></div>
+    <button class="btn ghost" id="sh-x" type="button" aria-label="ปิด"><i class="fa-solid fa-xmark"></i></button></div>
   <div class="sh-b"><div class="tabs" id="tabs"></div><div id="list"></div></div>
 </aside>
 <div class="toast" id="toast" role="status"></div>
@@ -218,7 +168,9 @@ const MASTER_AT='12 ต.ค. 2569 11:21', COUNT_AT='12 ต.ค. 2569';
 const SHORT={'01':'ปกติ','02':'ชำรุด','03':'จำหน่าย (เฉพาะเจาะจง)','04':'รอจำหน่าย','05':'หาไม่เจอ','06':'ครุภัณฑ์โอน','07':'จำหน่าย (ขายอิเล็กทรอนิกส์)','08':'จำหน่าย (โอนหน่วยงานรัฐ)','09':'จำหน่าย (แปรสภาพ/ทำลาย)','10':'จำหน่ายเป็นสูญ','11':'ส่งคืนพัสดุ','12':'ตัดจำหน่าย (บันทึกผิด)'};
 const $=id=>document.getElementById(id);
 const th=new Intl.Collator('th',{sensitivity:'base',numeric:true});
-const I={chev:'<svg class="i" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg>',list:'<svg class="i" viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>'};
+const formatFloor=f=>{if(f==null||f==='(blank)')return 'ไม่ระบุชั้น';const s=String(f).trim();return /^\d+$/.test(s)?'ชั้น '+parseInt(s,10):s};
+const lbl=(x,l)=>{const v=x[l];return l===1?formatFloor(v):(v==='(blank)'?(l===0?'ไม่ระบุอาคาร':'ไม่ระบุห้อง'):v)};
+const LV=['fa-building','fa-layer-group','fa-door-open'],CL=['building-row','floor-row','room-row'];
 
 const ASSETS=DB.A.map(a=>({id:a[0],no:a[1],name:a[2],b:a[3]<0?null:DB.B[a[3]],f:a[4]||null,r:a[5]<0?null:DB.R[a[5]],st:a[6]}));
 let state={name:'ข้อมูลที่ฝังไว้ในหน้านี้',at:COUNT_AT,inList:new Set(DB.inList),done:new Set(DB.done),rows:DB.inList.length,unknown:0,embedded:true};
@@ -289,10 +241,11 @@ async function sync(manual){
   finally{syncing=false;$('refresh')&&($('refresh').disabled=false)}}
 function live(){
   const ok=!state.embedded&&!lastErr&&!paused;
-  const t=state.at instanceof Date?state.at.toLocaleTimeString('th-TH'):state.at;
-  $('live').innerHTML=`<span class="dot${ok?'':' off'}"></span><b>${paused?'ใช้ไฟล์ CSV ชั่วคราว':ok?'เชื่อมต่อ Google Sheet อยู่':'ยังไม่ได้เชื่อมต่อชีต'}</b>
-  <span class="muted small">${paused?esc(state.name):ok?`ล่าสุด ${esc(t)} · ผ่าน ${esc(state.via)}`:'กำลังแสดงข้อมูลที่ฝังไว้ ณ '+COUNT_AT}</span>
-  <button class="btn ghost" id="refresh" type="button">${paused?'กลับไปใช้ชีต':'รีเฟรชตอนนี้'}</button>`;
+  const at=state.at instanceof Date?state.at.toLocaleString('th-TH',{dateStyle:'medium',timeStyle:'short'}):state.at;
+  $('updated').innerHTML=`<span class="dot${ok?'':' off'}"></span>${ok?'อัปเดตล่าสุด':'ข้อมูล ณ'} ${esc(at)}`;
+  $('live').innerHTML=`<b>${paused?'ใช้ไฟล์ CSV ชั่วคราว':ok?'เชื่อมต่อ Google Sheet อยู่':'ยังไม่ได้เชื่อมต่อชีต'}</b>
+  <span class="muted small">${paused?esc(state.name):ok?`ผ่าน ${esc(state.via)} · รีเฟรชทุก ${CFG.refreshSec} วินาที`:'กำลังแสดงข้อมูลที่ฝังไว้ ณ '+COUNT_AT}</span>
+  <button class="btn ghost" id="refresh" type="button"><i class="fa-solid fa-rotate"></i>${paused?'กลับไปใช้ชีต':'รีเฟรชตอนนี้'}</button>`;
   $('refresh').onclick=()=>{if(paused){paused=false;lastErr=''}sync(true)};
   if(lastErr&&!paused)setMsg('เชื่อมต่อชีตไม่ได้: '+esc(lastErr)+'<br>ตรวจว่าตั้งค่า Apps Script หรือแชร์ชีตตามคู่มือแล้ว ระหว่างนี้หน้าแสดงข้อมูลเดิมที่มีอยู่',true)}
 
@@ -309,19 +262,16 @@ function build(){
   return{flat,items}}
 
 const pct=(y,t)=>t?y/t:0;
-function color(p){const a=[248,105,107],m=[255,235,132],g=[99,190,123];const lerp=(x,z,t)=>x.map((v,i)=>Math.round(v+(z[i]-v)*t));const c=p<.5?lerp(a,m,p/.5):lerp(m,g,(p-.5)/.5);return`rgb(${c})`}
-function stars(p){
-  const one=k=>k===0?'<svg viewBox="0 0 24 24" style="fill:#E8A317;stroke:#8a5a00;stroke-width:1.5"><use href="#star"/></svg>':k===1?'<svg viewBox="0 0 24 24" style="fill:url(#half);stroke:#8a5a00;stroke-width:1.5"><use href="#star"/></svg>':'<svg viewBox="0 0 24 24" style="fill:#fff;stroke:#8a5a00;stroke-width:1.5"><use href="#star"/></svg>';
-  /* Excel 3Stars: ≥67% ดาวเต็ม, ≥34% ครึ่งดวง, ต่ำกว่านั้นว่าง */
-  return one(p>=.67?0:p>=.34?1:2)}
-const fmt=n=>n?n.toLocaleString('en-US'):'';
+const cls=p=>p>=.8?'is-success':p>=.4?'is-warning':'is-danger';
+const bar=p=>`<div class="progress-cell"><div class="progress-track" role="progressbar" aria-valuenow="${Math.round(p*100)}" aria-valuemin="0" aria-valuemax="100"><span class="progress-fill ${cls(p)}" style="width:${(p*100).toFixed(1)}%"></span></div><span class="progress-text">${Math.round(p*100)}%</span></div>`;
+const fmt=n=>(n||0).toLocaleString('en-US');
 
 /* ---------- วาดตาราง ---------- */
 let last={flat:[],items:0};
 function render(){
   const {flat,items}=build();last={flat,items};
   const q=query.trim().toLowerCase();
-  const match=x=>!q||x.path.some(p=>p.toLowerCase().includes(q));
+  const match=x=>!q||x.path.some((p,i)=>(lbl(x.path,i)+' '+p).toLowerCase().includes(q));
   const vis=[];
   for(const x of flat){
     let show;
@@ -330,12 +280,12 @@ function render(){
     if(show)vis.push(x)}
   const body=$('body');
   body.innerHTML=vis.map(x=>{
-    const exp=q||isOpen(x);const p=pct(x.y,x.n+x.y),lab=x.path[x.l];
-    const tg=x.l<2?`<button class="tg" data-k="${esc(x.key)}" aria-expanded="${exp?'true':'false'}" aria-label="ยุบหรือขยาย ${esc(lab)}">${I.chev}</button>`:'<span class="sp"></span>';
-    return`<tr class="l${x.l}"><td><span class="lab">${tg}${esc(lab)}</span></td><td>${fmt(x.n)}</td><td>${fmt(x.y)}</td><td>${fmt(x.n+x.y)}</td><td><div class="pc" style="background:${color(p)}">${stars(p)}<span>${Math.round(p*100)}%</span></div></td><td class="ac"><button class="go" data-o="${esc(x.key)}" aria-label="ดูรายการครุภัณฑ์ ${esc(lab)}">รายการ</button></td></tr>`}).join('');
+    const exp=q||isOpen(x);const p=pct(x.y,x.n+x.y),lab=lbl(x.path,x.l);
+    const tg=x.l<2?`<button class="tg" data-k="${esc(x.key)}" aria-expanded="${exp?'true':'false'}" aria-label="ยุบหรือขยาย ${esc(lab)}"><i class="fa-solid fa-chevron-right"></i></button>`:'<span class="sp"></span>';
+    return`<tr class="${CL[x.l]}"><td><span class="lab">${tg}<i class="fa-solid ${LV[x.l]} lv"></i>${esc(lab)}</span></td><td>${fmt(x.n+x.y)}</td><td class="num-done">${fmt(x.y)}</td><td class="num-remaining">${fmt(x.n)}</td><td>${bar(p)}</td><td class="ac"><button class="go" data-o="${esc(x.key)}" aria-label="ดูรายการครุภัณฑ์ ${esc(lab)}">ดู</button></td></tr>`}).join('');
   const N=flat.filter(x=>x.l===0).reduce((s,x)=>s+x.n,0),Y=flat.filter(x=>x.l===0).reduce((s,x)=>s+x.y,0);
   if(!flat.length)body.innerHTML='<tr><td colspan="6" class="empty">ไม่มีครุภัณฑ์ที่ตรงกับสถานะที่เลือก</td></tr>';
-  else body.insertAdjacentHTML('beforeend',`<tr class="tot"><td>Grand Total</td><td>${fmt(N)}</td><td>${fmt(Y)}</td><td>${fmt(N+Y)}</td><td><div class="pc" style="background:${color(pct(Y,N+Y))}">${stars(pct(Y,N+Y))}<span>${Math.round(pct(Y,N+Y)*100)}%</span></div></td><td></td></tr>`);
+  else body.insertAdjacentHTML('beforeend',`<tr class="total-row"><td>รวมทั้งหมด</td><td>${fmt(N+Y)}</td><td class="num-done">${fmt(Y)}</td><td class="num-remaining">${fmt(N)}</td><td>${bar(pct(Y,N+Y))}</td><td></td></tr>`);
   kpi(N,Y)}
 /* สถานะยุบ/ขยาย: ค่าเริ่มต้นขยายทั้งหมด; เก็บเฉพาะรายการที่ผู้ใช้ปิด */
 function isOpen(x){return !shut.has(x.key)}
@@ -346,12 +296,12 @@ function kpi(N,Y){
   const tot=N+Y,p=pct(Y,tot);
   const out=ASSETS.filter(a=>state.inList.has(a.id)&&!scope.has(a.st)).length;
   const miss=ASSETS.filter(a=>!state.inList.has(a.id)&&scope.has(a.st)).length;
-  $('kpis').innerHTML=`<div class="kpi"><small>ครุภัณฑ์ที่นับตามเงื่อนไข</small><b>${tot.toLocaleString('en-US')}</b></div>
-  <div class="kpi"><small>ตรวจนับแล้ว</small><b style="color:var(--success)">${Y.toLocaleString('en-US')}</b></div>
-  <div class="kpi"><small>ยังไม่ได้ตรวจนับ</small><b>${N.toLocaleString('en-US')}</b></div>
-  <div class="kpi"><small>ความคืบหน้า</small><b>${(p*100).toFixed(1)}%</b><div class="bar"><i style="width:${(p*100).toFixed(1)}%"></i></div></div>
-  <div class="kpi"><small>อยู่ในรายการแต่นอกเงื่อนไขสถานะ</small><b>${out.toLocaleString('en-US')}</b></div>
-  <div class="kpi"><small>สถานะตรงเงื่อนไขแต่ไม่อยู่ในรายการตรวจนับ</small><b style="color:${miss?'var(--warn)':'inherit'}">${miss.toLocaleString('en-US')}</b></div>`}
+  $('kpis').innerHTML=`<div class="summary-card"><div class="summary-icon"><i class="fa-solid fa-boxes-stacked"></i></div><div><small>จำนวนรายการทั้งหมด</small><b>${fmt(tot)}</b></div></div>
+  <div class="summary-card ok"><div class="summary-icon"><i class="fa-solid fa-circle-check"></i></div><div><small>ตรวจนับแล้ว</small><b>${fmt(Y)}</b></div></div>
+  <div class="summary-card wait"><div class="summary-icon"><i class="fa-solid fa-hourglass-half"></i></div><div><small>รอตรวจนับ</small><b>${fmt(N)}</b></div></div>
+  <div class="summary-card"><div class="summary-icon"><i class="fa-solid fa-chart-line"></i></div><div style="flex:1;min-width:0"><small>ความคืบหน้ารวม</small><b>${(p*100).toFixed(1)}%</b><div class="progress-track"><span class="progress-fill ${cls(p)}" style="width:${(p*100).toFixed(1)}%"></span></div></div></div>`;
+  const notes=[];if(out)notes.push(`อยู่ในรายการตรวจนับแต่นอกเงื่อนไขสถานะ ${fmt(out)} รายการ`);if(miss)notes.push(`สถานะตรงเงื่อนไขแต่ไม่อยู่ในรายการตรวจนับ ${fmt(miss)} รายการ`);
+  kpi.notes=notes}
 
 function chips(){
   const c={};for(const a of ASSETS)if(state.inList.has(a.id))c[a.st]=(c[a.st]||0)+1;
@@ -359,14 +309,14 @@ function chips(){
 
 function source(){
   $('src').innerHTML=`<span class="muted">จำนวนในรายการตรวจนับ ${state.rows.toLocaleString('en-US')} รายการ</span>
-  <span class="muted">ข้อมูลครุภัณฑ์หลัก ณ ${MASTER_AT} · ${ASSETS.length.toLocaleString('en-US')} รายการ</span>`;live()}
-function done(){source();chips();render()}
+  <span>ข้อมูลครุภัณฑ์หลัก ณ ${MASTER_AT} · ${ASSETS.length.toLocaleString('en-US')} รายการ</span>${(kpi.notes||[]).map(n=>`<span>${esc(n)}</span>`).join('')}`;live()}
+function done(){chips();render();source()}
 
 /* ---------- รายการครุภัณฑ์ (ลิ้นชักขวา) ---------- */
 let cur=null,tab='n';
 function openSheet(key){
   const n=last.flat.find(x=>x.key===key);if(!n)return;cur=n;tab='n';
-  $('sh-t').textContent=n.path.join(' › ');
+  $('sh-t').textContent=n.path.map((_,i)=>lbl(n.path,i)).join(' › ');
   paintSheet();$('bg').classList.add('on');$('sheet').classList.add('on');$('sheet').setAttribute('aria-hidden','false')}
 function paintSheet(){
   const it=cur.items,sel=it.filter(x=>tab==='a'||(tab==='n'?!x.y:x.y)).sort((p,q)=>th.compare(p.a.no,q.a.no));
@@ -402,13 +352,20 @@ $('q').oninput=e=>{query=e.target.value;render()};
 $('tabs').onclick=e=>{const b=e.target.closest('[data-t]');if(b){tab=b.dataset.t;paintSheet()}};
 $('bg').onclick=closeSheet;$('sh-x').onclick=closeSheet;
 addEventListener('keydown',e=>{if(e.key==='Escape')closeSheet()});
+const rowsOut=()=>{const R=[['อาคาร','ชั้น','ห้อง','ทั้งหมด','ตรวจนับแล้ว','รอตรวจนับ','ความคืบหน้า (%)']];
+  for(const x of last.flat)R.push([lbl(x.path,0),x.l>=1?lbl(x.path,1):'',x.l>=2?lbl(x.path,2):'',x.n+x.y,x.y,x.n,+(pct(x.y,x.n+x.y)*100).toFixed(1)]);
+  const N=last.flat.filter(x=>x.l===0).reduce((s,x)=>s+x.n,0),Y=last.flat.filter(x=>x.l===0).reduce((s,x)=>s+x.y,0);
+  R.push(['รวมทั้งหมด','','',N+Y,Y,N,+(pct(Y,N+Y)*100).toFixed(1)]);return R};
 $('copy').onclick=async()=>{
-  const L=['Row Labels\tยังไม่ได้ตรวจนับ\tตรวจนับแล้ว\tGrand Total\t% ตรวจนับแล้ว'];
-  for(const x of last.flat)L.push(`${'    '.repeat(x.l)}${x.path[x.l]}\t${x.n}\t${x.y}\t${x.n+x.y}\t${(pct(x.y,x.n+x.y)*100).toFixed(0)}%`);
-  const txt=L.join('\n');
+  const txt=rowsOut().map(r=>r.join('\t')).join('\n');
   try{await navigator.clipboard.writeText(txt);toast('คัดลอกแล้ว วางใน Excel ได้เลย')}
   catch(e){const ta=document.createElement('textarea');ta.value=txt;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');toast('คัดลอกแล้ว วางใน Excel ได้เลย')}catch(_){toast('คัดลอกไม่สำเร็จ')}ta.remove()}};
-$('theme').onclick=()=>{const r=document.documentElement,d=r.dataset.theme?r.dataset.theme==='dark':matchMedia('(prefers-color-scheme:dark)').matches;r.dataset.theme=d?'light':'dark'};
+$('export').onclick=()=>{
+  const q=v=>/[",\n]/.test(String(v))?'"'+String(v).replace(/"/g,'""')+'"':v;
+  const csv='\ufeff'+rowsOut().map(r=>r.map(q).join(',')).join('\r\n');
+  const d=new Date(),n='ความคืบหน้าการตรวจนับ_'+d.getFullYear()+String(d.getMonth()+1).padStart(2,'0')+String(d.getDate()).padStart(2,'0')+'.csv';
+  const u=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'})),a=document.createElement('a');
+  a.href=u;a.download=n;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),2000);toast('ส่งออกไฟล์แล้ว เปิดด้วย Excel ได้เลย')};
 
 done();
 sync(false);
