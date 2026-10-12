@@ -3,138 +3,206 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#FF8233">
 <title>รายงานความคืบหน้าการตรวจนับทรัพย์สิน CICM</title>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&display=swap">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Google+Sans+Code:wght@400;500&family=Noto+Sans+Thai:wght@400;500;700&display=swap">
 <style>
-:root{--navy:#173b67;--navy-deep:#0f2c4f;--blue:#2563a9;--blue-soft:#eef5ff;--blue-line:#cfe0f5;--page:#f4f7fb;--card:#fff;--text:#1f2a37;--muted:#667085;--line:#e3e9f1;--green:#238636;--orange:#d97706;--red:#c62828;--track:#e6ecf4;--overlay:rgba(15,44,79,.45);--font:'Sarabun',system-ui,-apple-system,'Segoe UI',sans-serif;color-scheme:light}
+/* Sunrise: hero ส้มไล่สี · การ์ดโค้ง · ปุ่มแคปซูล · ไอคอน SVG ฝัง · มือถือก่อน */
+:root{
+  --hero-top:#FF8233;--hero-bottom:#FDAC55;
+  --accent:#F16524;--accent-deep:#D8531A;--on-accent:#FFFFFF;
+  --page-bg:#FFF4EB;--surface:#FFFFFF;--surface-2:#FFF7F1;
+  --text:#2B1A10;--text-muted:#8A6A57;--border:rgba(43,26,16,.12);
+  --band:#FFE4D1;--band-line:#F4B183;
+  --success:#2F9E5B;--warn:#C77A12;--danger:#C2412D;--track:#F6DCC8;
+  --overlay:rgba(0,0,0,.4);
+  --font:'Google Sans','Noto Sans Thai',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --mono:'Google Sans Code','Google Sans','Noto Sans Thai',ui-monospace,monospace}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --accent:#FF8A4C;--accent-deep:#FF9F6B;--on-accent:#2B1A10;
+  --page-bg:#1C120C;--surface:#271A12;--surface-2:#2F2017;
+  --text:#FBEDE2;--text-muted:#C2A18D;--border:rgba(251,237,226,.14);
+  --band:#4A2B1B;--band-line:#B8683A;--success:#59C98A;--warn:#E3B04B;--danger:#FF8A78;--track:#4A2B1B;--overlay:rgba(0,0,0,.6);color-scheme:dark}}
+:root[data-theme="dark"]{
+  --accent:#FF8A4C;--accent-deep:#FF9F6B;--on-accent:#2B1A10;
+  --page-bg:#1C120C;--surface:#271A12;--surface-2:#2F2017;
+  --text:#FBEDE2;--text-muted:#C2A18D;--border:rgba(251,237,226,.14);
+  --band:#4A2B1B;--band-line:#B8683A;--success:#59C98A;--warn:#E3B04B;--danger:#FF8A78;--track:#4A2B1B;--overlay:rgba(0,0,0,.6);color-scheme:dark}
 *{box-sizing:border-box}
-body{margin:0;background:var(--page);color:var(--text);font-family:var(--font);font-size:15px;line-height:1.5}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--page-bg);color:var(--text);font-family:var(--font);font-size:15px;line-height:1.55;padding-inline:14px}
 button,input{font:inherit;color:inherit}
-:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
-.container{max-width:1280px;margin:0 auto;padding:28px 20px 56px}
-.page-header{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap;margin-bottom:20px}
-.page-header h1{margin:0;font-size:clamp(22px,3.4vw,30px);font-weight:700;color:var(--navy);line-height:1.25}
-.page-header p{margin:4px 0 0;color:var(--muted)}
-.header-actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-.updated{display:inline-flex;gap:8px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:999px;padding:7px 14px;font-size:13px;color:var(--muted)}
-.updated .dot{width:9px;height:9px;border-radius:50%;background:var(--green);animation:pulse 2s infinite}
-.updated .dot.off{background:var(--orange);animation:none}
-@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(35,134,54,.5)}70%{box-shadow:0 0 0 8px rgba(35,134,54,0)}100%{box-shadow:0 0 0 0 rgba(35,134,54,0)}}
-.btn{display:inline-flex;gap:8px;align-items:center;border:1px solid var(--navy);background:var(--navy);color:#fff;border-radius:10px;padding:9px 16px;cursor:pointer;font-weight:600;transition:background .15s}
-.btn:hover{background:var(--navy-deep)}
-.btn.ghost{background:#fff;color:var(--navy);border-color:var(--blue-line)}
-.btn.ghost:hover{background:var(--blue-soft)}
+svg.i{width:1.15em;height:1.15em;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.muted{color:var(--text-muted)}.small{font-size:13px}
+
+.hero{margin-inline:-14px;padding:max(20px,env(safe-area-inset-top)) 16px 88px;background:linear-gradient(180deg,var(--hero-top),var(--hero-bottom));color:#fff}
+.hero-in{max-width:1200px;margin:0 auto}
+.top{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.brand{display:flex;gap:10px;align-items:center;font-weight:700}
+.dots{display:grid;grid-template-columns:repeat(2,8px);gap:3px}
+.dots i{width:8px;height:8px;border-radius:50%;background:#fff;display:block}
+.theme{background:rgba(255,255,255,.22);border:0;color:#fff;border-radius:9999px;width:40px;height:40px;display:grid;place-items:center;cursor:pointer}
+h1{margin:16px 0 6px;font-size:clamp(24px,6vw,40px);line-height:1.2;font-weight:700;text-wrap:balance}
+.hero p{margin:0;max-width:60ch;opacity:.95;font-size:14px}
+.hero-act{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px;align-items:center}
+.updated{display:inline-flex;gap:8px;align-items:center;background:rgba(255,255,255,.22);border-radius:9999px;padding:8px 14px;font-size:13px}
+.updated .dot{width:9px;height:9px;border-radius:50%;background:#fff;animation:pulse 2s infinite}
+.updated .dot.off{background:#FFE08A;animation:none}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(255,255,255,.7)}70%{box-shadow:0 0 0 8px transparent}100%{box-shadow:0 0 0 0 transparent}}
+.btn{display:inline-flex;gap:8px;align-items:center;justify-content:center;border:0;border-radius:9999px;padding:10px 18px;min-height:44px;cursor:pointer;background:var(--accent);color:var(--on-accent);font-weight:500;transition:background .2s}
+.btn:hover{background:var(--accent-deep)}
+.btn.white{background:#fff;color:var(--accent-deep)}.btn.white:hover{background:var(--band)}
+.btn.ghost{background:transparent;color:var(--text);border:1px solid var(--border)}.btn.ghost:hover{background:var(--band)}
 .btn:disabled{opacity:.6;cursor:wait}
-.summary-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:16px;margin-bottom:20px}
-.summary-card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px 20px;box-shadow:0 1px 2px rgba(23,59,103,.05);display:flex;gap:14px;align-items:center;min-width:0}
-.summary-icon{width:46px;height:46px;border-radius:12px;display:grid;place-items:center;font-size:19px;flex:none;background:var(--blue-soft);color:var(--navy)}
-.summary-card.ok .summary-icon{background:#e8f5ec;color:var(--green)}
-.summary-card.wait .summary-icon{background:#fff3e0;color:var(--orange)}
-.summary-card small{display:block;color:var(--muted);font-size:13px}
-.summary-card b{display:block;font-size:28px;line-height:1.15;color:var(--navy);font-variant-numeric:tabular-nums}
-.summary-card .progress-track{margin-top:8px}
-.card{background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:0 1px 2px rgba(23,59,103,.05);margin-bottom:20px;min-width:0}
-.card-pad{padding:18px 20px}
-.card h2{margin:0;font-size:17px;color:var(--navy)}
-.muted{color:var(--muted)}.small{font-size:13px}
-.src{display:flex;gap:6px 18px;flex-wrap:wrap;font-size:13px;color:var(--muted);margin-top:6px}
-.msg{margin-top:12px;padding:10px 14px;border-radius:10px;background:var(--blue-soft);border:1px solid var(--blue-line);font-size:13px}
-.msg.err{background:#fdecec;border-color:#f3b8b8;color:var(--red)}
-.fallback{margin-top:12px}.fallback summary{cursor:pointer;color:var(--muted);font-size:13px}
-.drop{margin-top:10px;display:flex;gap:14px;align-items:center;flex-wrap:wrap;border:2px dashed var(--blue-line);border-radius:12px;padding:14px;background:var(--blue-soft)}
-.drop.over{border-color:var(--blue);background:#dfeeff}
-.drop-t{flex:1 1 240px;min-width:0}.drop-t b{display:block}
+
+main{max-width:1200px;margin:-60px auto 48px;display:grid;gap:16px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:28px;min-width:0;overflow:hidden}
+.pad{padding:20px}
+.card h2{margin:0 0 4px;font-size:17px}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.kpi{background:var(--surface);border:1px solid var(--border);border-radius:24px;padding:16px;min-width:0}
+.kpi-h{display:flex;gap:8px;align-items:center;color:var(--text-muted);font-size:13px}
+.kpi-ic{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;background:var(--band);color:var(--accent-deep);flex:none}
+.kpi.ok .kpi-ic{color:var(--success)}.kpi.wait .kpi-ic{color:var(--warn)}
+.kpi b{display:block;margin-top:8px;font-family:var(--mono);font-size:clamp(22px,6vw,30px);font-weight:500;line-height:1.1;font-variant-numeric:tabular-nums}
+.kpi .track{margin-top:10px}
+.track{height:8px;border-radius:9999px;background:var(--track);overflow:hidden;flex:1}
+.fill{display:block;height:100%;border-radius:9999px;transition:width .4s}
+.fill.is-danger{background:var(--danger)}.fill.is-warning{background:var(--warn)}.fill.is-success{background:var(--success)}
+
+.live{display:flex;gap:6px 12px;flex-wrap:wrap;align-items:center;margin-top:8px}
+.src{display:flex;gap:2px 16px;flex-wrap:wrap;font-size:13px;color:var(--text-muted);margin-top:8px}
+.msg{margin-top:12px;padding:10px 14px;border-radius:16px;background:var(--surface-2);border:1px solid var(--border);font-size:13px}
+.msg.err{border-color:var(--danger);color:var(--danger)}
 .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
-.chip{border:1px solid var(--blue-line);background:#fff;border-radius:999px;padding:4px 12px;cursor:pointer;font-size:13px;display:inline-flex;gap:6px;align-items:center}
-.chip[aria-pressed="true"]{background:var(--navy);border-color:var(--navy);color:#fff}
-.chip em{font-style:normal;opacity:.8;font-variant-numeric:tabular-nums}
-.toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;padding:16px 20px;border-bottom:1px solid var(--line)}
-.search{position:relative;flex:1 1 260px;min-width:0}
-.search i{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--muted)}
-.search input{width:100%;border:1px solid var(--line);background:#fff;border-radius:10px;padding:9px 14px 9px 38px}
-.search input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37,99,169,.15);outline:0}
-.table-wrap{overflow:auto;max-height:72vh}
-table{border-collapse:separate;border-spacing:0;width:100%;min-width:760px}
-th{position:sticky;top:0;z-index:2;background:var(--navy);color:#fff;font-weight:600;padding:12px 14px;text-align:right;white-space:nowrap}
-th:first-child{text-align:left;border-top-left-radius:0}
-td{padding:9px 14px;border-bottom:1px solid var(--line);text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap;background:#fff}
-td:first-child{text-align:left;white-space:normal;min-width:260px}
-tr:hover td{background:#f8fbff}
-tr.building-row td{background:var(--blue-soft);font-weight:700;color:var(--navy);border-bottom:1px solid var(--blue-line)}
-tr.building-row td:first-child{border-left:4px solid var(--navy)}
-tr.floor-row td{background:#f8fafd;font-weight:600}
-tr.floor-row td:first-child{padding-left:38px;border-left:4px solid var(--blue-line)}
-tr.room-row td:first-child{padding-left:70px;border-left:4px solid transparent;font-weight:400;color:#344054}
-tr.total-row td{position:sticky;bottom:0;z-index:1;background:var(--navy);color:#fff;font-weight:700;border-bottom:0}
-.lab{display:inline-flex;gap:8px;align-items:center}
-.lab .lv{color:var(--blue);font-size:14px;width:1.2em;text-align:center}
-.building-row .lab .lv{color:var(--navy)}
-.tg{border:0;background:transparent;cursor:pointer;padding:2px 4px;border-radius:6px;color:var(--muted)}
-.tg i{transition:transform .15s}.tg[aria-expanded="true"] i{transform:rotate(90deg)}
-.sp{width:1.4em;display:inline-block}
-.num-remaining{color:var(--orange);font-weight:600}.num-done{color:var(--green);font-weight:600}
-.total-row .num-remaining,.total-row .num-done{color:#fff}
-.progress-cell{display:flex;align-items:center;gap:10px;min-width:170px}
-.progress-track{flex:1;height:9px;border-radius:999px;background:var(--track);overflow:hidden}
-.progress-fill{display:block;height:100%;border-radius:999px;transition:width .4s}
-.progress-fill.is-danger{background:var(--red)}.progress-fill.is-warning{background:var(--orange)}.progress-fill.is-success{background:var(--green)}
-.progress-text{width:46px;text-align:right;font-weight:700}
-.total-row .progress-track{background:rgba(255,255,255,.25)}.total-row .progress-fill{background:#fff}
-.go{border:0;background:transparent;color:var(--blue);cursor:pointer;padding:4px 10px;border-radius:8px;font-size:13px;font-weight:600}
-.go:hover{background:var(--blue-soft)}
+.chip{border:1px solid var(--border);background:transparent;border-radius:9999px;padding:6px 12px;min-height:34px;cursor:pointer;font-size:13px;display:inline-flex;gap:6px;align-items:center}
+.chip[aria-pressed="true"]{background:var(--accent);color:var(--on-accent);border-color:var(--accent)}
+.chip em{font-style:normal;font-family:var(--mono);opacity:.85}
+.fallback{margin-top:12px}.fallback summary{cursor:pointer;color:var(--text-muted);font-size:13px;padding:6px 0}
+.drop{margin-top:8px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;border:2px dashed var(--band-line);border-radius:20px;padding:14px;background:var(--surface-2)}
+.drop.over{border-color:var(--accent);background:var(--band)}
+.drop-t{flex:1 1 220px;min-width:0}.drop-t b{display:block}
+
+.tools{display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding:16px 16px 12px}
+.search{position:relative;flex:1 1 100%;min-width:0}
+.search svg{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--text-muted)}
+.search input{width:100%;min-height:44px;border:1px solid var(--border);background:var(--surface-2);border-radius:9999px;padding:10px 16px 10px 42px;font-size:16px}
+.search input:focus{border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 30%,transparent);outline:0}
+.tools .btn{flex:1 1 0;padding-inline:12px;font-size:14px;white-space:nowrap}
+
+.wrap{overflow:auto;max-height:72vh;border-top:1px solid var(--border)}
+table{border-collapse:separate;border-spacing:0;width:100%}
+th{position:sticky;top:0;z-index:2;background:var(--band);text-align:right;font-weight:500;padding:10px 12px;white-space:nowrap}
+th:first-child{text-align:left}
+td{padding:9px 12px;border-bottom:1px solid var(--border);text-align:right;font-family:var(--mono);font-variant-numeric:tabular-nums;white-space:nowrap;background:var(--surface)}
+td:first-child{text-align:left;font-family:var(--font);white-space:normal;min-width:240px}
+tr.building-row td{background:var(--band);font-weight:700;border-bottom:2px solid var(--band-line)}
+tr.building-row td:first-child{border-left:4px solid var(--accent)}
+tr.floor-row td{background:var(--surface-2);font-weight:500}
+tr.floor-row td:first-child{padding-left:30px;border-left:4px solid var(--band-line)}
+tr.room-row td:first-child{padding-left:56px;border-left:4px solid transparent}
+tr.total-row td{background:var(--band);font-weight:700;position:sticky;bottom:0;z-index:1;border-top:2px solid var(--band-line)}
+.lab{display:inline-flex;gap:6px;align-items:center;min-width:0}
+.lab .lv{color:var(--accent-deep)}
+.tg{border:0;background:transparent;cursor:pointer;padding:6px;margin:-6px -2px -6px -6px;border-radius:8px;color:var(--text-muted);display:inline-grid;place-items:center}
+.tg svg{transition:transform .15s}.tg[aria-expanded="true"] svg{transform:rotate(90deg)}
+.sp{width:1.15em;display:inline-block;flex:none}
+.num-done{color:var(--success)}.num-remaining{color:var(--warn)}
+.pg{display:flex;align-items:center;gap:10px;min-width:160px}
+.pg b{width:42px;text-align:right;font-weight:500}
+.go{border:0;background:transparent;color:var(--accent-deep);cursor:pointer;padding:8px 12px;border-radius:9999px;font-family:var(--font);font-size:13px;font-weight:500;min-height:36px}
+.go:hover{background:var(--band)}
 .total-row .go{display:none}
-td.ac,th.ac{text-align:center;padding-inline:8px}
-.empty{padding:32px;text-align:center;color:var(--muted)}
-.legend{display:flex;gap:16px;flex-wrap:wrap;padding:12px 20px;font-size:12.5px;color:var(--muted);border-top:1px solid var(--line)}
+td.ac,th.ac{text-align:center;padding-inline:6px}
+.empty{padding:32px;text-align:center;color:var(--text-muted)}
+.legend{display:flex;gap:6px 16px;flex-wrap:wrap;padding:12px 20px;font-size:12.5px;color:var(--text-muted);border-top:1px solid var(--border)}
 .legend span{display:inline-flex;gap:6px;align-items:center}.legend i{width:10px;height:10px;border-radius:50%;display:inline-block}
+
 .sheet-bg{position:fixed;inset:0;background:var(--overlay);display:none;z-index:50}.sheet-bg.on{display:block}
-.sheet{position:fixed;top:0;right:0;bottom:0;width:min(560px,100%);background:#fff;z-index:51;transform:translateX(100%);transition:transform .4s cubic-bezier(.16,1,.3,1);display:flex;flex-direction:column}
+.sheet{position:fixed;top:0;right:0;bottom:0;width:min(560px,100%);background:var(--surface);z-index:51;transform:translateX(100%);transition:transform .45s cubic-bezier(.16,1,.3,1);display:flex;flex-direction:column;padding-top:env(safe-area-inset-top,0px)}
 .sheet.on{transform:none}
-.sh-h{display:flex;gap:12px;justify-content:space-between;align-items:flex-start;padding:18px 20px;border-bottom:1px solid var(--line);background:var(--blue-soft)}
-.sh-h h3{margin:0;font-size:17px;color:var(--navy)}
-.sh-b{overflow:auto;padding:12px 20px 24px;flex:1}
+.sh-h{display:flex;gap:12px;justify-content:space-between;align-items:flex-start;padding:16px 18px;border-bottom:1px solid var(--border)}
+.sh-h h3{margin:0;font-size:17px;overflow-wrap:anywhere}
+.sh-b{overflow:auto;padding:12px 18px calc(24px + env(safe-area-inset-bottom,0px));flex:1}
 .tabs{display:flex;gap:8px;margin:6px 0 10px;flex-wrap:wrap}
-.li{display:flex;gap:10px;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--line)}
-.li div{min-width:0}.li b{font-weight:600;display:block;overflow-wrap:anywhere}.li code{font-size:12px;color:var(--muted)}
-.tag{flex:none;border-radius:999px;padding:2px 10px;font-size:12px;font-weight:600;background:var(--track)}
-.tag.y{color:var(--green);background:#e8f5ec}.tag.n{color:var(--orange);background:#fff3e0}
-.toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,20px);background:var(--navy);color:#fff;padding:10px 20px;border-radius:999px;opacity:0;pointer-events:none;transition:.3s;z-index:60}
+.li{display:flex;gap:10px;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border)}
+.li div{min-width:0}.li b{font-weight:500;display:block;overflow-wrap:anywhere}.li code{font-family:var(--mono);font-size:12px;color:var(--text-muted)}
+.tag{flex:none;border-radius:9999px;padding:2px 10px;font-size:12px;font-weight:500;background:var(--band)}
+.tag.y{color:var(--success)}.tag.n{color:var(--warn)}
+.toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translate(-50%,20px);background:var(--text);color:var(--surface);padding:10px 20px;border-radius:9999px;opacity:0;pointer-events:none;transition:.3s;z-index:60;max-width:90vw;text-align:center}
 .toast.on{opacity:1;transform:translate(-50%,0)}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
-@media (max-width:560px){.container{padding:18px 12px 40px}.toolbar,.card-pad{padding:14px}}
+
+@media (min-width:700px){
+  body{padding-inline:20px}.hero{margin-inline:-20px;padding-inline:20px}
+  .search{flex:1 1 260px}.tools .btn{flex:none}
+}
+@media (max-width:900px){.kpis{grid-template-columns:repeat(2,1fr)}}
+/* มือถือ: แปลงแถวตารางเป็นการ์ดต่อแถว (ชื่อ + แถบ + ตัวเลข 3 ช่อง) */
+@media (max-width:699px){
+  .card{border-radius:24px}.pad{padding:16px}
+  .wrap{max-height:none;overflow:visible}
+  table,tbody{display:block}thead{display:none}
+  tr{display:grid;grid-template-columns:repeat(3,1fr);grid-template-areas:"lab lab go" "bar bar bar" "tot done rem";column-gap:8px;padding:10px 14px 12px;border-bottom:1px solid var(--border);background:var(--surface)}
+  td{display:block;padding:0;border:0!important;background:transparent!important;min-width:0!important;text-align:left;position:static!important}
+  td:nth-child(1){grid-area:lab;align-self:center;font-size:15px}
+  td:nth-child(6){grid-area:go;justify-self:end}
+  td:nth-child(5){grid-area:bar;margin:8px 0 6px}
+  td:nth-child(2){grid-area:tot}td:nth-child(3){grid-area:done}td:nth-child(4){grid-area:rem}
+  td:nth-child(n+2):nth-child(-n+4){font-size:15px}
+  td:nth-child(n+2):nth-child(-n+4)::before{display:block;font-family:var(--font);font-size:11px;color:var(--text-muted);font-weight:400}
+  td:nth-child(2)::before{content:'ทั้งหมด'}td:nth-child(3)::before{content:'ตรวจแล้ว'}td:nth-child(4)::before{content:'รอตรวจ'}
+  tr.building-row{background:var(--band);border-left:4px solid var(--accent)}
+  tr.floor-row{background:var(--surface-2);border-left:4px solid var(--band-line);padding-left:24px}
+  tr.room-row{padding-left:38px}
+  tr.total-row{background:var(--band);border-top:2px solid var(--band-line);position:static}
+  td:first-child{padding-left:0!important}
+  .pg{min-width:0}
+  .empty{display:block}
+  .kpi{padding:14px}
+  #up{order:2}
+  .tools .btn{flex:1 1 0;font-size:13px;padding-inline:8px;gap:4px}.tools .btn svg{display:none}
+  .legend{padding:12px 16px}
+}
 </style>
 </head>
 <body>
 
-<div class="container">
-  <header class="page-header">
-    <div>
-      <h1>รายงานความคืบหน้าการตรวจนับทรัพย์สิน</h1>
-      <p>คณะพาณิชยศาสตร์และการบัญชี (CICM) มหาวิทยาลัยธรรมศาสตร์ · สรุปตามอาคาร ชั้น และห้อง</p>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"></svg>
+
+<header class="hero">
+  <div class="hero-in">
+    <div class="top">
+      <div class="brand"><span class="dots"><i></i><i></i><i></i><i></i></span>CICM · งานพัสดุ</div>
+      <button class="theme" id="theme" type="button" aria-label="สลับโหมดสว่าง/มืด"><svg class="i" data-ic="sun" viewBox="0 0 24 24"></svg></button>
     </div>
-    <div class="header-actions">
+    <h1>รายงานความคืบหน้าการตรวจนับทรัพย์สิน</h1>
+    <p>สรุปตามอาคาร → ชั้น → ห้อง ดึงผลตรวจนับสดจาก Google Sheet</p>
+    <div class="hero-act">
       <span class="updated" id="updated"></span>
-      <button class="btn" id="export" type="button"><i class="fa-solid fa-file-excel"></i>ส่งออก Excel</button>
+      <button class="btn white" id="export" type="button"><svg class="i" data-ic="download" viewBox="0 0 24 24"></svg>ส่งออก Excel</button>
     </div>
-  </header>
+  </div>
+</header>
 
-  <section class="summary-grid" id="kpis" aria-label="สรุปภาพรวม"></section>
+<main>
+  <section class="kpis" id="kpis" aria-label="สรุปภาพรวม"></section>
 
-  <section class="card card-pad" id="up">
+  <section class="card pad" id="up">
     <h2>แหล่งข้อมูลและเงื่อนไขสถานะ</h2>
-    <div class="live" id="live" style="display:flex;gap:10px 14px;flex-wrap:wrap;align-items:center;margin-top:8px"></div>
+    <div class="live" id="live"></div>
     <div class="src" id="src"></div>
     <div id="msg"></div>
     <div class="chips" id="chips" role="group" aria-label="สถานะครุภัณฑ์ที่นับ"></div>
-    <p class="muted small" style="margin:10px 0 0">นับเฉพาะครุภัณฑ์ที่อยู่ในรายการตรวจนับและมีสถานะที่เลือก ค่าเริ่มต้นคือ 01 ปกติ, 02 ชำรุด, 04 รอจำหน่าย, 11 ส่งคืนพัสดุ (ตรงกับรายงานตัวอย่าง)</p>
+    <p class="muted small" style="margin:10px 0 0">นับเฉพาะครุภัณฑ์ที่อยู่ในรายการตรวจนับและมีสถานะที่เลือก ค่าเริ่มต้นคือ 01, 02, 04, 11 (ตรงกับรายงานตัวอย่าง)</p>
     <details class="fallback">
       <summary>ใช้ไฟล์ CSV แทนชั่วคราว</summary>
       <div class="drop" id="drop">
-        <div class="drop-t"><b>ลากไฟล์ CSV มาวางที่นี่</b><span class="muted small">ใช้เมื่อเชื่อมต่อชีตไม่ได้ ระหว่างนี้การรีเฟรชอัตโนมัติจะหยุดจนกว่าจะกดกลับไปใช้ชีต</span></div>
+        <div class="drop-t"><b>ลากไฟล์ CSV มาวางที่นี่</b><span class="muted small">ใช้เมื่อเชื่อมต่อชีตไม่ได้ การรีเฟรชอัตโนมัติจะหยุดจนกว่าจะกดกลับไปใช้ชีต</span></div>
         <button class="btn ghost" id="pick" type="button">เลือกไฟล์ CSV</button>
         <input id="file" type="file" accept=".csv,text/csv" hidden>
       </div>
@@ -142,21 +210,21 @@ td.ac,th.ac{text-align:center;padding-inline:8px}
   </section>
 
   <section class="card" aria-label="ตารางความคืบหน้า">
-    <div class="toolbar">
-      <label class="search"><i class="fa-solid fa-magnifying-glass"></i><input id="q" type="search" placeholder="ค้นหาอาคาร ชั้น หรือห้อง" autocomplete="off"></label>
-      <button class="btn ghost" id="exp" type="button"><i class="fa-solid fa-angles-down"></i>ขยายทั้งหมด</button>
-      <button class="btn ghost" id="col" type="button"><i class="fa-solid fa-angles-up"></i>ยุบเหลืออาคาร</button>
-      <button class="btn ghost" id="copy" type="button"><i class="fa-regular fa-copy"></i>คัดลอก</button>
+    <div class="tools">
+      <label class="search"><svg class="i" data-ic="search" viewBox="0 0 24 24"></svg><input id="q" type="search" placeholder="ค้นหาอาคาร ชั้น หรือห้อง" autocomplete="off"></label>
+      <button class="btn ghost" id="exp" type="button"><svg class="i" data-ic="down" viewBox="0 0 24 24"></svg>ขยายทั้งหมด</button>
+      <button class="btn ghost" id="col" type="button"><svg class="i" data-ic="up" viewBox="0 0 24 24"></svg>ยุบเหลืออาคาร</button>
+      <button class="btn ghost" id="copy" type="button"><svg class="i" data-ic="copy" viewBox="0 0 24 24"></svg>คัดลอก</button>
     </div>
-    <div class="table-wrap"><table id="tb"><thead><tr><th>อาคาร / ชั้น / ห้อง</th><th>ทั้งหมด</th><th>ตรวจนับแล้ว</th><th>รอตรวจนับ</th><th style="text-align:left">ความคืบหน้า</th><th class="ac">รายการ</th></tr></thead><tbody id="body"></tbody></table></div>
-    <div class="legend"><span><i style="background:var(--green)"></i>ตั้งแต่ 80%</span><span><i style="background:var(--orange)"></i>40–79%</span><span><i style="background:var(--red)"></i>ต่ำกว่า 40%</span></div>
+    <div class="wrap"><table id="tb"><thead><tr><th>อาคาร / ชั้น / ห้อง</th><th>ทั้งหมด</th><th>ตรวจแล้ว</th><th>รอตรวจ</th><th style="text-align:left">ความคืบหน้า</th><th class="ac">รายการ</th></tr></thead><tbody id="body"></tbody></table></div>
+    <div class="legend"><span><i style="background:var(--success)"></i>ตั้งแต่ 80%</span><span><i style="background:var(--warn)"></i>40–79%</span><span><i style="background:var(--danger)"></i>ต่ำกว่า 40%</span></div>
   </section>
-</div>
+</main>
 
 <div class="sheet-bg" id="bg"></div>
 <aside class="sheet" id="sheet" aria-hidden="true" aria-label="รายการครุภัณฑ์">
   <div class="sh-h"><div><h3 id="sh-t"></h3><div class="muted small" id="sh-s"></div></div>
-    <button class="btn ghost" id="sh-x" type="button" aria-label="ปิด"><i class="fa-solid fa-xmark"></i></button></div>
+    <button class="btn ghost" id="sh-x" type="button" aria-label="ปิด" style="padding:10px"><svg class="i" data-ic="x" viewBox="0 0 24 24"></svg></button></div>
   <div class="sh-b"><div class="tabs" id="tabs"></div><div id="list"></div></div>
 </aside>
 <div class="toast" id="toast" role="status"></div>
@@ -170,7 +238,23 @@ const $=id=>document.getElementById(id);
 const th=new Intl.Collator('th',{sensitivity:'base',numeric:true});
 const formatFloor=f=>{if(f==null||f==='(blank)')return 'ไม่ระบุชั้น';const s=String(f).trim();return /^\d+$/.test(s)?'ชั้น '+parseInt(s,10):s};
 const lbl=(x,l)=>{const v=x[l];return l===1?formatFloor(v):(v==='(blank)'?(l===0?'ไม่ระบุอาคาร':'ไม่ระบุห้อง'):v)};
-const LV=['fa-building','fa-layer-group','fa-door-open'],CL=['building-row','floor-row','room-row'];
+const IC={sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2m-7.07-2.93 1.41-1.41m11.32-11.32 1.41-1.41M2 12h2m16 0h2M4.93 4.93l1.41 1.41m11.32 11.32 1.41 1.41"/>',
+ download:'<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/>',
+ search:'<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>',
+ down:'<path d="m7 6 5 5 5-5"/><path d="m7 13 5 5 5-5"/>',up:'<path d="m17 11-5-5-5 5"/><path d="m17 18-5-5-5 5"/>',
+ copy:'<rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>',
+ x:'<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',chev:'<path d="m9 18 6-6-6-6"/>',
+ refresh:'<path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/>',
+ building:'<rect width="16" height="20" x="4" y="2" rx="2"/><path d="M9 22v-4h6v4M8 6h.01M16 6h.01M12 6h.01M12 10h.01M12 14h.01M16 10h.01M16 14h.01M8 10h.01M8 14h.01"/>',
+ layers:'<path d="m12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z"/><path d="m22 17.65-9.17 4.16a2 2 0 0 1-1.66 0L2 17.65"/><path d="m22 12.65-9.17 4.16a2 2 0 0 1-1.66 0L2 12.65"/>',
+ door:'<path d="M13 4h3a2 2 0 0 1 2 2v14"/><path d="M2 20h3M13 20h9"/><path d="M10 12v.01"/><path d="M13 4.562v16.157a1 1 0 0 1-1.242.97L5 20V5.562a2 2 0 0 1 1.515-1.94l4-1A2 2 0 0 1 13 4.561Z"/>',
+ box:'<path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/>',
+ ok:'<circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/>',
+ wait:'<path d="M5 22h14M5 2h14"/><path d="M17 22v-4.172a2 2 0 0 0-.586-1.414L12 12l-4.414 4.414A2 2 0 0 0 7 17.828V22"/><path d="M7 2v4.172a2 2 0 0 0 .586 1.414L12 12l4.414-4.414A2 2 0 0 0 17 6.172V2"/>',
+ trend:'<path d="M16 7h6v6"/><path d="m22 7-8.5 8.5-5-5L2 17"/>'};
+const ic=(n,c)=>`<svg class="i${c?' '+c:''}" viewBox="0 0 24 24">${IC[n]}</svg>`;
+document.querySelectorAll('[data-ic]').forEach(e=>e.innerHTML=IC[e.dataset.ic]);
+const LV=['building','layers','door'],CL=['building-row','floor-row','room-row'];
 
 const ASSETS=DB.A.map(a=>({id:a[0],no:a[1],name:a[2],b:a[3]<0?null:DB.B[a[3]],f:a[4]||null,r:a[5]<0?null:DB.R[a[5]],st:a[6]}));
 let state={name:'ข้อมูลที่ฝังไว้ในหน้านี้',at:COUNT_AT,inList:new Set(DB.inList),done:new Set(DB.done),rows:DB.inList.length,unknown:0,embedded:true};
@@ -245,7 +329,7 @@ function live(){
   $('updated').innerHTML=`<span class="dot${ok?'':' off'}"></span>${ok?'อัปเดตล่าสุด':'ข้อมูล ณ'} ${esc(at)}`;
   $('live').innerHTML=`<b>${paused?'ใช้ไฟล์ CSV ชั่วคราว':ok?'เชื่อมต่อ Google Sheet อยู่':'ยังไม่ได้เชื่อมต่อชีต'}</b>
   <span class="muted small">${paused?esc(state.name):ok?`ผ่าน ${esc(state.via)} · รีเฟรชทุก ${CFG.refreshSec} วินาที`:'กำลังแสดงข้อมูลที่ฝังไว้ ณ '+COUNT_AT}</span>
-  <button class="btn ghost" id="refresh" type="button"><i class="fa-solid fa-rotate"></i>${paused?'กลับไปใช้ชีต':'รีเฟรชตอนนี้'}</button>`;
+  <button class="btn ghost" id="refresh" type="button">${ic('refresh')}${paused?'กลับไปใช้ชีต':'รีเฟรชตอนนี้'}</button>`;
   $('refresh').onclick=()=>{if(paused){paused=false;lastErr=''}sync(true)};
   if(lastErr&&!paused)setMsg('เชื่อมต่อชีตไม่ได้: '+esc(lastErr)+'<br>ตรวจว่าตั้งค่า Apps Script หรือแชร์ชีตตามคู่มือแล้ว ระหว่างนี้หน้าแสดงข้อมูลเดิมที่มีอยู่',true)}
 
@@ -263,7 +347,7 @@ function build(){
 
 const pct=(y,t)=>t?y/t:0;
 const cls=p=>p>=.8?'is-success':p>=.4?'is-warning':'is-danger';
-const bar=p=>`<div class="progress-cell"><div class="progress-track" role="progressbar" aria-valuenow="${Math.round(p*100)}" aria-valuemin="0" aria-valuemax="100"><span class="progress-fill ${cls(p)}" style="width:${(p*100).toFixed(1)}%"></span></div><span class="progress-text">${Math.round(p*100)}%</span></div>`;
+const bar=p=>`<div class="pg"><div class="track" role="progressbar" aria-valuenow="${Math.round(p*100)}" aria-valuemin="0" aria-valuemax="100"><span class="fill ${cls(p)}" style="width:${(p*100).toFixed(1)}%"></span></div><b>${Math.round(p*100)}%</b></div>`;
 const fmt=n=>(n||0).toLocaleString('en-US');
 
 /* ---------- วาดตาราง ---------- */
@@ -281,8 +365,8 @@ function render(){
   const body=$('body');
   body.innerHTML=vis.map(x=>{
     const exp=q||isOpen(x);const p=pct(x.y,x.n+x.y),lab=lbl(x.path,x.l);
-    const tg=x.l<2?`<button class="tg" data-k="${esc(x.key)}" aria-expanded="${exp?'true':'false'}" aria-label="ยุบหรือขยาย ${esc(lab)}"><i class="fa-solid fa-chevron-right"></i></button>`:'<span class="sp"></span>';
-    return`<tr class="${CL[x.l]}"><td><span class="lab">${tg}<i class="fa-solid ${LV[x.l]} lv"></i>${esc(lab)}</span></td><td>${fmt(x.n+x.y)}</td><td class="num-done">${fmt(x.y)}</td><td class="num-remaining">${fmt(x.n)}</td><td>${bar(p)}</td><td class="ac"><button class="go" data-o="${esc(x.key)}" aria-label="ดูรายการครุภัณฑ์ ${esc(lab)}">ดู</button></td></tr>`}).join('');
+    const tg=x.l<2?`<button class="tg" data-k="${esc(x.key)}" aria-expanded="${exp?'true':'false'}" aria-label="ยุบหรือขยาย ${esc(lab)}">${ic('chev')}</button>`:'<span class="sp"></span>';
+    return`<tr class="${CL[x.l]}"><td><span class="lab">${tg}${ic(LV[x.l],'lv')}${esc(lab)}</span></td><td>${fmt(x.n+x.y)}</td><td class="num-done">${fmt(x.y)}</td><td class="num-remaining">${fmt(x.n)}</td><td>${bar(p)}</td><td class="ac"><button class="go" data-o="${esc(x.key)}" aria-label="ดูรายการครุภัณฑ์ ${esc(lab)}">ดู</button></td></tr>`}).join('');
   const N=flat.filter(x=>x.l===0).reduce((s,x)=>s+x.n,0),Y=flat.filter(x=>x.l===0).reduce((s,x)=>s+x.y,0);
   if(!flat.length)body.innerHTML='<tr><td colspan="6" class="empty">ไม่มีครุภัณฑ์ที่ตรงกับสถานะที่เลือก</td></tr>';
   else body.insertAdjacentHTML('beforeend',`<tr class="total-row"><td>รวมทั้งหมด</td><td>${fmt(N+Y)}</td><td class="num-done">${fmt(Y)}</td><td class="num-remaining">${fmt(N)}</td><td>${bar(pct(Y,N+Y))}</td><td></td></tr>`);
@@ -296,10 +380,8 @@ function kpi(N,Y){
   const tot=N+Y,p=pct(Y,tot);
   const out=ASSETS.filter(a=>state.inList.has(a.id)&&!scope.has(a.st)).length;
   const miss=ASSETS.filter(a=>!state.inList.has(a.id)&&scope.has(a.st)).length;
-  $('kpis').innerHTML=`<div class="summary-card"><div class="summary-icon"><i class="fa-solid fa-boxes-stacked"></i></div><div><small>จำนวนรายการทั้งหมด</small><b>${fmt(tot)}</b></div></div>
-  <div class="summary-card ok"><div class="summary-icon"><i class="fa-solid fa-circle-check"></i></div><div><small>ตรวจนับแล้ว</small><b>${fmt(Y)}</b></div></div>
-  <div class="summary-card wait"><div class="summary-icon"><i class="fa-solid fa-hourglass-half"></i></div><div><small>รอตรวจนับ</small><b>${fmt(N)}</b></div></div>
-  <div class="summary-card"><div class="summary-icon"><i class="fa-solid fa-chart-line"></i></div><div style="flex:1;min-width:0"><small>ความคืบหน้ารวม</small><b>${(p*100).toFixed(1)}%</b><div class="progress-track"><span class="progress-fill ${cls(p)}" style="width:${(p*100).toFixed(1)}%"></span></div></div></div>`;
+  const card=(c,i,l,v,x='')=>`<div class="kpi ${c}"><div class="kpi-h"><span class="kpi-ic">${ic(i)}</span>${l}</div><b>${v}</b>${x}</div>`;
+  $('kpis').innerHTML=card('','box','รายการทั้งหมด',fmt(tot))+card('ok','ok','ตรวจนับแล้ว',fmt(Y))+card('wait','wait','รอตรวจนับ',fmt(N))+card('','trend','ความคืบหน้ารวม',(p*100).toFixed(1)+'%',`<div class="track"><span class="fill ${cls(p)}" style="width:${(p*100).toFixed(1)}%"></span></div>`);
   const notes=[];if(out)notes.push(`อยู่ในรายการตรวจนับแต่นอกเงื่อนไขสถานะ ${fmt(out)} รายการ`);if(miss)notes.push(`สถานะตรงเงื่อนไขแต่ไม่อยู่ในรายการตรวจนับ ${fmt(miss)} รายการ`);
   kpi.notes=notes}
 
@@ -367,6 +449,7 @@ $('export').onclick=()=>{
   const u=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'})),a=document.createElement('a');
   a.href=u;a.download=n;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),2000);toast('ส่งออกไฟล์แล้ว เปิดด้วย Excel ได้เลย')};
 
+$('theme').onclick=()=>{const r=document.documentElement,d=r.dataset.theme?r.dataset.theme==='dark':matchMedia('(prefers-color-scheme:dark)').matches;r.dataset.theme=d?'light':'dark'};
 done();
 sync(false);
 setInterval(()=>{if(!document.hidden)sync(false)},CFG.refreshSec*1000);
