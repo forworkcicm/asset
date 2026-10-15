@@ -39,8 +39,12 @@ svg.i{width:1.15em;height:1.15em;stroke:currentColor;fill:none;stroke-width:2;st
 h1{margin:16px 0 6px;font-size:clamp(24px,6vw,40px);line-height:1.2;font-weight:700;text-wrap:balance}
 .hero p{margin:0;max-width:60ch;opacity:.95;font-size:14px}
 .hero-act{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px;align-items:center}
-.updated{display:inline-flex;gap:8px;align-items:center;background:rgba(255,255,255,.22);border-radius:9999px;padding:8px 14px;font-size:13px}
-.updated .dot{width:9px;height:9px;border-radius:50%;background:#fff;animation:pulse 2s infinite}
+.updated{display:inline-flex;gap:8px;align-items:center;flex-wrap:wrap;background:rgba(255,255,255,.22);border-radius:9999px;padding:8px 14px;font-size:14px}
+.updated.err{border-radius:22px;flex-wrap:nowrap;background:#fff;color:var(--danger);font-weight:500;padding:6px 8px 6px 14px}
+.updated.err .dot{background:#E5372B;animation:pulseR 1.2s infinite}
+@keyframes pulseR{0%{box-shadow:0 0 0 0 rgba(229,55,43,.6)}70%{box-shadow:0 0 0 8px transparent}100%{box-shadow:0 0 0 0 transparent}}
+.retry{flex:none;border:0;background:var(--danger);color:#fff;border-radius:9999px;padding:6px 14px;min-height:36px;cursor:pointer;font-weight:500;display:inline-flex;gap:6px;align-items:center}
+.updated .dot{flex:none;width:9px;height:9px;border-radius:50%;background:#fff;animation:pulse 2s infinite}
 .updated .dot.off{background:#FFE08A;animation:none}
 @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(255,255,255,.7)}70%{box-shadow:0 0 0 8px transparent}100%{box-shadow:0 0 0 0 transparent}}
 .btn{display:inline-flex;gap:8px;align-items:center;justify-content:center;border:0;border-radius:9999px;padding:10px 18px;min-height:44px;cursor:pointer;background:var(--accent);color:var(--on-accent);font-weight:500;transition:background .2s}
@@ -104,6 +108,15 @@ tr.total-row td{background:var(--band);font-weight:700;position:sticky;bottom:0;
 .num-done{color:var(--success)}.num-remaining{color:var(--warn)}
 .pg{display:flex;align-items:center;gap:10px;min-width:160px}
 .pg b{width:42px;text-align:right;font-weight:500}
+.frac{flex:none;font-family:var(--mono);font-size:12px;background:var(--surface);border:1px solid var(--border);border-radius:9999px;padding:1px 8px;white-space:nowrap}
+tr.building-row .frac{background:var(--surface)}
+.qrow{display:flex;gap:8px;align-items:center;overflow-x:auto;scrollbar-width:none;padding:0 0 8px}
+.qrow::-webkit-scrollbar{display:none}
+.ql{flex:none;font-size:12px;color:var(--text-muted);min-width:4.2em}
+.seg{display:inline-flex;flex:none;border:1px solid var(--border);border-radius:9999px;padding:3px;gap:2px;background:var(--surface-2)}
+.seg .chip{border:0;min-height:36px}
+.tg[aria-expanded]{scroll-margin-top:8px}
+tr{scroll-margin-top:8px}
 .go{border:0;background:transparent;color:var(--accent-deep);cursor:pointer;padding:8px 12px;border-radius:9999px;font-family:var(--font);font-size:13px;font-weight:500;min-height:36px}
 .go:hover{background:var(--band)}
 .total-row .go{display:none}
@@ -128,7 +141,7 @@ td.ac,th.ac{text-align:center;padding-inline:6px}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 
 
-.quick{display:flex;gap:8px;overflow-x:auto;padding:14px 16px 0;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.quick{padding:14px 16px 4px}
 .quick::-webkit-scrollbar,.acts::-webkit-scrollbar{display:none}
 .quick .chip{flex:none;white-space:nowrap;min-height:38px}
 .qsep{flex:none;width:1px;background:var(--border);margin:4px 2px}
@@ -206,7 +219,8 @@ td.ac,th.ac{text-align:center;padding-inline:6px}
     <div class="live" id="live"></div>
     <div class="src" id="src"></div>
     <div id="msg"></div>
-    <div class="chips" id="chips" role="group" aria-label="สถานะครุภัณฑ์ที่นับ"></div>
+    <details class="fallback" id="stdet"><summary>เลือกสถานะครุภัณฑ์ที่ใช้นับทั้งหมด</summary>
+    <div class="chips" id="chips" role="group" aria-label="สถานะครุภัณฑ์ที่นับ"></div></details>
     <p class="muted small" style="margin:10px 0 0">นับเฉพาะครุภัณฑ์ที่อยู่ในรายการตรวจนับและมีสถานะที่เลือก ค่าเริ่มต้นคือ 01, 02, 04, 11 (ตรงกับรายงานตัวอย่าง)</p>
     <details class="fallback">
       <summary>ใช้ไฟล์ CSV แทนชั่วคราว</summary>
@@ -219,9 +233,10 @@ td.ac,th.ac{text-align:center;padding-inline:6px}
   </section>
 
   <section class="card" aria-label="ตารางความคืบหน้า">
+    <datalist id="sug"></datalist>
     <div class="quick" id="quick" aria-label="กรองด่วน"></div>
     <div class="tools">
-      <label class="search"><svg class="i" data-ic="search" viewBox="0 0 24 24"></svg><input id="q" type="search" placeholder="ค้นหาอาคาร ชั้น หรือห้อง" autocomplete="off"></label>
+      <label class="search"><svg class="i" data-ic="search" viewBox="0 0 24 24"></svg><input id="q" type="search" list="sug" placeholder="ค้นหาอาคาร ชั้น หรือห้อง" autocomplete="off"></label>
       <div class="acts"><button class="btn ghost" id="exp" type="button"><svg class="i" data-ic="down" viewBox="0 0 24 24"></svg>ขยายทั้งหมด</button>
       <button class="btn ghost" id="col" type="button"><svg class="i" data-ic="up" viewBox="0 0 24 24"></svg>ยุบเหลืออาคาร</button>
       <button class="btn ghost" id="copy" type="button"><svg class="i" data-ic="copy" viewBox="0 0 24 24"></svg>คัดลอก</button></div>
@@ -337,7 +352,10 @@ async function sync(manual){
 function live(){
   const ok=!state.embedded&&!lastErr&&!paused;
   const at=state.at instanceof Date?state.at.toLocaleString('th-TH',{dateStyle:'medium',timeStyle:'short'}):state.at;
-  $('updated').innerHTML=`<span class="dot${ok?'':' off'}"></span>${ok?'อัปเดตล่าสุด':'ข้อมูล ณ'} ${esc(at)}`;
+  const bad=!!lastErr&&!paused;
+  $('updated').className='updated'+(bad?' err':'');
+  $('updated').innerHTML=bad?`<span class="dot"></span><span style="flex:1;min-width:0">เชื่อมต่อชีตไม่ได้ · แสดงข้อมูล ณ ${esc(at)}</span><button class="retry" id="retry" type="button">${ic('refresh')}ลองเชื่อมต่อใหม่</button>`:`<span class="dot${ok?'':' off'}"></span>${ok?'อัปเดตล่าสุด':'ข้อมูล ณ'} ${esc(at)}`;
+  if(bad)$('retry').onclick=()=>sync(true);
   $('live').innerHTML=`<b>${paused?'ใช้ไฟล์ CSV ชั่วคราว':ok?'เชื่อมต่อ Google Sheet อยู่':'ยังไม่ได้เชื่อมต่อชีต'}</b>
   <span class="muted small">${paused?esc(state.name):ok?`ผ่าน ${esc(state.via)} · รีเฟรชทุก ${CFG.refreshSec} วินาที`:'กำลังแสดงข้อมูลที่ฝังไว้ ณ '+COUNT_AT}</span>
   <button class="btn ghost" id="refresh" type="button">${ic('refresh')}${paused?'กลับไปใช้ชีต':'รีเฟรชตอนนี้'}</button>`;
@@ -358,18 +376,25 @@ function build(){
 
 const pct=(y,t)=>t?y/t:0;
 const cls=p=>p>=.8?'is-success':p>=.4?'is-warning':'is-danger';
-const bar=p=>`<div class="pg"><div class="track" role="progressbar" aria-valuenow="${Math.round(p*100)}" aria-valuemin="0" aria-valuemax="100"><span class="fill ${cls(p)}" style="width:${(p*100).toFixed(1)}%"></span></div><b>${Math.round(p*100)}%</b></div>`;
+const bar=(p,y,t)=>`<div class="pg"><div class="track" role="progressbar" aria-valuenow="${Math.round(p*100)}" aria-valuemin="0" aria-valuemax="100"><span class="fill ${cls(p)}" style="width:${(p*100).toFixed(1)}%"></span></div><span class="frac">${fmt(y)}/${fmt(t)}</span><b>${Math.round(p*100)}%</b></div>`;
 const fmt=n=>(n||0).toLocaleString('en-US');
 
 /* ---------- วาดตาราง ---------- */
-let bF='',pendOnly=false;
+let bF='',fF='',pf='';
 function quick(all){
-  const bs=all.filter(x=>x.l===0);
-  $('quick').innerHTML=`<button class="chip" type="button" data-p="1" aria-pressed="${pendOnly}">เฉพาะที่ยังตรวจไม่เสร็จ</button><span class="qsep"></span><button class="chip" type="button" data-b="" aria-pressed="${!bF}">ทุกอาคาร</button>`+bs.map(x=>`<button class="chip" type="button" data-b="${esc(x.path[0])}" aria-pressed="${bF===x.path[0]}">${esc(lbl(x.path,0))}</button>`).join('')}
+  const bs=all.filter(x=>x.l===0),fs=bF?all.filter(x=>x.l===1&&x.path[0]===bF):[];
+  const c=(a,v,t,on)=>`<button class="chip" type="button" ${a}="${esc(v)}" aria-pressed="${on}">${t}</button>`;
+  $('quick').innerHTML=
+   `<div class="qrow"><span class="ql">ความคืบหน้า</span><span class="seg">${c('data-p','','ทั้งหมด',!pf)}${c('data-p','n','ยังตรวจไม่เสร็จ',pf==='n')}${c('data-p','y','ตรวจเสร็จแล้ว',pf==='y')}</span></div>`+
+   `<div class="qrow"><span class="ql">สถานะ</span>${['01','02','05'].map(k=>c('data-sc',k,(SHORT[k]),scope.has(k))).join('')}</div>`+
+   `<div class="qrow"><span class="ql">อาคาร</span>${c('data-b','','ทุกอาคาร',!bF)}${bs.map(x=>c('data-b',x.path[0],esc(lbl(x.path,0)),bF===x.path[0])).join('')}</div>`+
+   (bF?`<div class="qrow"><span class="ql">ชั้น</span>${c('data-f','','ทุกชั้น',!fF)}${fs.map(x=>c('data-f',x.path[1],esc(lbl(x.path,1)),fF===x.path[1])).join('')}</div>`:'')}
+function suggest(){const S=new Set();for(const a of ASSETS){if(a.b)S.add(a.b);if(a.r)S.add(a.r);if(a.f)S.add(formatFloor(a.f))}
+  $('sug').innerHTML=[...S].sort(th.compare).map(v=>`<option value="${esc(v)}">`).join('')}
 let last={flat:[],items:0};
 function render(){
   const built=build();const all=built.flat,items=built.items;
-  const flat=all.filter(x=>(!bF||x.path[0]===bF)&&(!pendOnly||x.n>0));last={flat,items};quick(all);
+  const flat=all.filter(x=>(!bF||x.path[0]===bF)&&(!fF||x.l===0||x.path[1]===fF)&&(pf!=='n'||x.n>0)&&(pf!=='y'||x.n===0));last={flat,items};quick(all);
   const q=query.trim().toLowerCase();
   const match=x=>!q||x.path.some((p,i)=>(lbl(x.path,i)+' '+p).toLowerCase().includes(q));
   const vis=[];
@@ -382,11 +407,11 @@ function render(){
   body.innerHTML=vis.map(x=>{
     const exp=q||isOpen(x);const p=pct(x.y,x.n+x.y),lab=lbl(x.path,x.l);
     const tg=x.l<2?`<button class="tg" data-k="${esc(x.key)}" aria-expanded="${exp?'true':'false'}" aria-label="ยุบหรือขยาย ${esc(lab)}">${ic('chev')}</button>`:'<span class="sp"></span>';
-    return`<tr class="${CL[x.l]}"><td><span class="lab">${tg}${ic(LV[x.l],'lv')}${esc(lab)}</span></td><td>${fmt(x.n+x.y)}</td><td class="num-done">${fmt(x.y)}</td><td class="num-remaining">${fmt(x.n)}</td><td>${bar(p)}</td><td class="ac"><button class="go" data-o="${esc(x.key)}" aria-label="ดูรายการครุภัณฑ์ ${esc(lab)}">ดู</button></td></tr>`}).join('');
+    return`<tr class="${CL[x.l]}"><td><span class="lab">${tg}${ic(LV[x.l],'lv')}${esc(lab)}</span></td><td>${fmt(x.n+x.y)}</td><td class="num-done">${fmt(x.y)}</td><td class="num-remaining">${fmt(x.n)}</td><td>${bar(p,x.y,x.n+x.y)}</td><td class="ac"><button class="go" data-o="${esc(x.key)}" aria-label="ดูรายการครุภัณฑ์ ${esc(lab)}">ดู</button></td></tr>`}).join('');
   const N=flat.filter(x=>x.l===0).reduce((s,x)=>s+x.n,0),Y=flat.filter(x=>x.l===0).reduce((s,x)=>s+x.y,0);
   const NA=all.filter(x=>x.l===0).reduce((s,x)=>s+x.n,0),YA=all.filter(x=>x.l===0).reduce((s,x)=>s+x.y,0);
   if(!flat.length)body.innerHTML='<tr><td colspan="6" class="empty">ไม่มีครุภัณฑ์ที่ตรงกับสถานะที่เลือก</td></tr>';
-  else body.insertAdjacentHTML('beforeend',`<tr class="total-row"><td>${bF||pendOnly?'รวมที่แสดง':'รวมทั้งหมด'}</td><td>${fmt(N+Y)}</td><td class="num-done">${fmt(Y)}</td><td class="num-remaining">${fmt(N)}</td><td>${bar(pct(Y,N+Y))}</td><td></td></tr>`);
+  else body.insertAdjacentHTML('beforeend',`<tr class="total-row"><td>${bF||fF||pf?'รวมที่แสดง':'รวมทั้งหมด'}</td><td>${fmt(N+Y)}</td><td class="num-done">${fmt(Y)}</td><td class="num-remaining">${fmt(N)}</td><td>${bar(pct(Y,N+Y),Y,N+Y)}</td><td></td></tr>`);
   kpi(NA,YA)}
 /* สถานะยุบ/ขยาย: ค่าเริ่มต้นขยายทั้งหมด; เก็บเฉพาะรายการที่ผู้ใช้ปิด */
 function isOpen(x){return opened.has(x.key)}
@@ -444,9 +469,14 @@ const drop=$('drop');
 drop.addEventListener('drop',e=>take(e.dataTransfer.files[0]));
 $('chips').onclick=e=>{const b=e.target.closest('[data-s]');if(!b)return;const k=b.dataset.s;scope.has(k)?scope.delete(k):scope.add(k);chips();render()};
 $('body').onclick=e=>{
-  const t=e.target.closest('.tg');if(t){const k=t.dataset.k;opened.has(k)?opened.delete(k):opened.add(k);render();return}
+  const t=e.target.closest('.tg');if(t){const k=t.dataset.k;if(opened.has(k))opened.delete(k);else{
+      if(innerWidth<700){const P=k.split('\u0001'),pre=P.slice(0,-1).join('\u0001');for(const o of [...opened]){const O=o.split('\u0001');if(o!==k&&O.length>=P.length&&O.slice(0,P.length-1).join('\u0001')===pre)opened.delete(o)}}
+      opened.add(k)}
+    render();if(innerWidth<700){const n=[...document.querySelectorAll('.tg')].find(z=>z.dataset.k===k);n&&n.closest('tr').scrollIntoView({block:'start',behavior:'smooth'})}return}
   const g=e.target.closest('.go');if(g)openSheet(g.dataset.o)};
-$('quick').onclick=e=>{const b=e.target.closest('.chip');if(!b)return;if('p' in b.dataset)pendOnly=!pendOnly;else bF=b.dataset.b;render()};
+$('quick').onclick=e=>{const b=e.target.closest('.chip');if(!b)return;const d=b.dataset;
+  if('p' in d)pf=d.p;else if('sc' in d){scope.has(d.sc)?scope.delete(d.sc):scope.add(d.sc);chips()}
+  else if('b' in d){bF=d.b;fF=''}else if('f' in d)fF=d.f;render()};
 $('exp').onclick=()=>{opened=new Set(last.flat.filter(x=>x.l<2).map(x=>x.key));render()};
 $('col').onclick=()=>{opened=new Set();render()};
 $('q').oninput=e=>{query=e.target.value;render()};
@@ -472,6 +502,7 @@ $('export').onclick=()=>{
   const u=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'})),a=document.createElement('a');
   a.href=u;a.download=n;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),2000);toast('ส่งออกไฟล์แล้ว เปิดด้วย Excel ได้เลย')};
 
+suggest();
 addEventListener('offline',()=>{toast('ไม่มีอินเทอร์เน็ต: กำลังแสดงข้อมูลล่าสุดที่โหลดไว้');lastErr='ออฟไลน์';live()});
 addEventListener('online',()=>{toast('เชื่อมต่ออินเทอร์เน็ตแล้ว กำลังซิงค์…');sync(false)});
 done();
