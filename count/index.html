@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#FF8233">
+<meta name="color-scheme" content="light">
 <title>รายงานความคืบหน้าการตรวจนับทรัพย์สิน CICM</title>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -19,18 +20,8 @@
   --band:#FFE4D1;--band-line:#F4B183;
   --success:#2F9E5B;--warn:#C77A12;--danger:#C2412D;--track:#F6DCC8;
   --overlay:rgba(0,0,0,.4);
-  --font:'Google Sans','Noto Sans Thai',system-ui,-apple-system,'Segoe UI',sans-serif;
+  color-scheme:light;--font:'Google Sans','Noto Sans Thai',system-ui,-apple-system,'Segoe UI',sans-serif;
   --mono:'Google Sans Code','Google Sans','Noto Sans Thai',ui-monospace,monospace}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
-  --accent:#FF8A4C;--accent-deep:#FF9F6B;--on-accent:#2B1A10;
-  --page-bg:#1C120C;--surface:#271A12;--surface-2:#2F2017;
-  --text:#FBEDE2;--text-muted:#C2A18D;--border:rgba(251,237,226,.14);
-  --band:#4A2B1B;--band-line:#B8683A;--success:#59C98A;--warn:#E3B04B;--danger:#FF8A78;--track:#4A2B1B;--overlay:rgba(0,0,0,.6);color-scheme:dark}}
-:root[data-theme="dark"]{
-  --accent:#FF8A4C;--accent-deep:#FF9F6B;--on-accent:#2B1A10;
-  --page-bg:#1C120C;--surface:#271A12;--surface-2:#2F2017;
-  --text:#FBEDE2;--text-muted:#C2A18D;--border:rgba(251,237,226,.14);
-  --band:#4A2B1B;--band-line:#B8683A;--success:#59C98A;--warn:#E3B04B;--danger:#FF8A78;--track:#4A2B1B;--overlay:rgba(0,0,0,.6);color-scheme:dark}
 *{box-sizing:border-box}
 html{-webkit-text-size-adjust:100%}
 body{margin:0;background:var(--page-bg);color:var(--text);font-family:var(--font);font-size:15px;line-height:1.55;padding-inline:14px}
@@ -45,7 +36,6 @@ svg.i{width:1.15em;height:1.15em;stroke:currentColor;fill:none;stroke-width:2;st
 .brand{display:flex;gap:10px;align-items:center;font-weight:700}
 .dots{display:grid;grid-template-columns:repeat(2,8px);gap:3px}
 .dots i{width:8px;height:8px;border-radius:50%;background:#fff;display:block}
-.theme{background:rgba(255,255,255,.22);border:0;color:#fff;border-radius:9999px;width:40px;height:40px;display:grid;place-items:center;cursor:pointer}
 h1{margin:16px 0 6px;font-size:clamp(24px,6vw,40px);line-height:1.2;font-weight:700;text-wrap:balance}
 .hero p{margin:0;max-width:60ch;opacity:.95;font-size:14px}
 .hero-act{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px;align-items:center}
@@ -137,6 +127,13 @@ td.ac,th.ac{text-align:center;padding-inline:6px}
 .toast.on{opacity:1;transform:translate(-50%,0)}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 
+
+.quick{display:flex;gap:8px;overflow-x:auto;padding:14px 16px 0;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.quick::-webkit-scrollbar,.acts::-webkit-scrollbar{display:none}
+.quick .chip{flex:none;white-space:nowrap;min-height:38px}
+.qsep{flex:none;width:1px;background:var(--border);margin:4px 2px}
+.acts{display:contents}
+.grab{display:none}
 @media (min-width:700px){
   body{padding-inline:20px}.hero{margin-inline:-20px;padding-inline:20px}
   .search{flex:1 1 260px}.tools .btn{flex:none}
@@ -144,6 +141,20 @@ td.ac,th.ac{text-align:center;padding-inline:6px}
 @media (max-width:900px){.kpis{grid-template-columns:repeat(2,1fr)}}
 /* มือถือ: แปลงแถวตารางเป็นการ์ดต่อแถว (ชื่อ + แถบ + ตัวเลข 3 ช่อง) */
 @media (max-width:699px){
+  .tools{padding:12px 16px 14px;gap:10px}
+  .acts{display:flex;gap:8px;overflow-x:auto;flex:1 1 100%;scrollbar-width:none}
+  .acts .btn{flex:none!important;white-space:nowrap}.tools .btn svg{display:inline-block!important}
+  .search input{font-size:16px}
+  tr{padding:14px 14px 14px!important;row-gap:2px}
+  td:nth-child(n+2):nth-child(-n+4){background:var(--surface-2)!important;border-radius:14px;padding:8px 10px;margin-top:2px}
+  tr.building-row td:nth-child(n+2):nth-child(-n+4){background:var(--surface)!important}
+  .go{min-height:44px;min-width:44px;padding:6px 16px;background:var(--band);border-radius:9999px}
+  .tg{padding:12px;margin:-12px -6px -12px -12px}
+  .sheet{top:auto;left:0;right:0;bottom:0;width:100%;height:88vh;border-radius:28px 28px 0 0;transform:translateY(100%);padding-top:0}
+  .sheet.on{transform:none}
+  .grab{display:block;width:44px;height:5px;border-radius:9999px;background:var(--band-line);margin:10px auto 0;flex:none}
+  .sh-h{touch-action:none}
+
   .card{border-radius:24px}.pad{padding:16px}
   .wrap{max-height:none;overflow:visible}
   table,tbody{display:block}thead{display:none}
@@ -165,7 +176,6 @@ td.ac,th.ac{text-align:center;padding-inline:6px}
   .empty{display:block}
   .kpi{padding:14px}
   #up{order:2}
-  .tools .btn{flex:1 1 0;font-size:13px;padding-inline:8px;gap:4px}.tools .btn svg{display:none}
   .legend{padding:12px 16px}
 }
 </style>
@@ -178,7 +188,6 @@ td.ac,th.ac{text-align:center;padding-inline:6px}
   <div class="hero-in">
     <div class="top">
       <div class="brand"><span class="dots"><i></i><i></i><i></i><i></i></span>CICM · งานพัสดุ</div>
-      <button class="theme" id="theme" type="button" aria-label="สลับโหมดสว่าง/มืด"><svg class="i" data-ic="sun" viewBox="0 0 24 24"></svg></button>
     </div>
     <h1>รายงานความคืบหน้าการตรวจนับทรัพย์สิน</h1>
     <p>สรุปตามอาคาร → ชั้น → ห้อง ดึงผลตรวจนับสดจาก Google Sheet</p>
@@ -210,11 +219,12 @@ td.ac,th.ac{text-align:center;padding-inline:6px}
   </section>
 
   <section class="card" aria-label="ตารางความคืบหน้า">
+    <div class="quick" id="quick" aria-label="กรองด่วน"></div>
     <div class="tools">
       <label class="search"><svg class="i" data-ic="search" viewBox="0 0 24 24"></svg><input id="q" type="search" placeholder="ค้นหาอาคาร ชั้น หรือห้อง" autocomplete="off"></label>
-      <button class="btn ghost" id="exp" type="button"><svg class="i" data-ic="down" viewBox="0 0 24 24"></svg>ขยายทั้งหมด</button>
+      <div class="acts"><button class="btn ghost" id="exp" type="button"><svg class="i" data-ic="down" viewBox="0 0 24 24"></svg>ขยายทั้งหมด</button>
       <button class="btn ghost" id="col" type="button"><svg class="i" data-ic="up" viewBox="0 0 24 24"></svg>ยุบเหลืออาคาร</button>
-      <button class="btn ghost" id="copy" type="button"><svg class="i" data-ic="copy" viewBox="0 0 24 24"></svg>คัดลอก</button>
+      <button class="btn ghost" id="copy" type="button"><svg class="i" data-ic="copy" viewBox="0 0 24 24"></svg>คัดลอก</button></div>
     </div>
     <div class="wrap"><table id="tb"><thead><tr><th>อาคาร / ชั้น / ห้อง</th><th>ทั้งหมด</th><th>ตรวจแล้ว</th><th>รอตรวจ</th><th style="text-align:left">ความคืบหน้า</th><th class="ac">รายการ</th></tr></thead><tbody id="body"></tbody></table></div>
     <div class="legend"><span><i style="background:var(--success)"></i>ตั้งแต่ 80%</span><span><i style="background:var(--warn)"></i>40–79%</span><span><i style="background:var(--danger)"></i>ต่ำกว่า 40%</span></div>
@@ -223,7 +233,8 @@ td.ac,th.ac{text-align:center;padding-inline:6px}
 
 <div class="sheet-bg" id="bg"></div>
 <aside class="sheet" id="sheet" aria-hidden="true" aria-label="รายการครุภัณฑ์">
-  <div class="sh-h"><div><h3 id="sh-t"></h3><div class="muted small" id="sh-s"></div></div>
+  <div class="grab" id="grab" aria-hidden="true"></div>
+  <div class="sh-h"><div style="flex:1;min-width:0"><h3 id="sh-t"></h3><div class="muted small" id="sh-s"></div><div class="pg" id="sh-p" style="margin-top:8px"></div></div>
     <button class="btn ghost" id="sh-x" type="button" aria-label="ปิด" style="padding:10px"><svg class="i" data-ic="x" viewBox="0 0 24 24"></svg></button></div>
   <div class="sh-b"><div class="tabs" id="tabs"></div><div id="list"></div></div>
 </aside>
@@ -351,16 +362,21 @@ const bar=p=>`<div class="pg"><div class="track" role="progressbar" aria-valueno
 const fmt=n=>(n||0).toLocaleString('en-US');
 
 /* ---------- วาดตาราง ---------- */
+let bF='',pendOnly=false;
+function quick(all){
+  const bs=all.filter(x=>x.l===0);
+  $('quick').innerHTML=`<button class="chip" type="button" data-p="1" aria-pressed="${pendOnly}">เฉพาะที่ยังตรวจไม่เสร็จ</button><span class="qsep"></span><button class="chip" type="button" data-b="" aria-pressed="${!bF}">ทุกอาคาร</button>`+bs.map(x=>`<button class="chip" type="button" data-b="${esc(x.path[0])}" aria-pressed="${bF===x.path[0]}">${esc(lbl(x.path,0))}</button>`).join('')}
 let last={flat:[],items:0};
 function render(){
-  const {flat,items}=build();last={flat,items};
+  const built=build();const all=built.flat,items=built.items;
+  const flat=all.filter(x=>(!bF||x.path[0]===bF)&&(!pendOnly||x.n>0));last={flat,items};quick(all);
   const q=query.trim().toLowerCase();
   const match=x=>!q||x.path.some((p,i)=>(lbl(x.path,i)+' '+p).toLowerCase().includes(q));
   const vis=[];
   for(const x of flat){
     let show;
     if(q){show=flat.some(z=>match(z)&&(z.key===x.key||z.key.startsWith(x.key+'\u0001')||x.key.startsWith(z.key+'\u0001')))}
-    else{const anc=[];for(let i=1;i<=x.l;i++)anc.push(x.path.slice(0,i).join('\u0001'));show=anc.every(k=>!shut.has(k))}
+    else{const anc=[];for(let i=1;i<=x.l;i++)anc.push(x.path.slice(0,i).join('\u0001'));show=anc.every(k=>opened.has(k))}
     if(show)vis.push(x)}
   const body=$('body');
   body.innerHTML=vis.map(x=>{
@@ -368,12 +384,13 @@ function render(){
     const tg=x.l<2?`<button class="tg" data-k="${esc(x.key)}" aria-expanded="${exp?'true':'false'}" aria-label="ยุบหรือขยาย ${esc(lab)}">${ic('chev')}</button>`:'<span class="sp"></span>';
     return`<tr class="${CL[x.l]}"><td><span class="lab">${tg}${ic(LV[x.l],'lv')}${esc(lab)}</span></td><td>${fmt(x.n+x.y)}</td><td class="num-done">${fmt(x.y)}</td><td class="num-remaining">${fmt(x.n)}</td><td>${bar(p)}</td><td class="ac"><button class="go" data-o="${esc(x.key)}" aria-label="ดูรายการครุภัณฑ์ ${esc(lab)}">ดู</button></td></tr>`}).join('');
   const N=flat.filter(x=>x.l===0).reduce((s,x)=>s+x.n,0),Y=flat.filter(x=>x.l===0).reduce((s,x)=>s+x.y,0);
+  const NA=all.filter(x=>x.l===0).reduce((s,x)=>s+x.n,0),YA=all.filter(x=>x.l===0).reduce((s,x)=>s+x.y,0);
   if(!flat.length)body.innerHTML='<tr><td colspan="6" class="empty">ไม่มีครุภัณฑ์ที่ตรงกับสถานะที่เลือก</td></tr>';
-  else body.insertAdjacentHTML('beforeend',`<tr class="total-row"><td>รวมทั้งหมด</td><td>${fmt(N+Y)}</td><td class="num-done">${fmt(Y)}</td><td class="num-remaining">${fmt(N)}</td><td>${bar(pct(Y,N+Y))}</td><td></td></tr>`);
-  kpi(N,Y)}
+  else body.insertAdjacentHTML('beforeend',`<tr class="total-row"><td>${bF||pendOnly?'รวมที่แสดง':'รวมทั้งหมด'}</td><td>${fmt(N+Y)}</td><td class="num-done">${fmt(Y)}</td><td class="num-remaining">${fmt(N)}</td><td>${bar(pct(Y,N+Y))}</td><td></td></tr>`);
+  kpi(NA,YA)}
 /* สถานะยุบ/ขยาย: ค่าเริ่มต้นขยายทั้งหมด; เก็บเฉพาะรายการที่ผู้ใช้ปิด */
-function isOpen(x){return !shut.has(x.key)}
-let shut=new Set();
+function isOpen(x){return opened.has(x.key)}
+let opened=new Set();
 function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 
 function kpi(N,Y){
@@ -404,6 +421,7 @@ function paintSheet(){
   const it=cur.items,sel=it.filter(x=>tab==='a'||(tab==='n'?!x.y:x.y)).sort((p,q)=>th.compare(p.a.no,q.a.no));
   $('sh-s').textContent=`ทั้งหมด ${it.length.toLocaleString('en-US')} · ยังไม่ตรวจ ${cur.n.toLocaleString('en-US')} · ตรวจแล้ว ${cur.y.toLocaleString('en-US')}`;
   $('tabs').innerHTML=[['n','ยังไม่ตรวจ'],['y','ตรวจแล้ว'],['a','ทั้งหมด']].map(([k,t])=>`<button class="chip" type="button" data-t="${k}" aria-pressed="${tab===k}">${t}</button>`).join('');
+  $('sh-p').innerHTML=`<div class="track"><span class="fill ${cls(pct(cur.y,it.length))}" style="width:${(pct(cur.y,it.length)*100).toFixed(1)}%"></span></div><b style="width:auto;white-space:nowrap">ตรวจแล้ว ${cur.y.toLocaleString('en-US')}/${it.length.toLocaleString('en-US')} · ${Math.round(pct(cur.y,it.length)*100)}%</b>`;
   const cap=400;
   $('list').innerHTML=sel.slice(0,cap).map(x=>`<div class="li"><div><b>${esc(x.a.name||'(ไม่มีชื่อ)')}</b><code>${esc(x.a.no)} · id ${x.a.id}</code></div><span class="tag ${x.y?'y':'n'}">${x.y?'ตรวจแล้ว':'ยังไม่ตรวจ'}</span></div>`).join('')+(sel.length>cap?`<p class="muted small">แสดง ${cap} รายการแรกจาก ${sel.length.toLocaleString('en-US')} รายการ</p>`:'')||'<p class="muted">ไม่มีรายการ</p>'}
 function closeSheet(){$('bg').classList.remove('on');$('sheet').classList.remove('on');$('sheet').setAttribute('aria-hidden','true')}
@@ -414,7 +432,7 @@ function setMsg(t,err){$('msg').innerHTML=t?`<div class="msg${err?' err':''}">${
 async function take(f){
   if(!f)return;
   try{const prs=pairs(parseCSV(await f.text()));
-    state=applyPairs(prs,{name:f.name,via:'ไฟล์ CSV',at:new Date(),embedded:false});paused=true;lastErr='';shut=new Set();
+    state=applyPairs(prs,{name:f.name,via:'ไฟล์ CSV',at:new Date(),embedded:false});paused=true;lastErr='';opened=new Set();
     setMsg(`อ่านไฟล์สำเร็จ ${state.rows.toLocaleString('en-US')} แถว ตรวจนับแล้ว ${state.done.size.toLocaleString('en-US')} รายการ`,false);
     done();toast('ใช้ข้อมูลจากไฟล์ CSV')}
   catch(e){setMsg(esc(e.message),true)}}
@@ -426,12 +444,17 @@ const drop=$('drop');
 drop.addEventListener('drop',e=>take(e.dataTransfer.files[0]));
 $('chips').onclick=e=>{const b=e.target.closest('[data-s]');if(!b)return;const k=b.dataset.s;scope.has(k)?scope.delete(k):scope.add(k);chips();render()};
 $('body').onclick=e=>{
-  const t=e.target.closest('.tg');if(t){const k=t.dataset.k;shut.has(k)?shut.delete(k):shut.add(k);render();return}
+  const t=e.target.closest('.tg');if(t){const k=t.dataset.k;opened.has(k)?opened.delete(k):opened.add(k);render();return}
   const g=e.target.closest('.go');if(g)openSheet(g.dataset.o)};
-$('exp').onclick=()=>{shut=new Set();render()};
-$('col').onclick=()=>{shut=new Set(last.flat.filter(x=>x.l===0).map(x=>x.key));render()};
+$('quick').onclick=e=>{const b=e.target.closest('.chip');if(!b)return;if('p' in b.dataset)pendOnly=!pendOnly;else bF=b.dataset.b;render()};
+$('exp').onclick=()=>{opened=new Set(last.flat.filter(x=>x.l<2).map(x=>x.key));render()};
+$('col').onclick=()=>{opened=new Set();render()};
 $('q').oninput=e=>{query=e.target.value;render()};
 $('tabs').onclick=e=>{const b=e.target.closest('[data-t]');if(b){tab=b.dataset.t;paintSheet()}};
+(()=>{let y0=null,dy=0;const sh=$('sheet'),h=e=>e.target.closest('#grab,.sh-h');
+  sh.addEventListener('touchstart',e=>{if(innerWidth<700&&h(e)){y0=e.touches[0].clientY;dy=0;sh.style.transition='none'}},{passive:true});
+  sh.addEventListener('touchmove',e=>{if(y0==null)return;dy=Math.max(0,e.touches[0].clientY-y0);sh.style.transform=`translateY(${dy}px)`},{passive:true});
+  sh.addEventListener('touchend',()=>{if(y0==null)return;sh.style.transition='';sh.style.transform='';if(dy>90)closeSheet();y0=null})})();
 $('bg').onclick=closeSheet;$('sh-x').onclick=closeSheet;
 addEventListener('keydown',e=>{if(e.key==='Escape')closeSheet()});
 const rowsOut=()=>{const R=[['อาคาร','ชั้น','ห้อง','ทั้งหมด','ตรวจนับแล้ว','รอตรวจนับ','ความคืบหน้า (%)']];
@@ -449,7 +472,8 @@ $('export').onclick=()=>{
   const u=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'})),a=document.createElement('a');
   a.href=u;a.download=n;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),2000);toast('ส่งออกไฟล์แล้ว เปิดด้วย Excel ได้เลย')};
 
-$('theme').onclick=()=>{const r=document.documentElement,d=r.dataset.theme?r.dataset.theme==='dark':matchMedia('(prefers-color-scheme:dark)').matches;r.dataset.theme=d?'light':'dark'};
+addEventListener('offline',()=>{toast('ไม่มีอินเทอร์เน็ต: กำลังแสดงข้อมูลล่าสุดที่โหลดไว้');lastErr='ออฟไลน์';live()});
+addEventListener('online',()=>{toast('เชื่อมต่ออินเทอร์เน็ตแล้ว กำลังซิงค์…');sync(false)});
 done();
 sync(false);
 setInterval(()=>{if(!document.hidden)sync(false)},CFG.refreshSec*1000);
