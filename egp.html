@@ -236,17 +236,17 @@ body {
     line-height: 1;
     letter-spacing: -0.06em;
     white-space: nowrap;
-    font-size: clamp(50px, 12vw, 100px);
+    font-size: clamp(80px, 12vw, 100px);
     transform: scale(1.15, 1);
     transform-origin: center;
 }
 /* แสงนวลหลังภาพประกอบ — แทนวงรีทึบเดิมที่ไปบังตัวอักษร e-GP
    (วงรีทึบมีหน้าที่เฉพาะตอนคำพื้นหลังมีรูตรงกลาง เช่น เลข 0 ในหน้า 404) */
 #bgGlow {
-    width: clamp(200px, 32vw, 480px);
-    height: clamp(260px, 40vw, 480px);
+    width:  clamp(200px, 32vw, 480px);   /* ← ควรเท่ากับ height */
+    height: clamp(260px, 40vw, 620px);   /* ← ไม่เท่ากับ width ทำให้วงรีเบ้ */
     border-radius: 9999px;
-    background: radial-gradient(circle, rgba(255,255,255,0.38) 0%, rgba(255,255,255,0.16) 35%, transparent 90%);
+    background: radial-gradient(circle, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0.22) 45%, transparent 72%);  /* ← แก้ตรงนี้ */
 }
 
 .hero-visual {
