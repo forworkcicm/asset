@@ -523,6 +523,23 @@ pre.cmd { margin: 0; padding: 12px 14px; border-radius: 12px; background: #2b211
 .sheetlink a:hover{text-decoration:underline}
 .sheetlink .num{margin-left:auto;color:var(--muted);font-size:12px}
 .msg.warn { background: #fff4ec; color: #7a3300; box-shadow: inset 3px 0 0 var(--o3); }
+/* จุดตรวจ: กดเครื่องหมายแล้วไปที่ช่อง */
+.checks button.m { border: 0; padding: 0; cursor: pointer; font: inherit; font-size: 11px; font-weight: 700; font-family: var(--font-num); transition: transform .15s, box-shadow .15s; }
+.checks button.m.warn { background: #fff; }
+.checks button.m.pend { background: #fff; }
+.checks button.m:hover, .checks button.m:focus-visible { transform: scale(1.18); box-shadow: 0 0 0 4px var(--soft); outline: none; }
+.checks button.m.bad:hover, .checks button.m.bad:focus-visible { box-shadow: 0 0 0 4px var(--soft), 0 2px 8px rgba(197,75,0,.35); }
+.golink { display: inline-block; margin-top: 3px; padding: 0; border: 0; background: none; font: inherit; font-size: 12px; font-weight: 600; color: var(--o7); cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
+.golink:hover, .golink:focus-visible { color: var(--o8); }
+button.next.go { border: 0; font: inherit; text-align: left; cursor: pointer; width: 100%; }
+button.next.go:hover, button.next.go:focus-visible { box-shadow: inset 0 0 0 1.5px var(--o5); outline: none; }
+.next .gochev { margin-left: auto; font-size: 12px; font-weight: 600; color: var(--o7); white-space: nowrap; }
+.jump-flash { position: relative; border-radius: 12px; animation: jumpflash 1.1s ease-in-out 3; }
+.jump-flash .input, .jump-flash .select { border-color: var(--o4) !important; box-shadow: 0 0 0 4px rgba(255,102,7,.22) !important; }
+.jump-flash > label { color: var(--o7); }
+.jumpmsg { display: block; margin-top: 6px; padding: 7px 10px; border-radius: 10px; background: #fff4ec; color: #7a3300; font-size: 12.5px; line-height: 1.45; box-shadow: inset 3px 0 0 var(--o4); overflow-wrap: anywhere; }
+@keyframes jumpflash { 0%, 100% { background: transparent; } 50% { background: rgba(255,130,51,.14); } }
+@media (prefers-reduced-motion: reduce) { .jump-flash { animation: none; background: rgba(255,130,51,.10); } }
 
 </style>
 </head>
@@ -1243,6 +1260,27 @@ const GATES = [
     ] }
 ];
 const DUP_FIELDS = ['repair_req_no', 'report_no', 'order_no', 'result_no', 'po_no'];
+/* ช่องที่ต้องแก้ จากข้อความเหตุผลแบบ make_docs.py เช่น "ช่อง 'วันที่ลงนามในหนังสือ' ว่าง" */
+function goFromReason(r) {
+  const t = s_(r);
+  if (!t) return null;
+  let m = /ช่อง '([^']+)'/.exec(t) || /ยังไม่กรอก '([^']+)'/.exec(t);
+  if (m) {
+    if (COLUMNS[m[1]]) return { view: 'docs', key: COLUMNS[m[1]] };
+    const c = /^ชีตตั้งค่า: (.+)$/.exec(m[1]); if (c && CONF_KEYS[c[1]]) return { view: 'settings', key: CONF_KEYS[c[1]] };
+    const p = /กรรมการ (\d)/.exec(m[1]); if (p) return { view: 'docs', key: 'committee' + p[1] };
+    if (m[1] === 'วันที่ประกาศผู้ชนะ') return { view: 'docs', key: 'announce_date' };
+  }
+  m = /กรรมการ (\d)/.exec(t); if (m) return { view: 'docs', key: 'committee' + m[1] };
+  if (/รายชื่อกรรมการซ้ำ/.test(t)) return { view: 'docs', key: 'committee1' };
+  if (/ผู้ขาย/.test(t)) return { view: 'docs', key: 'vendor' };
+  if (/ตัวอักษร/.test(t)) return { view: 'docs', key: 'amount_text' };
+  const hit = Object.keys(COLUMNS).sort((a, b) => b.length - a.length).find((h) => t.includes(h));
+  if (hit) return { view: 'docs', key: COLUMNS[hit] };
+  if (/ราคาต่อหน่วย|จำนวน '/.test(t)) return { view: 'docs', key: 'qty' };
+  if (/ภาษีมูลค่าเพิ่ม/.test(t)) return { view: 'docs', key: 'vat_mode' };
+  return null;
+}
 const THAI_TEXT_KEYS = ['project_name', 'unit', 'symptom', 'reason', 'owner_unit', 'price_source', 'warranty'];
 /* คืนคำที่มีสระบน/ล่างหรือวรรณยุกต์ซ้อนกัน (เช่น เปลี่ี่ยน) หรือ '' ถ้าไม่พบ */
 function thaiMarkTypo(v) {
@@ -1257,12 +1295,13 @@ function thaiMarkTypo(v) {
 function evaluateGates(job, res, statuses, asset, jobs, conf, people) {
   const st = Object.fromEntries(statuses.map((s) => [s.n, s]));
   const ctx = res.ctx;
-  const chk = (label, ok, level, detail) => ({ label, ok, level: level || 'error', detail: detail || '' });
+  const chk = (label, ok, level, detail, go) => ({ label, ok, level: level || 'error', detail: detail || '', go: go || null });
+  const F = (key, view) => ({ view: view || 'docs', key });
   const docChk = (n) => {
     const s = st[n];
     if (s.state === 'ready') return chk('ฉบับ ' + s.code + ' ' + s.title + ' พร้อมออก', true);
-    if (s.state === 'skip') return chk('ฉบับ ' + s.code + ' ' + s.title + ' ยังไม่ถึงขั้น', false, 'pending', s.reasons[0]);
-    return chk('ฉบับ ' + s.code + ' ' + s.title + ' ยังออกไม่ได้', false, 'error', s.reasons.join(' · '));
+    if (s.state === 'skip') return chk('ฉบับ ' + s.code + ' ' + s.title + ' ยังไม่ถึงขั้น', false, 'pending', s.reasons[0], goFromReason(s.reasons[0]));
+    return chk('ฉบับ ' + s.code + ' ' + s.title + ' ยังออกไม่ได้', false, 'error', s.reasons.join(' · '), goFromReason(s.reasons[0]));
   };
   const dupOf = (k) => {
     if (blank(job[k])) return [];
@@ -1271,7 +1310,8 @@ function evaluateGates(job, res, statuses, asset, jobs, conf, people) {
   const dupChk = (keys) => {
     const hits = [];
     keys.forEach((k) => { const d = dupOf(k); if (d.length) hits.push(KEY_LABEL[k] + ' ' + numStr(job[k]) + ' ซ้ำกับงาน ' + d.map((o) => s_(o.seq) || s_(o.project_name)).join(', ')); });
-    return chk('เลขที่เอกสารไม่ซ้ำกับงานอื่นในทะเบียน', hits.length === 0, 'error', hits.join(' · '));
+    const first = keys.find((k) => dupOf(k).length);
+    return chk('เลขที่เอกสารไม่ซ้ำกับงานอื่นในทะเบียน', hits.length === 0, 'error', hits.join(' · '), first ? F(first) : null);
   };
   /* ผู้ลงนามในตั้งค่าเทียบกับชีตบุคลากร */
   const deanName = norm(conf.dean_name);
@@ -1285,7 +1325,7 @@ function evaluateGates(job, res, statuses, asset, jobs, conf, people) {
     if (!hits.length) return null;
     return chk('เลขที่ในชีตเป็นข้อความ ตรงกับที่ make_docs.py จะพิมพ์', false, 'warn',
       hits.map((k) => KEY_LABEL[k] + ': ชีตแสดง ' + job.fmt[k].shown + ' แต่เก็บเป็นตัวเลข ' + job.fmt[k].raw + ' ถ้ารัน make_docs.py จากลิงก์ชีต เอกสารจะพิมพ์ “' + job.fmt[k].py + '”').join(' · ') +
-      ' — แก้ในชีต: เลือกเซลล์ → รูปแบบ → ตัวเลข → ข้อความธรรมดา แล้วพิมพ์เลขที่ใหม่ หรือใช้ไฟล์ที่ดาวน์โหลดจากระบบนี้ (ส่งเป็นข้อความให้แล้ว)');
+      ' — แก้ในชีต: เลือกเซลล์ → รูปแบบ → ตัวเลข → ข้อความธรรมดา แล้วพิมพ์เลขที่ใหม่ หรือใช้ไฟล์ที่ดาวน์โหลดจากระบบนี้ (ส่งเป็นข้อความให้แล้ว)', F(hits[0]));
   };
   const pushIf = (arr, c) => { if (c) arr.push(c); };
   /* สระหรือวรรณยุกต์ซ้อน เช่น เปลี่ี่ยน */
@@ -1294,26 +1334,28 @@ function evaluateGates(job, res, statuses, asset, jobs, conf, people) {
   const out = [];
   /* ด่าน 1 */
   const g1 = [docChk(1)];
+  const ja = job.asset || {};
   g1.push(chk('คำนวณค่าเสื่อมของครุภัณฑ์ที่ซ่อมแล้ว', !!(asset && asset.model), 'error',
     asset && asset.model ? 'มูลค่าคงเหลือ ' + formatMoney(asset.model.snapshot.bookValueCents) + ' บาท ณ ' + thaiShortFull(asset.model.input.currentDate)
-      : 'ไปที่ระบบค่าเสื่อมราคา กรอกราคาทุน อายุ และวันที่เริ่มใช้'));
+      : 'ไปที่ระบบค่าเสื่อมราคา กรอกราคาทุน อายุ และวันที่เริ่มใช้',
+    F(blank(ja.cost) ? 'cost' : blank(ja.start) ? 'start' : asset && asset.errors ? Object.keys(asset.errors)[0] || 'cost' : 'cost', 'dep')));
   if (r) g1.push(chk('ค่าซ่อมเทียบมูลค่า (ข้อมูลประกอบการพิจารณา ไม่ใช่เกณฑ์ตัดสิน)', null, 'info',
     'ต่อมูลค่าคงเหลือ ' + pctText(r.vsBook) + ' · ต่อราคาทุน ' + pctText(r.vsCost) + ' · ค่าซ่อมสะสมต่อราคาทุน ' + pctText(r.cumVsCost)));
   if (ctx.amount_cents !== null && ctx.amount_cents !== undefined) {
     g1.push(chk('วงเงินไม่เกิน 500,000 บาท (วิธีเฉพาะเจาะจงตามวงเงิน)', ctx.amount_cents <= 50000000, 'warn',
-      ctx.amount_cents > 50000000 ? 'วงเงิน ' + formatMoney(ctx.amount_cents) + ' บาท เกินวงเงิน ตรวจเหตุผลการใช้วิธีเฉพาะเจาะจง' : ''));
+      ctx.amount_cents > 50000000 ? 'วงเงิน ' + formatMoney(ctx.amount_cents) + ' บาท เกินวงเงิน ตรวจเหตุผลการใช้วิธีเฉพาะเจาะจง' : '', F('amount')));
   }
-  if (marks.length) g1.push(chk('ไม่มีสระหรือวรรณยุกต์พิมพ์ซ้อน', false, 'warn', marks.map(([k, w]) => KEY_LABEL[k] + ': “' + w + '”').join(' · ')));
+  if (marks.length) g1.push(chk('ไม่มีสระหรือวรรณยุกต์พิมพ์ซ้อน', false, 'warn', marks.map(([k, w]) => KEY_LABEL[k] + ': “' + w + '”').join(' · '), F(marks[0][0])));
   const priceD = parseThaiDate(job.price_date), reqD = parseThaiDate(job.report_date) || parseThaiDate(job.letter_date);
   if (priceD && reqD) g1.push(chk('กำหนดราคากลางก่อนหรือวันเดียวกับรายงานขอซื้อขอจ้าง', priceD <= reqD, 'warn',
-    priceD > reqD ? 'ราคากลาง ' + thaiShortFull(priceD) + ' · ' + (parseThaiDate(job.report_date) ? 'รายงานขอซื้อขอจ้าง ' : 'วันที่ลงนาม ') + thaiShortFull(reqD) + ' ตรวจวันที่ในชีต' : ''));
+    priceD > reqD ? 'ราคากลาง ' + thaiShortFull(priceD) + ' · ' + (parseThaiDate(job.report_date) ? 'รายงานขอซื้อขอจ้าง ' : 'วันที่ลงนาม ') + thaiShortFull(reqD) + ' ตรวจวันที่ในชีต' : '', F('price_date')));
   pushIf(g1, fmtChk(['doc_no', 'quote_no', 'repair_req_no', 'phone']));
   g1.push(chk('ชื่อคณบดีในตั้งค่าตรงกับชีตบุคลากร', deanConflict.length === 0, 'warn',
-    deanConflict.length ? 'ชีตบุคลากรระบุตำแหน่งคณบดีเป็น ' + deanConflict.map(([n]) => norm(n)).join(', ') + ' แต่ผู้ลงนามในตั้งค่าคือ ' + deanName + ' ตรวจให้ตรงก่อนลงนาม' : ''));
+    deanConflict.length ? 'ชีตบุคลากรระบุตำแหน่งคณบดีเป็น ' + deanConflict.map(([n]) => norm(n)).join(', ') + ' แต่ผู้ลงนามในตั้งค่าคือ ' + deanName + ' ตรวจให้ตรงก่อนลงนาม' : '', F('dean_name', 'settings')));
   out.push({ ...GATES[0], reached: true, checks: g1 });
   /* ด่าน 2 */
-  const g2 = [docChk(1), chk('ระบุประเภทเงินแล้ว', !blank(job.fund_type), 'error', blank(job.fund_type) ? 'เลือก เงินงบประมาณ หรือ เงินนอกงบประมาณ' : s_(job.fund_type))];
-  g2.push(chk('กรอกเลขที่อ้างถึง ERP', !blank(job.erp_no), 'warn', blank(job.erp_no) ? 'ถ้าเว้นว่าง ฉบับ 02 และ 04 จะพิมพ์เป็นเส้นจุดให้เขียนเอง' : s_(job.erp_no)));
+  const g2 = [docChk(1), chk('ระบุประเภทเงินแล้ว', !blank(job.fund_type), 'error', blank(job.fund_type) ? 'เลือก เงินงบประมาณ หรือ เงินนอกงบประมาณ' : s_(job.fund_type), F('fund_type'))];
+  g2.push(chk('กรอกเลขที่อ้างถึง ERP', !blank(job.erp_no), 'warn', blank(job.erp_no) ? 'ถ้าเว้นว่าง ฉบับ 02 และ 04 จะพิมพ์เป็นเส้นจุดให้เขียนเอง' : s_(job.erp_no), F('erp_no')));
   pushIf(g2, fmtChk(['erp_no']));
   g2.push(dupChk(['repair_req_no']));
   out.push({ ...GATES[1], reached: true, checks: g2 });
@@ -1322,16 +1364,17 @@ function evaluateGates(job, res, statuses, asset, jobs, conf, people) {
   const g3 = [docChk(2), docChk(3), docChk(4), docChk(5)];
   if (ctx.agreed_price_cents !== null && ctx.central_price_cents !== null && ctx.agreed_price_cents !== undefined) {
     g3.push(chk('ราคาที่ตกลงไม่เกินราคากลาง', ctx.agreed_price_cents <= ctx.central_price_cents, 'error',
-      'ตกลง ' + formatMoney(ctx.agreed_price_cents) + ' · ราคากลาง ' + formatMoney(ctx.central_price_cents)));
+      'ตกลง ' + formatMoney(ctx.agreed_price_cents) + ' · ราคากลาง ' + formatMoney(ctx.central_price_cents), F('agreed_price')));
   }
   g3.push(chk('ผู้ขายอยู่ในชีตผู้ขาย พร้อมที่อยู่ โทรศัพท์ เลขผู้เสียภาษี',
     res.vendorKnown && !blank(res.vendor.address) && !blank(res.vendor.phone) && !blank(res.vendor.tax_id), 'error',
     blank(job.vendor) ? 'ยังไม่ได้เลือกผู้ขาย' : !res.vendorKnown ? 'เพิ่มผู้ขายรายนี้ในชีตผู้ขายก่อน'
-      : [['address', 'ที่อยู่'], ['phone', 'โทรศัพท์'], ['tax_id', 'เลขประจำตัวผู้เสียภาษี']].filter(([k]) => blank(res.vendor[k])).map(([, l]) => l).join(' ') .replace(/^(.+)$/, 'ชีตผู้ขายยังไม่มี$1ของ ' + s_(job.vendor))));
+      : [['address', 'ที่อยู่'], ['phone', 'โทรศัพท์'], ['tax_id', 'เลขประจำตัวผู้เสียภาษี']].filter(([k]) => blank(res.vendor[k])).map(([, l]) => l).join(' ') .replace(/^(.+)$/, 'ชีตผู้ขายยังไม่มี$1ของ ' + s_(job.vendor) + ' เพิ่มในชีตผู้ขายแล้วกดดึงข้อมูลล่าสุด'), F('vendor')));
   const order = [['report_date', 'รายงานขอซื้อขอจ้าง'], ['order_date', 'คำสั่งแต่งตั้ง'], ['result_date', 'รายงานผล'], ['announce_date', 'ประกาศผู้ชนะ']];
   const bad = [];
-  for (let i = 1; i < order.length; i++) { const a = d(order[i - 1][0]), b = d(order[i][0]); if (a && b && b < a) bad.push(order[i][1] + ' ลงวันที่ก่อน' + order[i - 1][1]); }
-  g3.push(chk('วันที่เอกสารเรียงตามลำดับขั้นตอน', bad.length === 0, 'warn', bad.join(' · ')));
+  let badKey = null;
+  for (let i = 1; i < order.length; i++) { const a = d(order[i - 1][0]), b = d(order[i][0]); if (a && b && b < a) { bad.push(order[i][1] + ' ลงวันที่ก่อน' + order[i - 1][1]); badKey = badKey || order[i][0]; } }
+  g3.push(chk('วันที่เอกสารเรียงตามลำดับขั้นตอน', bad.length === 0, 'warn', bad.join(' · '), badKey ? F(badKey) : null));
   pushIf(g3, fmtChk(['report_no', 'order_no', 'result_no']));
   g3.push(dupChk(['report_no', 'order_no', 'result_no']));
   out.push({ ...GATES[2], reached: reached3, checks: g3 });
@@ -1339,16 +1382,16 @@ function evaluateGates(job, res, statuses, asset, jobs, conf, people) {
   const reached4 = !blank(job.po_no);
   const g4 = [docChk(6)];
   const fm = [st[7], st[8]].filter((s) => s.state !== 'ready');
-  g4.push(chk('แบบประเมิน FM-PUR-02 และ FM-PUR-09 พร้อมออก', fm.length === 0, 'warn', fm.map((s) => s.code + ': ' + s.reasons[0]).join(' · ')));
+  g4.push(chk('แบบประเมิน FM-PUR-02 และ FM-PUR-09 พร้อมออก', fm.length === 0, 'warn', fm.map((s) => s.code + ': ' + s.reasons[0]).join(' · '), fm.length ? goFromReason(fm[0].reasons[0]) : null));
   const digits = (k, len) => {
     const val = numStr(job[k]);
-    if (blank(val)) return chk(KEY_LABEL[k] + ' กรอกแล้ว', false, 'error', 'ยังว่าง');
-    if (!/^\d+$/.test(val)) return chk(KEY_LABEL[k] + ' เป็นตัวเลขล้วน', false, 'error', "'" + val + "' มีตัวอักษรอื่นปน");
-    return chk(KEY_LABEL[k] + ' เป็นตัวเลขล้วน', val.length === len, 'warn', val.length === len ? val : 'มี ' + val.length + ' หลัก (ปกติ ' + len + ' หลัก)');
+    if (blank(val)) return chk(KEY_LABEL[k] + ' กรอกแล้ว', false, 'error', 'ยังว่าง', F(k));
+    if (!/^\d+$/.test(val)) return chk(KEY_LABEL[k] + ' เป็นตัวเลขล้วน', false, 'error', "'" + val + "' มีตัวอักษรอื่นปน", F(k));
+    return chk(KEY_LABEL[k] + ' เป็นตัวเลขล้วน', val.length === len, 'warn', val.length === len ? val : 'มี ' + val.length + ' หลัก (ปกติ ' + len + ' หลัก)', F(k));
   };
   g4.push(digits('egp_project_no', 11), digits('contract_ctrl_no', 12));
   const poD = d('po_date'), annD = d('announce_date');
-  if (poD && annD) g4.push(chk('ใบสั่งลงวันที่ไม่ก่อนประกาศผู้ชนะ', poD >= annD, 'warn', poD < annD ? 'ใบสั่ง ' + thaiShortFull(poD) + ' · ประกาศ ' + thaiShortFull(annD) : ''));
+  if (poD && annD) g4.push(chk('ใบสั่งลงวันที่ไม่ก่อนประกาศผู้ชนะ', poD >= annD, 'warn', poD < annD ? 'ใบสั่ง ' + thaiShortFull(poD) + ' · ประกาศ ' + thaiShortFull(annD) : '', F('po_date')));
   const days = Number(ctx.delivery_days);
   if (poD && days > 0) {
     const calc = addDays(poD, days);
@@ -1385,8 +1428,8 @@ function nextAction(gates, statuses) {
       const d = statuses.find((s) => s.state === 'skip');
       return { gate: g.no, text: d ? d.reasons[0].replace("ยังไม่กรอก '", "กรอก '") + ' เพื่อออกฉบับ ' + d.code : 'เตรียมเอกสารด่าน ' + g.no };
     }
-    if (g.state === 'blocked') { const c = g.checks.find((x) => x.level === 'error' && x.ok === false); return { gate: g.no, text: c.detail || c.label, bad: true }; }
-    if (g.state === 'progress') { const c = g.checks.find((x) => x.level === 'pending' && x.ok === false); return { gate: g.no, text: (c.detail || c.label).replace("ยังไม่กรอก '", "กรอก '") }; }
+    if (g.state === 'blocked') { const c = g.checks.find((x) => x.level === 'error' && x.ok === false); return { gate: g.no, text: c.detail || c.label, bad: true, go: c.go }; }
+    if (g.state === 'progress') { const c = g.checks.find((x) => x.level === 'pending' && x.ok === false); return { gate: g.no, text: (c.detail || c.label).replace("ยังไม่กรอก '", "กรอก '"), go: c.go }; }
     if (g.state === 'confirm') { const m = g.manual.find((x) => !x.done); return { gate: g.no, text: 'ยืนยัน: ' + m.label }; }
   }
   return { gate: 5, text: 'ผ่านครบ 4 ด่าน รอตรวจรับพัสดุ' };
@@ -1488,6 +1531,13 @@ function runSelfTests(sampleJob, pmap, vmap, conf) {
       const vm2 = vendorMap([{ name: 'ผู้รับจ้างทดสอบ', activity: '', address: 'ที่อยู่ทดสอบ', phone: '', tax_id: '0000000000000' }]);
       const s = docStatuses(buildDocs(sampleJob, pmap, vm2, conf));
       return { ok: s[5].state === 'blocked', detail: s[5].reasons[0] || '' };
+    });
+    t('กดเครื่องหมายต้องแก้แล้วพาไปช่องที่ถูก', () => {
+      const r = buildDocs({ ...sampleJob, letter_date: '' }, pmap, vmap, conf);
+      const g = evaluateGates({ ...sampleJob, id: 't', letter_date: '' }, r, docStatuses(r), null, [], conf, []);
+      const c = g[0].checks[0], a = g[0].checks[1];
+      const ok = c.go && c.go.key === 'letter_date' && a.go && a.go.view === 'dep' && a.go.key === 'cost' && goFromReason("ชีต 'ผู้ขาย' ยังไม่มีโทรศัพท์ของ 'x'").key === 'vendor';
+      return { ok: !!ok, detail: JSON.stringify(c.go) };
     });
     t('ด่าน 1 ทักวันที่ราคากลางหลังรายงานขอซื้อขอจ้าง', () => {
       const j = { ...sampleJob, id: 't', price_date: '16 ตุลาคม 2569', report_date: '31 สิงหาคม 2569' };
@@ -1710,6 +1760,8 @@ function save() {
   clearTimeout(saveTimer);
   saveTimer = setTimeout(() => { try { localStorage.setItem(STORE_KEY, JSON.stringify(S)); } catch (e) { /* โหมดส่วนตัว */ } }, 250);
 }
+/* ลำดับที่เอกสารของรายงานค่าเสื่อม: กรอกเองได้ ถ้าว่างใช้ใบแจ้งซ่อมลำดับที่ของงาน (รายงานแนบท้ายใบแจ้งซ่อม) */
+const assetDocRef = (j) => (j ? s_((j.asset || {}).docRef) || numStr(j.repair_req_no) : '');
 const jobKey = (j) => norm(numStr(j.seq)) + '|' + norm(j.project_name);
 function curJob() { return S.jobs.find((j) => j.id === S.selectedId) || S.jobs[0] || null; }
 let refsVer = 0, refsCache = null;
@@ -1870,7 +1922,7 @@ function extraRow(a) {
   const pct = (x) => (x === null || x === undefined || !isFinite(x) ? '' : Math.round(x * 10000) / 100);
   const longDate = (v) => { const d = parseBESlash(v); return d ? thaiLong(d) : v; }; /* ข้อความวันที่ไทยไม่ถูกชีตแปลงเป็นวันที่ ค.ศ. */
   return [s_(j.seq), s_(j.project_name), as.code, as.name, as.cost, as.salvage, as.life, longDate(as.start), longDate(as.asOf), BASIS_LABEL[as.basis] || '',
-    EOL_POLICIES[as.eol] || '', GROUP_LABEL[as.grouping] || '', as.status, as.budget, as.docRef, as.prior,
+    EOL_POLICIES[as.eol] || '', GROUP_LABEL[as.grouping] || '', as.status, as.budget, assetDocRef(j), as.prior,
     m ? m.snapshot.accumulatedCents / 100 : '', m ? m.snapshot.bookValueCents / 100 : '',
     r ? pct(r.vsBook) : '', r ? pct(r.vsCost) : '', r ? pct(r.cumVsCost) : '',
     Object.keys(j.checks || {}).filter((k) => j.checks[k]).join(',')];
@@ -1935,9 +1987,9 @@ const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
 const esc = (s) => String(s === null || s === undefined ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const ICON = (id) => '<svg class="ic" aria-hidden="true"><use href="#i-' + id + '"/></svg>';
 let toastTimer;
-function toast(msg) {
+function toast(msg, ms) {
   const t = $('#toast'); t.textContent = msg; t.classList.add('show');
-  clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), 2200);
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), ms || 2200);
 }
 function copyText(text, srcEl, okMsg) {
   const fallback = () => {
@@ -1990,7 +2042,8 @@ function renderJobStrip(a) {
     '</div></div>' +
     '<div class="gaterail" role="list">' +
     a.gates.map((g) => '<a class="gr" role="listitem" href="#docs" data-gate="' + g.id + '"><span class="k">ด่าน ' + g.no + ' → ' + esc(g.short) + '</span>' + stGate(g) + '</a>').join('') +
-    '<div class="next"><b>ขั้นถัดไป</b><span>' + esc(a.next.text) + '</span></div></div></div>';
+    (a.next.go ? '<button type="button" class="next go" data-go-view="' + esc(a.next.go.view) + '" data-go-key="' + esc(a.next.go.key) + '" data-go-msg="' + esc(a.next.text) + '"><b>ขั้นถัดไป</b><span>' + esc(a.next.text) + '</span><span class="gochev">ไปที่ช่อง →</span></button>'
+      : '<div class="next"><b>ขั้นถัดไป</b><span>' + esc(a.next.text) + '</span></div>') + '</div></div>';
 }
 function renderSrcNote() {
   const el = $('#srcNote'); if (!el) return;
@@ -2224,7 +2277,9 @@ function renderDep() {
     '<p>วิธีเส้นตรง คิดรายวันด้วยเศษส่วนแบบไม่ปัดกลางทาง ข้อมูลครุภัณฑ์ผูกกับงานที่เลือก ค่าซ่อมดึงจากจำนวนเงินของงาน จึงได้ตัวเลขเทียบรูปแบบเดียวกันทุกงาน</p></div></div>' +
     '<div class="cols form-left"><div class="box stack"><h3>ข้อมูลครุภัณฑ์</h3>' +
     '<div class="grid-2">' +
-    depField('code', 'รหัสครุภัณฑ์', 'text') + depField('docRef', 'ลำดับที่เอกสาร', 'num') +
+    depField('code', 'รหัสครุภัณฑ์', 'text') +
+    '<div class="field"><label for="a_docRef">ลำดับที่เอกสาร</label><input class="input num" id="a_docRef" data-a="docRef" inputmode="numeric" value="' + esc(assetDocRef(j)) + '" placeholder="ใบแจ้งซ่อมลำดับที่">' +
+    '<span class="hint" id="ah_docRef">' + (blank(as.docRef) ? (blank(j.repair_req_no) ? 'ดึงจากใบแจ้งซ่อมลำดับที่ในระบบที่ 3 (ยังว่าง)' : 'ดึงจากใบแจ้งซ่อมลำดับที่ของงานนี้') : 'กรอกเอง · ลบให้ว่างเพื่อกลับไปใช้ใบแจ้งซ่อมลำดับที่') + '</span><span class="err" id="ae_docRef"></span></div>' +
     '<div class="field span-all"><label for="a_name">รายการ</label><input class="input" id="a_name" data-a="name" value="' + esc(as.name) + '" placeholder="หม้อนึ่งความดันไอน้ำ"><span class="err" id="ae_name"></span></div>' +
     '<div class="field span-all"><label for="a_cost">ราคาทุน (บาท)</label><input class="input money" id="a_cost" data-a="cost" inputmode="decimal" value="' + esc(as.cost) + '" placeholder="0.00" style="font-size:17px;font-weight:700;color:var(--o8)"><span class="err" id="ae_cost"></span></div>' +
     depField('salvage', 'มูลค่าซาก', 'money') + depField('life', 'อายุตามบัญชี (ปี)', 'num') +
@@ -2314,7 +2369,7 @@ function renderDepOut() {
   const P = S.prefs, as = { ...ASSET_DEFAULT, ...(a.job.asset || {}) };
   const summary = ['รหัสครุภัณฑ์\t' + as.code, 'รายการ\t' + as.name, 'ราคาทุน\t' + money(m.input.costCents) + ' บาท', 'อายุการใช้งาน\t' + calculateDuration(m.input.startDate, m.input.currentDate),
     'ค่าเสื่อมสะสม\t' + money(m.snapshot.accumulatedCents) + ' บาท', 'มูลค่าคงเหลือ\t' + money(m.snapshot.bookValueCents) + ' บาท', 'สถานะการใช้งาน\t' + as.status,
-    'แหล่งงบ\t' + as.budget, 'เลขที่เอกสาร\t' + (as.docRef || '-')].join('\n');
+    'แหล่งงบ\t' + as.budget, 'เลขที่เอกสาร\t' + (assetDocRef(a.job) || '-')].join('\n');
   const acrobat = ['ไม่พบประวัติการซ่อม', P.officer_name, thaiShortFull(m.input.currentDate)].join('\n');
   cp.innerHTML = '<div class="snip"><div class="snip-head"><span class="t">สรุปข้อมูล</span><span class="from">วางใน Excel ได้เป็น 2 คอลัมน์</span></div><textarea id="depSum" class="tall" style="min-height:200px">' + esc(summary) + '</textarea>' +
     '<button class="btn soft sm copy" type="button" data-copy-target="depSum">' + ICON('copy') + 'คัดลอก</button></div>' +
@@ -2497,11 +2552,24 @@ function docCard(s) {
     '<span class="name">' + esc(s.n === 6 ? (curJob().kind === 'ซื้อ' ? 'ใบสั่งซื้อ' : 'ใบสั่งจ้าง') : s.full) + '</span>' +
     (s.reasons.length ? '<ul>' + s.reasons.slice(0, 4).map((r) => '<li>' + esc(r) + '</li>').join('') + (s.reasons.length > 4 ? '<li>และอีก ' + (s.reasons.length - 4) + ' ข้อ</li>' : '') + '</ul>' : '') + '</div>';
 }
+const DEP_LABEL = { cost: 'ราคาทุน', start: 'วันที่เริ่มใช้', asOf: 'คำนวณถึงวันที่', life: 'อายุตามบัญชี', salvage: 'มูลค่าซาก', name: 'รายการ', code: 'รหัสครุภัณฑ์', docRef: 'ลำดับที่เอกสาร', prior: 'ค่าซ่อมสะสมก่อนหน้า' };
+function goLabel(go) {
+  if (go.view === 'dep') return (DEP_LABEL[go.key] || go.key) + ' (ค่าเสื่อมราคา)';
+  if (go.view === 'settings') { const h = Object.keys(CONF_KEYS).find((x) => CONF_KEYS[x] === go.key); return (h || go.key) + ' (ตั้งค่า)'; }
+  return KEY_LABEL[go.key] || go.key;
+}
 function gateCard(g) {
   const mk = (c) => {
     const cls = c.ok === null ? 'info' : c.ok ? 'ok' : c.level === 'warn' ? 'warn' : c.level === 'pending' ? 'pend' : 'bad';
     const mark = { ok: '✓', bad: '×', warn: '!', pend: '◦', info: 'i' }[cls];
-    return '<li class="' + (cls === 'bad' ? 'bad' : '') + '"><span class="m ' + cls + '" aria-hidden="true">' + mark + '</span><span><span class="vh">' + ({ ok: 'ผ่าน', bad: 'ต้องแก้', warn: 'ควรตรวจ', pend: 'ยังไม่ถึงขั้น', info: 'ข้อมูล' })[cls] + ': </span>' + esc(c.label) + (c.detail ? '<span class="d">' + esc(c.detail) + '</span>' : '') + '</span></li>';
+    const word = ({ ok: 'ผ่าน', bad: 'ต้องแก้', warn: 'ควรตรวจ', pend: 'ยังไม่ถึงขั้น', info: 'ข้อมูล' })[cls];
+    const go = c.ok === false && c.go ? c.go : null;
+    const where = go ? goLabel(go) : '';
+    const goAttr = go ? ' data-go-view="' + esc(go.view) + '" data-go-key="' + esc(go.key) + '" data-go-msg="' + esc(word + ': ' + (c.detail || c.label)) + '"' : '';
+    const m = go ? '<button type="button" class="m ' + cls + ' go"' + goAttr + ' title="ไปที่ช่อง ' + esc(where) + '" aria-label="' + esc(word + ' ไปที่ช่อง ' + where) + '">' + mark + '</button>'
+      : '<span class="m ' + cls + '" aria-hidden="true">' + mark + '</span>';
+    return '<li class="' + (cls === 'bad' ? 'bad' : '') + '">' + m + '<span>' + (go ? '' : '<span class="vh">' + word + ': </span>') + esc(c.label) + (c.detail ? '<span class="d">' + esc(c.detail) + '</span>' : '') +
+      (go ? '<button type="button" class="golink"' + goAttr + '>ไปที่ช่อง ' + esc(where) + ' →</button>' : '') + '</span></li>';
   };
   return '<div class="gate" id="gate-' + g.id + '"><div class="gno"><span>ด่าน ' + g.no + '</span>' + stGate(g) + '</div>' +
     '<div><span class="to">งานพัสดุ → ' + esc(g.to) + '</span><h3>' + esc(g.title) + '</h3></div><div class="carries">ส่ง: ' + esc(g.carries) + '</div>' +
@@ -2908,7 +2976,7 @@ function depReport() {
     '.bar{margin:0 0 14px;display:flex;gap:10px;align-items:center}.bar button{font:inherit;font-size:14px;padding:8px 16px;border-radius:999px;border:0;background:#C54B00;color:#fff;cursor:pointer}' +
     '.note{font-size:11px;color:#555;margin-top:6px}@media print{.bar{display:none}body{padding:0}}</style></head><body>' +
     '<div class="bar"><button onclick="window.print()">พิมพ์ / บันทึกเป็น PDF</button><span>กระดาษ A4 แนวตั้ง</span></div>' +
-    '<div class="ref">ลำดับที่เอกสาร ' + esc(as.docRef || '-') + '</div><div class="org">' + esc(S.conf.org_name || '') + '</div><h1>รายงานการคำนวณค่าเสื่อมราคาครุภัณฑ์</h1>' +
+    '<div class="ref">ลำดับที่เอกสาร ' + esc(assetDocRef(curJob()) || '-') + '</div><div class="org">' + esc(S.conf.org_name || '') + '</div><h1>รายงานการคำนวณค่าเสื่อมราคาครุภัณฑ์</h1>' +
     '<table><tbody>' + infoRows.join('') + '</tbody></table><p class="crit">' + esc(criteriaLine(m)) + '</p>' +
     (a.ratios ? '<p class="note">ค่าซ่อมเทียบมูลค่าเป็นข้อมูลประกอบการพิจารณาของผู้บริหาร ไม่ใช่เกณฑ์ตัดสินว่าควรซ่อมหรือจัดหาใหม่</p>' : '') +
     '<h2>ตารางค่าเสื่อมราคาแยกตาม' + esc(GROUP_LABEL[m.input.grouping]) + '</h2><table><thead><tr>' + DEP_HEAD.map((h) => '<th>' + esc(h) + '</th>').join('') + '</tr></thead><tbody>' + body +
@@ -3064,7 +3132,31 @@ document.addEventListener('change', (e) => {
 document.addEventListener('toggle', (e) => {
   const d = e.target; if (d.dataset && d.dataset.grp) { if (d.open) openGroups.add(d.dataset.grp); else openGroups.delete(d.dataset.grp); }
 }, true);
+/* กดเครื่องหมายในจุดตรวจ → ไปที่ช่องที่ต้องแก้ เปิดหัวข้อ เน้นสี และบอกว่าต้องแก้อะไร */
+function jumpTo(view, key, msg) {
+  if (currentView !== view) location.hash = '#' + view;
+  let tries = 0;
+  const go = () => {
+    if (currentView !== view && tries++ < 40) { requestAnimationFrame(go); return; }
+    const el = $('#' + ({ docs: 'f_', dep: 'a_', settings: 'c_' }[view] || 'f_') + key);
+    if (!el) { toast(msg, 5000); return; }
+    const det = el.closest('details'); if (det && !det.open) det.open = true;
+    const field = el.closest('.field') || el;
+    document.querySelectorAll('.jump-flash').forEach((x) => { x.classList.remove('jump-flash'); const n = x.querySelector('.jumpmsg'); if (n) n.remove(); });
+    field.classList.add('jump-flash');
+    field.insertAdjacentHTML('beforeend', '<span class="jumpmsg" role="alert">' + esc(msg) + '</span>');
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    setTimeout(() => { try { el.focus({ preventScroll: true }); } catch (_) { el.focus(); } }, 380);
+    const clear = () => { field.classList.remove('jump-flash'); const n = field.querySelector('.jumpmsg'); if (n) n.remove(); };
+    el.addEventListener('input', clear, { once: true });
+    el.addEventListener('change', clear, { once: true });
+    setTimeout(() => field.classList.remove('jump-flash'), 4000);
+  };
+  requestAnimationFrame(go);
+}
 document.addEventListener('click', (e) => {
+  const gt = e.target.closest('[data-go-view]');
+  if (gt) { e.preventDefault(); jumpTo(gt.dataset.goView, gt.dataset.goKey, gt.dataset.goMsg || ''); return; }
   const t = e.target.closest('[data-copy-target],[data-copy-text],[data-q],[data-egpkind],[data-act],[data-metric],[data-gate],[data-pick]');
   if (!t) return;
   if (t.dataset.copyTarget) { const el = $('#' + t.dataset.copyTarget); if (el) copyText(el.value, el); return; }
