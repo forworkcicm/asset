@@ -558,7 +558,7 @@ function parseSQL(t){
         throw new Error('รูปแบบ INSERT ไม่ถูกต้อง (ตำแหน่ง '+i+')')}
       const id=parseInt(f[ix[0]],10);if(!Number.isFinite(id))continue;
       rows.push([id,cl(f[ix[1]]),cl(f[ix[2]]),f[ix[3]]||'',f[ix[4]]||'',f[ix[5]]||'',f[ix[6]]||''])}}
-  if(!rows.length)throw new Error('ไม่พบข้อมูลตาราง asset ในไฟล์ (ต้องเป็นไฟล์ .sql ที่ export ตาราง asset จาก phpMyAdmin)');
+  if(!rows.length)throw new Error('ไม่พบข้อมูลตาราง');
   rows.sort((x,y)=>x[0]-y[0]);
   const g=/Generation Time:\s*(\w{3})\s+(\d+),\s*(\d{4})\s+at\s+(\d+):(\d+)\s*(AM|PM)/.exec(t.slice(0,6000));let ts=null,at='';
   if(g){const mo=EN.indexOf(g[1]),h=(+g[4])%12+(g[6]==='PM'?12:0);if(mo>=0){ts=Date.UTC(+g[3],mo,+g[2],h,+g[5]);at=thAt(+g[3],mo,+g[2],h,+g[5])}}
