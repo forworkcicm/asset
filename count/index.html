@@ -521,7 +521,7 @@ $('export').onclick=()=>{
   a.href=u;a.download=n;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),2000);toast('ส่งออกไฟล์แล้ว เปิดด้วย Excel ได้เลย')};
 
 /* ---------- ข้อมูลครุภัณฑ์หลักจากไฟล์ SQL (ตาราง asset) ----------
-   เลือกไฟล์ .sql ที่ export จาก phpMyAdmin → หน้าอ่านเฉพาะ 7 คอลัมน์ (id, asset_no, asset_name, build/floor/room/status_code)
+   เลือกไฟล์ .sql ที่ export → หน้าอ่านเฉพาะ 7 คอลัมน์ (id, asset_no, asset_name, build/floor/room/status_code)
    แล้วจำผลไว้ในเบราว์เซอร์นี้ · ถ้าเบราว์เซอร์รองรับ (Chrome/Edge) จะจำตำแหน่งไฟล์ไว้ให้กดอัปเดตจากไฟล์เดิมได้เลย */
 const MKEY='cicm_master_v1',HDB='cicm_handles';
 const MON=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'],EN=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
