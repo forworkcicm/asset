@@ -223,7 +223,7 @@ td.ac,th.ac{text-align:center;padding-inline:6px}
     <div id="msg"></div>
     <div class="sqlbox">
       <div class="drop" id="sqldrop">
-        <div class="drop-t"><b>ข้อมูลครุภัณฑ์หลัก (ไฟล์ SQL)</b><span class="muted small" id="sqlinfo"></span></div>
+        <div class="drop-t"><b>ข้อมูลครุภัณฑ์หลัก</b><span class="muted small" id="sqlinfo"></span></div>
         <button class="btn" id="sqlbtn" type="button"></button>
         <button class="btn ghost" id="sqlother" type="button" hidden>เลือกไฟล์อื่น</button>
         <button class="btn ghost" id="sqlreset" type="button" hidden>ใช้ข้อมูลที่ฝังในหน้า</button>
@@ -581,7 +581,7 @@ const hSet=async h=>{try{const d=await idb();await new Promise(ok=>{const tx=d.t
 const sqlMsg=(t,err)=>{$('sqlmsg').innerHTML=t?`<div class="msg${err?' err':''}">${t}</div>`:''};
 function sqlUI(){
   $('sqlinfo').innerHTML=`${esc(MASTER_VIA)} ณ ${esc(MASTER_AT)} · ${ASSETS.length.toLocaleString('en-US')} รายการ`+(handle?`<br>จำไฟล์ไว้แล้ว: ${esc(handle.name)}`:'');
-  $('sqlbtn').innerHTML=handle?ic('refresh')+'อัปเดตจาก '+esc(handle.name):ic('file')+'เลือกไฟล์ SQL';
+  $('sqlbtn').innerHTML=handle?ic('refresh')+'อัปเดตจาก '+esc(handle.name):ic('file')+'เลือกไฟล์';
   $('sqlother').hidden=!handle;$('sqlreset').hidden=!(master.custom||handle)}
 
 async function loadSQL(f,h){
