@@ -193,6 +193,47 @@ td.ac,th.ac{text-align:center;padding-inline:6px}
 }
 [hidden]{display:none!important}
 .sqlbox{margin-top:14px}.sqlbox .drop{margin-top:0}.sqlbox .btn{flex:none}
+
+/* ===== บันทึกหน้างาน: สถานะพิเศษ · Remark · สถานะแอดมิน ===== */
+.kpis.k6{grid-template-columns:repeat(3,1fr)}
+@media (max-width:900px){.kpis.k6{grid-template-columns:repeat(2,1fr)}}
+.kpi small{display:block;margin-top:8px;color:var(--text-muted);font-size:12px;line-height:1.4}
+.kpi.flag .kpi-ic{color:#7A4E00;background:#FFEFC2}
+.kpi.adm .kpi-ic{color:var(--danger)}
+.nb{display:inline-flex;gap:3px;align-items:center;font-size:11.5px;font-weight:500;background:#FFEFC2;color:#7A4E00;border-radius:9999px;padding:1px 8px;margin-left:2px;font-family:var(--font);white-space:nowrap}
+.nb svg{width:.95em;height:.95em}
+.warnt{color:var(--warn)}.errt{color:var(--danger)}
+.btn.sm{min-height:44px;padding:8px 14px;font-size:13.5px}
+
+.it{padding:12px 0;border-bottom:1px solid var(--border)}
+.it-top{display:flex;gap:10px;justify-content:space-between;align-items:flex-start}
+.it-top>div:first-child{min-width:0}
+.it-top b{font-weight:500;display:block;overflow-wrap:anywhere}
+.it-top code{font-family:var(--mono);font-size:12px;color:var(--text-muted)}
+.tags{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;flex:none;max-width:52%}
+.tag.f{background:#FFEFC2;color:#7A4E00}
+.tag.a{color:var(--success)}
+.tag.p{background:var(--surface-2);color:var(--text-muted);border:1px solid var(--border)}
+.it-act{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.fl{max-width:100%;display:inline-flex;gap:10px;align-items:center;min-height:44px;padding:6px 16px 6px 12px;border:1px solid var(--border);border-radius:9999px;background:transparent;cursor:pointer;font-size:13.5px;text-align:left;line-height:1.3}
+.fl .bx{width:22px;height:22px;border-radius:7px;border:2px solid var(--text-muted);display:grid;place-items:center;flex:none;color:transparent}
+.fl .bx svg{width:14px;height:14px;stroke-width:3}
+.fl[aria-pressed="true"]{background:#FFEFC2;border-color:#E3B341;color:#5C3B00}
+.fl[aria-pressed="true"] .bx{background:#B7791F;border-color:#B7791F;color:#fff}
+.rmtxt{margin-top:8px;padding:8px 12px;border-radius:14px;background:var(--surface-2);border:1px solid var(--border);font-size:13.5px;white-space:pre-wrap;overflow-wrap:anywhere}
+.edit{margin-top:8px;display:grid;gap:8px}
+.edit textarea{width:100%;min-height:88px;resize:vertical;font:inherit;color:inherit;border:1px solid var(--border);background:var(--surface-2);border-radius:16px;padding:10px 14px;font-size:16px;line-height:1.5}
+.edit textarea:focus,.who input:focus{border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 30%,transparent);outline:0}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.meta{margin-top:6px;font-size:12px;color:var(--text-muted);overflow-wrap:anywhere}
+.adm-row{display:flex;gap:10px;align-items:center;margin-top:6px;min-height:44px;font-size:13.5px;cursor:pointer}
+.adm-row input{width:22px;height:22px;accent-color:var(--success);flex:none}
+.who{display:grid;gap:8px;padding:12px 14px;border:1px solid var(--border);border-radius:20px;background:var(--surface-2);margin:6px 0 10px}
+.who input{min-height:44px;border:1px solid var(--border);background:var(--surface);border-radius:9999px;padding:8px 14px;font-size:16px;flex:1 1 140px;min-width:0}
+.who .adm-msg{font-size:13px;color:var(--danger);flex:1 1 100%}
+#queue h2{margin-bottom:2px}
+.qhead{display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin:10px 0 4px}
+.qwhere{font-size:12.5px;color:var(--text-muted);margin-top:2px}
 </style>
 </head>
 <body>
@@ -205,7 +246,7 @@ td.ac,th.ac{text-align:center;padding-inline:6px}
       <div class="brand"><span class="dots"><i></i><i></i><i></i><i></i></span>CICM · งานพัสดุ</div>
     </div>
     <h1>รายงานความคืบหน้าการตรวจนับทรัพย์สิน</h1>
-    <p>สรุปตามอาคาร → ชั้น → ห้อง ดึงผลตรวจนับสดจาก Google Sheet</p>
+    <p>สรุปตามอาคาร → ชั้น → ห้อง ดึงผลตรวจนับสดจาก Google Sheet · บันทึกสถานะพิเศษและ Remark หน้างานได้ทันที</p>
     <div class="hero-act">
       <span class="updated" id="updated"></span>
       <button class="btn white" id="export" type="button"><svg class="i" data-ic="download" viewBox="0 0 24 24"></svg>ส่งออก Excel</button>
@@ -220,6 +261,7 @@ td.ac,th.ac{text-align:center;padding-inline:6px}
     <h2>แหล่งข้อมูลและเงื่อนไขสถานะ</h2>
     <div class="live" id="live"></div>
     <div class="src" id="src"></div>
+    <div class="src" id="nsrc"></div>
     <div id="msg"></div>
     <div class="sqlbox">
       <div class="drop" id="sqldrop">
@@ -257,6 +299,13 @@ td.ac,th.ac{text-align:center;padding-inline:6px}
     <div class="wrap"><table id="tb"><thead><tr><th>อาคาร / ชั้น / ห้อง</th><th>ทั้งหมด</th><th>ตรวจแล้ว</th><th>รอตรวจ</th><th style="text-align:left">ความคืบหน้า</th><th class="ac">รายการ</th></tr></thead><tbody id="body"></tbody></table></div>
     <div class="legend"><span><i style="background:var(--success)"></i>ตั้งแต่ 80%</span><span><i style="background:var(--warn)"></i>40–79%</span><span><i style="background:var(--danger)"></i>ต่ำกว่า 40%</span></div>
   </section>
+  <section class="card pad" id="queue" aria-label="บันทึกหน้างานที่ต้องตรวจสอบ">
+    <h2>บันทึกหน้างานที่ต้องตรวจสอบ</h2>
+    <p class="muted small" id="q-sub" style="margin:0"></p>
+    <div id="q-who"></div>
+    <div class="qhead"><span class="seg" id="q-seg"></span><button class="btn ghost sm" id="q-exp" type="button"><svg class="i" data-ic="download" viewBox="0 0 24 24"></svg>ส่งออก CSV</button></div>
+    <div id="q-list"></div>
+  </section>
 </main>
 
 <div class="sheet-bg" id="bg"></div>
@@ -264,7 +313,7 @@ td.ac,th.ac{text-align:center;padding-inline:6px}
   <div class="grab" id="grab" aria-hidden="true"></div>
   <div class="sh-h"><div style="flex:1;min-width:0"><h3 id="sh-t"></h3><div class="muted small" id="sh-s"></div><div class="pg" id="sh-p" style="margin-top:8px"></div></div>
     <button class="btn ghost" id="sh-x" type="button" aria-label="ปิด" style="padding:10px"><svg class="i" data-ic="x" viewBox="0 0 24 24"></svg></button></div>
-  <div class="sh-b"><div class="tabs" id="tabs"></div><div id="list"></div></div>
+  <div class="sh-b"><div id="who"></div><div class="tabs" id="tabs"></div><div id="list"></div></div>
 </aside>
 <div class="toast" id="toast" role="status"></div>
 
@@ -293,6 +342,11 @@ const IC={sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2m-7.07-2.9
  wait:'<path d="M5 22h14M5 2h14"/><path d="M17 22v-4.172a2 2 0 0 0-.586-1.414L12 12l-4.414 4.414A2 2 0 0 0 7 17.828V22"/><path d="M7 2v4.172a2 2 0 0 0 .586 1.414L12 12l4.414-4.414A2 2 0 0 0 17 6.172V2"/>',
  file:'<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M12 18v-6"/><path d="m9 15 3-3 3 3"/>',
  trend:'<path d="M16 7h6v6"/><path d="m22 7-8.5 8.5-5-5L2 17"/>'};
+Object.assign(IC,{
+ flag:'<path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" x2="4" y1="22" y2="15"/>',
+ note:'<path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.375 2.625a1 1 0 0 1 3 3l-9.013 9.014a2 2 0 0 1-.853.505l-2.873.84a.5.5 0 0 1-.62-.62l.84-2.873a2 2 0 0 1 .506-.852z"/>',
+ shield:'<path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/>',
+ check:'<path d="M20 6 9 17l-5-5"/>'});
 const ic=(n,c)=>`<svg class="i${c?' '+c:''}" viewBox="0 0 24 24">${IC[n]}</svg>`;
 document.querySelectorAll('[data-ic]').forEach(e=>e.innerHTML=IC[e.dataset.ic]);
 const LV=['building','layers','door'],CL=['building-row','floor-row','room-row'];
@@ -306,7 +360,7 @@ let open=new Set(),collapsedAll=false,query='';
 
 /* ---------- ตั้งค่าแหล่งข้อมูล (แก้ตรงนี้ที่เดียว) ---------- */
 const CFG={
-  appsScriptUrl:'',   /* URL ของ Web App จาก Code.gs (แนะนำ: ชีตเป็นส่วนตัวได้ ส่งออกเฉพาะ asset_id กับ count_status) */
+  appsScriptUrl:'',   /* URL ของ Web App (ลงท้าย /exec) จาก Code.gs — ต้องใส่ เพื่อบันทึกสถานะพิเศษ/Remark/สถานะแอดมินลง ชีต2 · ชีตเป็นส่วนตัวได้ ส่งออกเฉพาะ asset_id กับ count_status */
   sheetId:'1sEhA-A-k1e5fdb2RLz2txirNCAatX-XBk4dyz6-Jbhs', gid:'0', /* ใช้ gviz ต้องแชร์ชีตเป็น "ทุกคนที่มีลิงก์ · ผู้อ่าน" */
   pubCsv:'',          /* ลิงก์ ไฟล์ > แชร์ > เผยแพร่ไปยังเว็บ > CSV (สำรอง) */
   refreshSec:60
@@ -359,7 +413,7 @@ async function fetchSheet(){
   throw new Error(tried.join(' · ')||'ยังไม่ได้ตั้งค่าแหล่งข้อมูล')}
 
 let paused=false,syncing=false,lastErr='';
-async function sync(manual){
+async function sync(manual){syncNotes(manual);
   if(paused||syncing)return;syncing=true;$('refresh')&&($('refresh').disabled=true);
   try{const r=await fetchSheet();
     state=applyPairs(r.prs,{name:'asset_count_list · ชีต1',via:r.via,at:r.updated,embedded:false});
@@ -384,9 +438,9 @@ function live(){
 function build(){
   const T=new Map();let items=0;
   for(const a of ASSETS){if(!state.inList.has(a.id)||!scope.has(a.st))continue;
-    const y=state.done.has(a.id);items++;
+    const y=isDone(a.id);items++;
     const B=a.b??'(blank)',F=a.f??'(blank)',R=a.r??'(blank)';
-    for(const k of [[B],[B,F],[B,F,R]]){const key=k.join('\u0001');let n=T.get(key);if(!n){n={key,path:k,l:k.length-1,n:0,y:0,items:[]};T.set(key,n)}n.items.push({a,y});y?n.y++:n.n++}}
+    for(const k of [[B],[B,F],[B,F,R]]){const key=k.join('\u0001');let n=T.get(key);if(!n){n={key,path:k,l:k.length-1,n:0,y:0,fl:0,items:[]};T.set(key,n)}n.items.push({a,y});y?n.y++:n.n++;if(FLAGS.has(a.id))n.fl++}}
   const kids=(p,l)=>[...T.values()].filter(x=>x.l===l&&p.every((v,i)=>x.path[i]===v)).sort((x,z)=>{const u=x.path[l],v=z.path[l];if(u==='(blank)')return 1;if(v==='(blank)')return -1;return th.compare(u,v)});
   const flat=[];
   for(const b of kids([],0)){flat.push(b);for(const f of kids(b.path,1)){flat.push(f);for(const r of kids(f.path,2))flat.push(r)}}
@@ -405,7 +459,7 @@ function quick(all){
   $('quick').innerHTML=
    `<div class="qrow"><span class="ql">ความคืบหน้า</span><span class="seg">${c('data-p','','ทั้งหมด',!pf)}${c('data-p','n','ยังตรวจไม่เสร็จ',pf==='n')}${c('data-p','y','ตรวจเสร็จแล้ว',pf==='y')}</span></div>`+
    `<div class="qrow"><span class="ql">สถานะ</span>${['01','02','05'].map(k=>c('data-sc',k,(SHORT[k]),scope.has(k))).join('')}</div>`+
-   `<div class="qrow"><span class="ql">อาคาร</span>${c('data-b','','ทุกอาคาร',!bF)}${bs.map(x=>c('data-b',x.path[0],esc(lbl(x.path,0)),bF===x.path[0])).join('')}</div>`+
+   `<div class="qrow"><span class="ql">หน้างาน</span>${c('data-cf','','นับรายการ “พบแต่ไม่มีเลข” เป็นตรวจแล้ว',countFlagged)}</div><div class="qrow"><span class="ql">อาคาร</span>${c('data-b','','ทุกอาคาร',!bF)}${bs.map(x=>c('data-b',x.path[0],esc(lbl(x.path,0)),bF===x.path[0])).join('')}</div>`+
    (bF?`<div class="qrow"><span class="ql">ชั้น</span>${c('data-f','','ทุกชั้น',!fF)}${fs.map(x=>c('data-f',x.path[1],esc(lbl(x.path,1)),fF===x.path[1])).join('')}</div>`:'')}
 function suggest(){const S=new Set();for(const a of ASSETS){if(a.b)S.add(a.b);if(a.r)S.add(a.r);if(a.f)S.add(formatFloor(a.f))}
   $('sug').innerHTML=[...S].sort(th.compare).map(v=>`<option value="${esc(v)}">`).join('')}
@@ -425,7 +479,7 @@ function render(){
   body.innerHTML=vis.map(x=>{
     const exp=q||isOpen(x);const p=pct(x.y,x.n+x.y),lab=lbl(x.path,x.l);
     const tg=x.l<2?`<button class="tg" data-k="${esc(x.key)}" aria-expanded="${exp?'true':'false'}" aria-label="ยุบหรือขยาย ${esc(lab)}">${ic('chev')}</button>`:'<span class="sp"></span>';
-    return`<tr class="${CL[x.l]}"><td><span class="lab">${tg}${ic(LV[x.l],'lv')}${esc(lab)}</span></td><td>${fmt(x.n+x.y)}</td><td class="num-done">${fmt(x.y)}</td><td class="num-remaining">${fmt(x.n)}</td><td>${bar(p,x.y,x.n+x.y)}</td><td class="ac"><button class="go" data-o="${esc(x.key)}" aria-label="ดูรายการครุภัณฑ์ ${esc(lab)}">ดู</button></td></tr>`}).join('');
+    return`<tr class="${CL[x.l]}"><td><span class="lab">${tg}${ic(LV[x.l],'lv')}${esc(lab)}${x.fl?`<span class="nb" title="พบแต่ไม่มีเลข/สติ๊กเกอร์หาย ${x.fl} รายการ">${ic('flag')}${x.fl}</span>`:''}</span></td><td>${fmt(x.n+x.y)}</td><td class="num-done">${fmt(x.y)}</td><td class="num-remaining">${fmt(x.n)}</td><td>${bar(p,x.y,x.n+x.y)}</td><td class="ac"><button class="go" data-o="${esc(x.key)}" aria-label="ดูรายการครุภัณฑ์ ${esc(lab)}">ดู</button></td></tr>`}).join('');
   const N=flat.filter(x=>x.l===0).reduce((s,x)=>s+x.n,0),Y=flat.filter(x=>x.l===0).reduce((s,x)=>s+x.y,0);
   const NA=all.filter(x=>x.l===0).reduce((s,x)=>s+x.n,0),YA=all.filter(x=>x.l===0).reduce((s,x)=>s+x.y,0);
   if(!flat.length)body.innerHTML='<tr><td colspan="6" class="empty">ไม่มีครุภัณฑ์ที่ตรงกับสถานะที่เลือก</td></tr>';
@@ -442,6 +496,7 @@ function kpi(N,Y){
   const miss=ASSETS.filter(a=>!state.inList.has(a.id)&&scope.has(a.st)).length;
   const card=(c,i,l,v,x='')=>`<div class="kpi ${c}"><div class="kpi-h"><span class="kpi-ic">${ic(i)}</span>${l}</div><b>${v}</b>${x}</div>`;
   $('kpis').innerHTML=card('','box','รายการทั้งหมด',fmt(tot))+card('ok','ok','ตรวจนับแล้ว',fmt(Y))+card('wait','wait','รอตรวจนับ',fmt(N))+card('','trend','ความคืบหน้ารวม',(p*100).toFixed(1)+'%',`<div class="track"><span class="fill ${cls(p)}" style="width:${(p*100).toFixed(1)}%"></span></div>`);
+  $('kpis').innerHTML+=noteKpis(card);$('kpis').className='kpis k6';
   const notes=[];if(out)notes.push(`อยู่ในรายการตรวจนับแต่นอกเงื่อนไขสถานะ ${fmt(out)} รายการ`);if(miss)notes.push(`สถานะตรงเงื่อนไขแต่ไม่อยู่ในรายการตรวจนับ ${fmt(miss)} รายการ`);
   kpi.notes=notes}
 
@@ -452,7 +507,7 @@ function chips(){
 function source(){
   $('src').innerHTML=`<span class="muted">จำนวนในรายการตรวจนับ ${state.rows.toLocaleString('en-US')} รายการ</span>
   <span>ข้อมูลครุภัณฑ์หลัก: ${esc(MASTER_VIA)} ณ ${esc(MASTER_AT)} · ${ASSETS.length.toLocaleString('en-US')} รายการ</span>${(kpi.notes||[]).map(n=>`<span>${esc(n)}</span>`).join('')}`;live()}
-function done(){chips();render();source()}
+function done(){chips();render();source();noteStatus();paintQueue()}
 
 /* ---------- รายการครุภัณฑ์ (ลิ้นชักขวา) ---------- */
 let cur=null,tab='n';
@@ -460,14 +515,237 @@ function openSheet(key){
   const n=last.flat.find(x=>x.key===key);if(!n)return;cur=n;tab='n';
   $('sh-t').textContent=n.path.map((_,i)=>lbl(n.path,i)).join(' › ');
   paintSheet();$('bg').classList.add('on');$('sheet').classList.add('on');$('sheet').setAttribute('aria-hidden','false')}
-function paintSheet(){
-  const it=cur.items,sel=it.filter(x=>tab==='a'||(tab==='n'?!x.y:x.y)).sort((p,q)=>th.compare(p.a.no,q.a.no));
-  $('sh-s').textContent=`ทั้งหมด ${it.length.toLocaleString('en-US')} · ยังไม่ตรวจ ${cur.n.toLocaleString('en-US')} · ตรวจแล้ว ${cur.y.toLocaleString('en-US')}`;
-  $('tabs').innerHTML=[['n','ยังไม่ตรวจ'],['y','ตรวจแล้ว'],['a','ทั้งหมด']].map(([k,t])=>`<button class="chip" type="button" data-t="${k}" aria-pressed="${tab===k}">${t}</button>`).join('');
-  $('sh-p').innerHTML=`<div class="track"><span class="fill ${cls(pct(cur.y,it.length))}" style="width:${(pct(cur.y,it.length)*100).toFixed(1)}%"></span></div><b style="width:auto;white-space:nowrap">ตรวจแล้ว ${cur.y.toLocaleString('en-US')}/${it.length.toLocaleString('en-US')} · ${Math.round(pct(cur.y,it.length)*100)}%</b>`;
-  const cap=400;
-  $('list').innerHTML=sel.slice(0,cap).map(x=>`<div class="li"><div><b>${esc(x.a.name||'(ไม่มีชื่อ)')}</b><code>${esc(x.a.no)} · id ${x.a.id}</code></div><span class="tag ${x.y?'y':'n'}">${x.y?'ตรวจแล้ว':'ยังไม่ตรวจ'}</span></div>`).join('')+(sel.length>cap?`<p class="muted small">แสดง ${cap} รายการแรกจาก ${sel.length.toLocaleString('en-US')} รายการ</p>`:'')||'<p class="muted">ไม่มีรายการ</p>'}
 function closeSheet(){$('bg').classList.remove('on');$('sheet').classList.remove('on');$('sheet').setAttribute('aria-hidden','true')}
+
+/* ======================= บันทึกหน้างาน =======================
+   • สถานะพิเศษ "พบครุภัณฑ์ แต่ไม่มีหมายเลข / สติ๊กเกอร์เลือนหาย"  • Remark ออนไลน์  • สถานะ "แก้ไข/ตรวจสอบฐานข้อมูลแล้ว" ของแอดมิน
+   เก็บใน ชีต2 ผ่าน Apps Script (Code.gs) — ผู้สำรวจกดแล้วขึ้นหน้าจอทันที ถ้าสัญญาณหายจะเก็บค้างในเครื่องแล้วส่งซ้ำให้เอง */
+const NK={me:'cicm_count_me',out:'cicm_count_outbox',cf:'cicm_count_cf',adm:'cicm_count_admin'};
+const store={
+  get(k,d){try{const v=localStorage.getItem(k);return v==null?d:JSON.parse(v)}catch(e){return d}},
+  set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}},
+  sget(k,d){try{const v=sessionStorage.getItem(k);return v==null?d:JSON.parse(v)}catch(e){return d}},
+  sset(k,v){try{v==null?sessionStorage.removeItem(k):sessionStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+let NOTES=new Map(),FLAGS=new Set();                       /* NOTES: id → {id,flag,remark,by,at,admin,adminBy,adminAt,upd} จากชีต2 */
+let OUTBOX=(()=>{const o=store.get(NK.out,[]);return Array.isArray(o)?o.filter(e=>e&&Number.isInteger(e.id)&&e.patch):[]})();
+let ME=Object.assign({name:'',key:''},store.get(NK.me,{}));
+let ADMIN=(()=>{const p=store.sget(NK.adm,'');return{on:!!p,pin:p||''}})();
+let countFlagged=!!store.get(NK.cf,false),qf='p',admForm=false;
+const drafts=new Map(),openEd=new Set();
+let sendErr='',readErr='',notesBusy=false,notesSig='',flushing=false;
+const notesOn=()=>!!CFG.appsScriptUrl;
+const when=ms=>ms?new Date(ms).toLocaleString('th-TH',{dateStyle:'medium',timeStyle:'short'}):'';
+const locOf=a=>[a.b,a.f?formatFloor(a.f):'',a.r].filter(Boolean).join(' › ')||'ไม่ระบุตำแหน่ง';
+const metaOf=a=>({asset_no:a.no||'',asset_name:a.name||'',building:a.b||'',floor:a.f?formatFloor(a.f):'',room:a.r||''});
+let _abi=null,_abiSrc=null;
+const assetById=id=>{if(_abiSrc!==ASSETS){_abiSrc=ASSETS;_abi=new Map(ASSETS.map(a=>[a.id,a]))}return _abi.get(id)};
+
+/* มุมมองของบันทึก = ค่าจากชีต + สิ่งที่ยังค้างส่งอยู่ในเครื่อง (ผู้สำรวจเห็นสิ่งที่เพิ่งกดทันที) */
+function noteView(id){
+  const b=NOTES.get(id)||{},e=OUTBOX.find(o=>o.id===id);
+  const v={flag:!!b.flag,remark:b.remark||'',by:b.by||'',at:b.at||0,upd:b.upd||0,admin:!!b.admin,adminBy:b.adminBy||'',adminAt:b.adminAt||0,pending:false};
+  if(e){v.pending=true;
+    if('flag' in e.patch&&!!e.patch.flag!==v.flag){v.flag=!!e.patch.flag;v.admin=false}
+    if('remark' in e.patch&&(e.patch.remark||'')!==v.remark){v.remark=e.patch.remark||'';v.admin=false}
+    if(v.admin===false){v.adminBy='';v.adminAt=0}
+    v.by=e.by||v.by;v.at=v.at||e.ts;v.upd=Math.max(v.upd,e.ts)}
+  return v}
+const hasNote=v=>v.flag||!!v.remark;
+function reindex(){FLAGS=new Set();for(const id of new Set([...NOTES.keys(),...OUTBOX.map(o=>o.id)]))if(noteView(id).flag)FLAGS.add(id)}
+const isDone=id=>state.done.has(id)||(countFlagged&&FLAGS.has(id));
+reindex();
+
+/* ---------- เรียก Apps Script ---------- */
+async function apiCall(url,opt){
+  const ctl=new AbortController(),t=setTimeout(()=>ctl.abort(),25000);
+  try{const r=await fetch(url,{...opt,signal:ctl.signal});if(!r.ok)throw new Error('HTTP '+r.status);
+    const txt=await r.text();try{return JSON.parse(txt)}catch(e){throw new Error('Apps Script ตอบกลับไม่ใช่ JSON (ตรวจว่า deploy เป็น "ทุกคน")')}}
+  catch(e){throw e.name==='AbortError'?new Error('หมดเวลารอการตอบกลับ'):e}
+  finally{clearTimeout(t)}}
+const apiGet=q=>{const u=CFG.appsScriptUrl;if(!u)throw new Error('ยังไม่ได้ตั้งค่า appsScriptUrl');return apiCall(u+(u.includes('?')?'&':'?')+q+'&t='+Date.now(),{cache:'no-store'})};
+/* text/plain = "simple request" เบราว์เซอร์ไม่ทำ preflight ซึ่ง Apps Script ไม่รองรับ */
+const apiPost=o=>{const u=CFG.appsScriptUrl;if(!u)throw new Error('ยังไม่ได้ตั้งค่า appsScriptUrl');return apiCall(u,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(o)})};
+
+/* ---------- คิวส่ง (กันสัญญาณหายหน้างาน) ---------- */
+function queue(id,patch){
+  const a=assetById(id);if(!a)return false;
+  const by=(ME.name||'').trim();
+  if(!by){toast('กรอกชื่อผู้บันทึกก่อน');focusWho();return false}
+  let e=OUTBOX.find(o=>o.id===id);
+  if(!e){e={id,patch:{},meta:metaOf(a),by,ts:Date.now(),ver:0};OUTBOX.push(e)}
+  Object.assign(e.patch,patch);e.by=by;e.ts=Date.now();e.ver++;
+  store.set(NK.out,OUTBOX);reindex();
+  clearTimeout(queue.t);queue.t=setTimeout(()=>flush().then(()=>afterLocal(id)),300);
+  return true}
+async function flush(){
+  if(flushing||!notesOn()||!OUTBOX.length)return;
+  flushing=true;sendErr='';
+  try{while(OUTBOX.length){
+    const e=OUTBOX[0],ver=e.ver;let j;
+    try{j=await apiPost({action:'save',key:ME.key,id:e.id,by:e.by,meta:e.meta,...e.patch})}
+    catch(err){sendErr='ส่งไม่ได้ ('+err.message+') เก็บไว้ในเครื่องแล้ว จะส่งซ้ำให้อัตโนมัติ';break}
+    if(j.ok){if(j.note)NOTES.set(j.note.id,j.note);if(e.ver===ver)OUTBOX.splice(OUTBOX.indexOf(e),1);else OUTBOX.push(OUTBOX.shift())}
+    else if(j.code==='bad'){OUTBOX.splice(OUTBOX.indexOf(e),1);toast('ข้ามรายการที่บันทึกไม่ได้: '+(j.error||''))}
+    else{sendErr=j.error||'ส่งไม่สำเร็จ';break}}}
+  finally{flushing=false;store.set(NK.out,OUTBOX);reindex()}}
+
+/* ---------- ดึงบันทึกจากชีต2 ---------- */
+async function syncNotes(manual){
+  if(!notesOn()){noteStatus();return}
+  if(notesBusy)return;notesBusy=true;
+  const before=notesSig+'|'+OUTBOX.length+'|'+sendErr+'|'+readErr;
+  try{await flush();
+    const j=await apiGet('action=notes');
+    if(!j.ok)throw new Error(j.error||'อ่านบันทึกไม่ได้');
+    readErr='';const sig=JSON.stringify(j.notes);
+    if(sig!==notesSig){notesSig=sig;NOTES=new Map(j.notes.map(n=>[n.id,n]))}}
+  catch(e){readErr='อ่านบันทึกหน้างานไม่ได้: '+e.message}
+  finally{notesBusy=false;reindex();
+    if(before!==notesSig+'|'+OUTBOX.length+'|'+sendErr+'|'+readErr)afterNotes();
+    if(manual)toast(readErr||sendErr?'ซิงค์บันทึกหน้างานไม่สำเร็จ':'อัปเดตบันทึกหน้างานแล้ว')}}
+
+/* ---------- แถบผู้บันทึก / โหมดแอดมิน (ใช้ซ้ำในลิ้นชักและการ์ดสรุป) ---------- */
+function whoHTML(){
+  return`<div class="who">
+   <div class="row"><input class="me-name" type="text" placeholder="ชื่อผู้บันทึก (จำไว้ในเครื่องนี้)" value="${esc(ME.name)}" autocomplete="name" maxlength="60" aria-label="ชื่อผู้บันทึก">
+   <input class="me-key" type="password" placeholder="รหัสผู้สำรวจ (ถ้ามี)" value="${esc(ME.key)}" autocomplete="off" aria-label="รหัสผู้สำรวจ" style="flex:0 1 150px"></div>
+   <div class="row">${ADMIN.on?`<span class="tag a">โหมดแอดมิน</span><button class="btn ghost sm" type="button" data-adm-off>ออกจากโหมดแอดมิน</button>`
+     :`<button class="btn ghost sm" type="button" data-adm-on>${ic('shield')}เข้าโหมดแอดมิน</button>`}
+     ${OUTBOX.length?`<span class="tag p">รอส่ง ${OUTBOX.length} รายการ</span><button class="btn ghost sm" type="button" data-flush>ส่งตอนนี้</button>`:''}</div>
+   ${admForm&&!ADMIN.on?`<div class="row"><input class="adm-pin" type="password" placeholder="รหัสแอดมิน" autocomplete="off" aria-label="รหัสแอดมิน"><button class="btn sm" type="button" data-adm-go>ยืนยัน</button><span class="adm-msg" role="alert"></span></div>`:''}
+  </div>`}
+function paintWho(force){
+  const f=document.activeElement;
+  if(!force&&f&&f.closest&&f.closest('.who')&&/INPUT/.test(f.tagName))return;
+  ['who','q-who'].forEach(i=>{const el=$(i);if(el)el.innerHTML=whoHTML()})}
+function focusWho(){const el=document.querySelector('.who .me-name');el&&el.focus()}
+function adminOff(){ADMIN={on:false,pin:''};store.sset(NK.adm,null);admForm=false;paintWho(true);repaintAll()}
+async function adminLogin(box){
+  const pin=(box.querySelector('.adm-pin')||{}).value||'',msg=box.querySelector('.adm-msg');if(!pin)return;
+  if(!notesOn()){msg.textContent='ต้องตั้งค่า Apps Script ก่อน จึงจะยืนยันรหัสแอดมินได้';return}
+  try{const j=await apiPost({action:'verify',pin});
+    if(j.ok){ADMIN={on:true,pin};store.sset(NK.adm,pin);admForm=false;paintWho(true);repaintAll();toast('เข้าโหมดแอดมินแล้ว')}
+    else msg.textContent=j.error||'รหัสไม่ถูกต้อง'}
+  catch(e){msg.textContent='เชื่อมต่อไม่ได้: '+e.message}}
+async function setAdmin(id,checked,box){
+  if(!(ME.name||'').trim()){toast('กรอกชื่อแอดมินก่อน (ช่องชื่อผู้บันทึก)');if(box)box.checked=!checked;focusWho();return}
+  if(box)box.disabled=true;
+  try{const j=await apiPost({action:'admin',pin:ADMIN.pin,id,by:ME.name.trim(),checked});
+    if(j.ok){if(j.note)NOTES.set(j.note.id,j.note);toast(checked?'บันทึกว่าตรวจสอบฐานข้อมูลแล้ว':'ยกเลิกสถานะตรวจสอบแล้ว')}
+    else{if(j.code==='admin')adminOff();toast(j.error||'บันทึกไม่สำเร็จ')}}
+  catch(err){toast('ส่งไม่ได้: '+err.message)}
+  afterLocal(id)}
+
+/* ---------- รายการในลิ้นชัก ---------- */
+const admRow=(id,v)=>ADMIN.on&&hasNote(v)?`<label class="adm-row"><input type="checkbox" data-adm="${id}" ${v.admin?'checked':''} ${v.pending?'disabled':''}>แก้ไข/ตรวจสอบฐานข้อมูลแล้ว${v.pending?'<span class="muted small"> (รอส่งขึ้นชีตก่อน)</span>':''}</label>`:'';
+const byLine=v=>v.by?`<div class="meta">บันทึกโดย ${esc(v.by)}${v.at?' · '+esc(when(v.at)):''}${v.admin?` · แอดมิน ${esc(v.adminBy)} ตรวจเมื่อ ${esc(when(v.adminAt))}`:''}</div>`:'';
+function tagsOf(v,real){
+  const t=[real?'<span class="tag y">ตรวจแล้ว</span>':v.flag?'<span class="tag f">พบ · ไม่มีเลข</span>':'<span class="tag n">ยังไม่ตรวจ</span>'];
+  if(v.flag&&real)t.push('<span class="tag f">ไม่มีเลข/สติ๊กเกอร์หาย</span>');
+  if(v.admin)t.push('<span class="tag a">แอดมินตรวจแล้ว</span>');
+  if(v.pending)t.push('<span class="tag p">รอส่ง</span>');
+  return t.join('')}
+function itemHTML(x){
+  const a=x.a,id=a.id,v=noteView(id),ed=openEd.has(id),draft=drafts.has(id)?drafts.get(id):v.remark;
+  return`<div class="it" data-row="${id}">
+   <div class="it-top"><div><b>${esc(a.name||'(ไม่มีชื่อ)')}</b><code>${esc(a.no)} · id ${id}</code></div><div class="tags">${tagsOf(v,state.done.has(id))}</div></div>
+   <div class="it-act">
+    <button class="fl" type="button" data-fl="${id}" aria-pressed="${v.flag}"><span class="bx">${ic('check')}</span>พบครุภัณฑ์ แต่ไม่มีหมายเลข / สติ๊กเกอร์เลือนหาย</button>
+    <button class="btn ghost sm" type="button" data-ed="${id}" aria-expanded="${ed}">${ic('note')}${ed?'ปิดช่อง Remark':v.remark?'แก้ Remark':'เพิ่ม Remark'}</button>
+   </div>
+   ${ed?`<div class="edit"><textarea id="ta-${id}" data-ta="${id}" maxlength="1000" rows="3" placeholder="เช่น สติ๊กเกอร์หลุด พบอยู่ใต้โต๊ะ · ย้ายไปห้อง 305 แล้ว · ชื่อในระบบไม่ตรงกับตัวเครื่อง" aria-label="Remark ของ ${esc(a.name||'')}">${esc(draft)}</textarea><div class="row"><button class="btn sm" type="button" data-sv="${id}">บันทึก Remark</button><button class="btn ghost sm" type="button" data-cx="${id}">ยกเลิก</button><span class="muted small" id="cc-${id}">${draft.length}/1000</span></div></div>`
+     :v.remark?`<div class="rmtxt">${esc(v.remark)}</div>`:''}
+   ${byLine(v)}${admRow(id,v)}</div>`}
+function patchRow(id){
+  const el=document.querySelector(`#list [data-row="${id}"]`),x=cur&&cur.items.find(i=>i.a.id===id);
+  if(el&&x)el.outerHTML=itemHTML(x)}
+
+/* กำลังพิมพ์ Remark อยู่ → ไม่ล้างทั้งรายการ (กันข้อความหาย) แต่ปรับเฉพาะแถวที่ไม่ได้เปิดช่องพิมพ์ */
+function patchRows(){
+  if(!cur)return;const m=new Map(cur.items.map(x=>[x.a.id,x]));
+  $('list').querySelectorAll('[data-row]').forEach(el=>{const id=+el.dataset.row;if(openEd.has(id))return;const x=m.get(id);if(x)el.outerHTML=itemHTML(x)})}
+function paintSheetHead(){
+  if(!cur)return;const it=cur.items;
+  const nf=it.filter(x=>FLAGS.has(x.a.id)).length,nr=it.filter(x=>noteView(x.a.id).remark).length;
+  $('sh-s').textContent=`ทั้งหมด ${it.length.toLocaleString('en-US')} · ยังไม่ตรวจ ${cur.n.toLocaleString('en-US')} · ตรวจแล้ว ${cur.y.toLocaleString('en-US')}`;
+  $('tabs').innerHTML=[['n','ยังไม่ตรวจ'],['y','ตรวจแล้ว'],['a','ทั้งหมด'],['f',`พบแต่ไม่มีเลข (${nf})`],['r',`มี Remark (${nr})`]].map(([k,t])=>`<button class="chip" type="button" data-t="${k}" aria-pressed="${tab===k}">${t}</button>`).join('');
+  $('sh-p').innerHTML=`<div class="track"><span class="fill ${cls(pct(cur.y,it.length))}" style="width:${(pct(cur.y,it.length)*100).toFixed(1)}%"></span></div><b style="width:auto;white-space:nowrap">ตรวจแล้ว ${cur.y.toLocaleString('en-US')}/${it.length.toLocaleString('en-US')} · ${Math.round(pct(cur.y,it.length)*100)}%</b>`}
+function paintSheetList(){
+  if(!cur)return;const cap=400;
+  const sel=cur.items.filter(x=>tab==='a'||(tab==='n'?!x.y:tab==='y'?x.y:tab==='f'?FLAGS.has(x.a.id):!!noteView(x.a.id).remark)).sort((p,q)=>th.compare(p.a.no,q.a.no));
+  $('list').innerHTML=sel.slice(0,cap).map(itemHTML).join('')+(sel.length>cap?`<p class="muted small">แสดง ${cap} รายการแรกจาก ${sel.length.toLocaleString('en-US')} รายการ</p>`:'')||'<p class="muted">ไม่มีรายการ</p>'}
+function paintSheet(){paintWho(true);paintSheetHead();paintSheetList()}
+const sheetOpen=()=>$('sheet').classList.contains('on');
+const relinkCur=()=>{if(cur){const n=last.flat.find(x=>x.key===cur.key);if(n)cur=n}};
+const editing=()=>{const f=document.activeElement;return(f&&/TEXTAREA|INPUT/.test(f.tagName)&&$('list').contains(f))||[...drafts.values()].some(d=>d!=null&&openEd.size)};
+function repaintAll(){paintQueue();if(sheetOpen()&&cur){paintSheetHead();paintSheetList()}}
+
+/* ---------- การ์ดสรุป: บันทึกหน้างานที่ต้องตรวจสอบ ---------- */
+function allNotes(){
+  const out=[];
+  for(const id of new Set([...NOTES.keys(),...OUTBOX.map(o=>o.id)])){const a=assetById(id);if(!a)continue;const v=noteView(id);if(hasNote(v))out.push({a,v})}
+  return out.sort((p,q)=>q.v.upd-p.v.upd)}
+const qFilter=(all)=>qf==='p'?all.filter(z=>!z.v.admin):qf==='d'?all.filter(z=>z.v.admin):all;
+function qItem(z){
+  const{a,v}=z,id=a.id;
+  return`<div class="it" data-q="${id}"><div class="it-top"><div><b>${esc(a.name||'(ไม่มีชื่อ)')}</b><code>${esc(a.no)} · id ${id}</code><div class="qwhere">${esc(locOf(a))}</div></div><div class="tags">${v.flag?'<span class="tag f">ไม่มีเลข/สติ๊กเกอร์หาย</span>':''}${v.admin?'<span class="tag a">แอดมินตรวจแล้ว</span>':'<span class="tag n">รอแอดมินตรวจ</span>'}${v.pending?'<span class="tag p">รอส่ง</span>':''}</div></div>
+   ${v.remark?`<div class="rmtxt">${esc(v.remark)}</div>`:''}${byLine(v)}${admRow(id,v)}</div>`}
+function paintQueue(){
+  const c=$('queue');if(!c)return;
+  const all=allNotes(),P=all.filter(z=>!z.v.admin).length,D=all.length-P,sel=qFilter(all),cap=150;
+  $('q-sub').textContent=`ผู้สำรวจกดสถานะพิเศษหรือเขียน Remark หน้างาน → แอดมินนำไปแก้ฐานข้อมูลหลัก → ติ๊ก “แก้ไข/ตรวจสอบฐานข้อมูลแล้ว”`;
+  $('q-seg').innerHTML=[['p',`รอแอดมินตรวจ (${P})`],['d',`ตรวจแล้ว (${D})`],['a',`ทั้งหมด (${all.length})`]].map(([k,t])=>`<button class="chip" type="button" data-qf="${k}" aria-pressed="${qf===k}">${t}</button>`).join('');
+  $('q-list').innerHTML=sel.slice(0,cap).map(qItem).join('')+(sel.length>cap?`<p class="muted small">แสดง ${cap} รายการล่าสุดจาก ${sel.length.toLocaleString('en-US')} รายการ — ส่งออก CSV เพื่อดูครบ</p>`:'')||`<p class="empty">${qf==='p'?'ไม่มีรายการที่รอแอดมินตรวจ':'ไม่มีรายการ'}</p>`}
+function exportNotes(){
+  const safe=v=>{v=String(v==null?'':v);return /^[=+\-@\t\r]/.test(v)?"'"+v:v};
+  const q=v=>/[",\n\r]/.test(String(v))?'"'+String(v).replace(/"/g,'""')+'"':v;
+  const R=[['asset_id','เลขครุภัณฑ์','ชื่อครุภัณฑ์','อาคาร','ชั้น','ห้อง','พบแต่ไม่มีเลข/สติ๊กเกอร์หาย','Remark','ผู้บันทึก','เวลาบันทึก','แอดมินตรวจแล้ว','แอดมิน','เวลาตรวจ']];
+  for(const{a,v}of qFilter(allNotes())){const m=metaOf(a);R.push([a.id,a.no,a.name,m.building,m.floor,m.room,v.flag?'Y':'',v.remark,v.by,when(v.at),v.admin?'Y':'',v.adminBy,when(v.adminAt)])}
+  const csv='﻿'+R.map(r=>r.map(c=>q(safe(c))).join(',')).join('\r\n'),d=new Date();
+  const n='บันทึกหน้างานตรวจนับ_'+d.getFullYear()+String(d.getMonth()+1).padStart(2,'0')+String(d.getDate()).padStart(2,'0')+'.csv';
+  const u=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'})),el=document.createElement('a');
+  el.href=u;el.download=n;document.body.appendChild(el);el.click();el.remove();setTimeout(()=>URL.revokeObjectURL(u),2000);toast('ส่งออกบันทึกหน้างานแล้ว')}
+
+/* ---------- KPI เพิ่ม 2 ใบ + สถานะการเชื่อมต่อ ---------- */
+function noteKpis(card){
+  let fl=0,pend=0;
+  for(const id of new Set([...NOTES.keys(),...OUTBOX.map(o=>o.id)])){const a=assetById(id);if(!a||!state.inList.has(id)||!scope.has(a.st))continue;const v=noteView(id);if(!hasNote(v))continue;if(v.flag)fl++;if(!v.admin)pend++}
+  return card('flag','flag','พบแต่ไม่มีเลข / สติ๊กเกอร์หาย',fmt(fl),`<small>${countFlagged?'นับรวมในยอด “ตรวจแล้ว” ด้านซ้าย':'ยังไม่นับรวมในยอด “ตรวจแล้ว” (เปิดได้ที่ตัวกรองด่วน)'}</small>`)
+    +card('adm','shield','รอแอดมินตรวจสอบ',fmt(pend),'<small>มี Remark หรือสถานะพิเศษ แต่ยังไม่ได้ติ๊กว่าแก้ฐานข้อมูลแล้ว</small>')}
+function noteStatus(){
+  const el=$('nsrc');if(!el)return;
+  el.innerHTML=(notesOn()?`<span>บันทึกหน้างาน: เชื่อมต่อ ชีต2 ผ่าน Apps Script${NOTES.size?' · '+NOTES.size.toLocaleString('en-US')+' รายการ':''}</span>`
+    :'<span class="warnt">บันทึกหน้างาน: ยังไม่ได้ตั้งค่า Apps Script — สิ่งที่กดจะค้างอยู่ในเครื่องนี้ก่อน แล้วส่งขึ้นชีตเองเมื่อตั้งค่า CFG.appsScriptUrl</span>')
+    +(OUTBOX.length?`<span class="warnt">รอส่ง ${OUTBOX.length} รายการ</span>`:'')+(sendErr?`<span class="errt">${esc(sendErr)}</span>`:'')+(readErr?`<span class="errt">${esc(readErr)}</span>`:'')}
+
+/* ---------- ประสานหลังข้อมูลบันทึกเปลี่ยน ---------- */
+function afterLocal(id){reindex();render();relinkCur();if(sheetOpen()&&cur){paintSheetHead();if(id!=null)patchRow(id)}paintQueue();noteStatus();paintWho()}
+function afterNotes(){reindex();render();relinkCur();paintQueue();noteStatus();paintWho();if(sheetOpen()&&cur){paintSheetHead();if(editing())patchRows();else paintSheetList()}}
+
+/* ---------- เหตุการณ์ ---------- */
+function onNoteClick(e){
+  const t=e.target.closest('[data-fl],[data-ed],[data-sv],[data-cx]');if(!t)return;const d=t.dataset;
+  if(d.fl){const id=+d.fl;if(queue(id,{flag:!noteView(id).flag}))afterLocal(id)}
+  else if(d.ed){const id=+d.ed;if(openEd.has(id)){openEd.delete(id);drafts.delete(id)}else{openEd.add(id);drafts.set(id,noteView(id).remark)}patchRow(id);const ta=$('ta-'+id);if(ta)ta.focus()}
+  else if(d.sv){const id=+d.sv,ta=$('ta-'+id);if(ta&&queue(id,{remark:ta.value.trim()})){openEd.delete(id);drafts.delete(id);afterLocal(id)}}
+  else if(d.cx){const id=+d.cx;openEd.delete(id);drafts.delete(id);patchRow(id)}}
+$('list').addEventListener('click',onNoteClick);
+$('list').addEventListener('input',e=>{const t=e.target.closest('[data-ta]');if(!t)return;const id=+t.dataset.ta;drafts.set(id,t.value);const c=$('cc-'+id);if(c)c.textContent=t.value.length+'/1000'});
+const onAdm=e=>{const b=e.target.closest('[data-adm]');if(b)setAdmin(+b.dataset.adm,b.checked,b)};
+$('list').addEventListener('change',onAdm);$('q-list').addEventListener('change',onAdm);
+document.addEventListener('input',e=>{
+  const t=e.target;if(!t.classList)return;
+  if(t.classList.contains('me-name')){ME.name=t.value;store.set(NK.me,ME);document.querySelectorAll('.me-name').forEach(i=>{if(i!==t)i.value=t.value})}
+  else if(t.classList.contains('me-key')){ME.key=t.value;store.set(NK.me,ME);document.querySelectorAll('.me-key').forEach(i=>{if(i!==t)i.value=t.value})}});
+document.addEventListener('click',e=>{
+  const b=e.target.closest('[data-adm-on],[data-adm-off],[data-adm-go],[data-flush]');if(!b)return;
+  if(b.matches('[data-adm-on]')){admForm=true;paintWho(true);const p=document.querySelector('.who .adm-pin');if(p)p.focus()}
+  else if(b.matches('[data-adm-off]'))adminOff();
+  else if(b.matches('[data-adm-go]'))adminLogin(b.closest('.who'));
+  else if(b.matches('[data-flush]')){flush().then(()=>{afterNotes();toast(sendErr?'ยังส่งไม่ได้':'ส่งขึ้นชีตแล้ว')})}});
+document.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.classList&&e.target.classList.contains('adm-pin')){e.preventDefault();adminLogin(e.target.closest('.who'))}});
+$('q-seg').onclick=e=>{const b=e.target.closest('[data-qf]');if(b){qf=b.dataset.qf;paintQueue()}};
+$('q-exp').onclick=exportNotes;
 
 /* ---------- เหตุการณ์ ---------- */
 function toast(t){const e=$('toast');e.textContent=t;e.classList.add('on');clearTimeout(toast.t);toast.t=setTimeout(()=>e.classList.remove('on'),2200)}
@@ -493,12 +771,12 @@ $('body').onclick=e=>{
     render();if(innerWidth<700){const n=[...document.querySelectorAll('.tg')].find(z=>z.dataset.k===k);n&&n.closest('tr').scrollIntoView({block:'start',behavior:'smooth'})}return}
   const g=e.target.closest('.go');if(g)openSheet(g.dataset.o)};
 $('quick').onclick=e=>{const b=e.target.closest('.chip');if(!b)return;const d=b.dataset;
-  if('p' in d)pf=d.p;else if('sc' in d){scope.has(d.sc)?scope.delete(d.sc):scope.add(d.sc);chips()}
+  if('cf' in d){countFlagged=!countFlagged;store.set(NK.cf,countFlagged);reindex()}else if('p' in d)pf=d.p;else if('sc' in d){scope.has(d.sc)?scope.delete(d.sc):scope.add(d.sc);chips()}
   else if('b' in d){bF=d.b;fF=''}else if('f' in d)fF=d.f;render()};
 $('exp').onclick=()=>{opened=new Set(last.flat.filter(x=>x.l<2).map(x=>x.key));render()};
 $('col').onclick=()=>{opened=new Set();render()};
 $('q').oninput=e=>{query=e.target.value;render()};
-$('tabs').onclick=e=>{const b=e.target.closest('[data-t]');if(b){tab=b.dataset.t;paintSheet()}};
+$('tabs').onclick=e=>{const b=e.target.closest('[data-t]');if(b){tab=b.dataset.t;paintSheetHead();paintSheetList()}};
 (()=>{let y0=null,dy=0;const sh=$('sheet'),h=e=>e.target.closest('#grab,.sh-h');
   sh.addEventListener('touchstart',e=>{if(innerWidth<700&&h(e)){y0=e.touches[0].clientY;dy=0;sh.style.transition='none'}},{passive:true});
   sh.addEventListener('touchmove',e=>{if(y0==null)return;dy=Math.max(0,e.touches[0].clientY-y0);sh.style.transform=`translateY(${dy}px)`},{passive:true});
