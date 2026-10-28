@@ -280,7 +280,7 @@ td.ac,th.ac{text-align:center;padding-inline:6px}
         <button class="btn ghost" id="sqlreset" type="button" hidden>ใช้ข้อมูลที่ฝังในหน้า</button>
         <input id="sqlfile" type="file" accept=".sql,text/plain,application/sql" hidden>
       </div>
-      <p class="muted small" style="margin:8px 0 0"></p>
+      <p class="muted small" style="margin:8px 0 0">เลือกไฟล์ .sql ที่ export จากตาราง asset (อ่านเลข ชื่อ อาคาร ชั้น ห้อง สถานะ รวมถึงรายละเอียดและหมายเหตุสำหรับช่องค้นหา)</p>
       <div id="sqlmsg"></div>
     </div>
     <details class="fallback" id="stdet"><summary>เลือกสถานะครุภัณฑ์ที่ใช้นับทั้งหมด</summary>
@@ -375,7 +375,7 @@ let open=new Set(),collapsedAll=false,query='';
 
 /* ---------- ตั้งค่าแหล่งข้อมูล (แก้ตรงนี้ที่เดียว) ---------- */
 const CFG={
-  appsScriptUrl:'https://script.google.com/macros/s/AKfycbzbHF96Lupgf39yAhf3EUFEc-4-QHFRYz5clF0NJW-iTg1GDFWFIfzvFUf9KUoAYsmdaQ/exec',   /* URL ของ Web App (ลงท้าย /exec) จาก Code.gs — ต้องใส่ เพื่อบันทึกสถานะพิเศษ/Remark/สถานะแอดมินลง ชีต2 · ชีตเป็นส่วนตัวได้ ส่งออกเฉพาะ asset_id กับ count_status */
+  appsScriptUrl:'',   /* URL ของ Web App (ลงท้าย /exec) จาก Code.gs — ต้องใส่ เพื่อบันทึกสถานะพิเศษ/Remark/สถานะแอดมินลง ชีต2 · ชีตเป็นส่วนตัวได้ ส่งออกเฉพาะ asset_id กับ count_status */
   sheetId:'1sEhA-A-k1e5fdb2RLz2txirNCAatX-XBk4dyz6-Jbhs', gid:'0', /* ใช้ gviz ต้องแชร์ชีตเป็น "ทุกคนที่มีลิงก์ · ผู้อ่าน" */
   pubCsv:'',          /* ลิงก์ ไฟล์ > แชร์ > เผยแพร่ไปยังเว็บ > CSV (สำรอง) */
   refreshSec:60
