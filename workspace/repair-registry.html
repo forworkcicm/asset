@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="color-scheme" content="light dark">
-<meta name="theme-color" content="#FF8233">
+<meta name="color-scheme" content="light">
+<meta name="theme-color" content="#F16524">
 <title>ทะเบียนจ้างซ่อม CICM</title>
 <!-- ฟอนต์: แยกลิงก์ทีละตระกูล เพื่อไม่ให้ตระกูลใดตระกูลหนึ่งโหลดไม่ได้แล้วพังทั้งชุด -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -17,35 +17,52 @@
 /* ============================================================
    โทเคนสี — ทุกสีในไฟล์นี้มาจากตัวแปรชุดนี้เท่านั้น
    ============================================================ */
+/* ============================================================
+   CICM MODERN CORPORATE THEME — WHITE / ORANGE / BLACK
+   ไม่มี dark mode: ทั้งหน้าใช้ธีมสว่างตลอด
+   ============================================================ */
 :root{
-  --hero-top:#FF8233; --hero-bottom:#FDAC55;
-  --accent:#F16524; --accent-deep:#D8531A; --on-accent:#fff;
-  --menu-top:#FF6B1A; --menu-bottom:#FF9642; --menu-text:#fff;
-  --page-bg:#FFF4EB; --surface:rgba(255,255,255,.92); --surface-2:#FFF7F1; --oval:#fff;
-  --text:#2B1A10; --text-muted:#8A6A57; --border:rgba(43,26,16,.10);
-  --success:#2F9E5B; --success-soft:rgba(47,158,91,.14);
-  --warn:#9A6212; --warn-soft:rgba(183,121,31,.18);
-  --danger:#C8382F; --danger-soft:rgba(200,56,47,.12);
-  --scrim:rgba(0,0,0,.4); --shadow:0 12px 40px rgba(120,50,10,.12);
-  --bar:#F16524; --bar-2:#FDAC55;
-  --white:#fff; --ink:#2B1A10; --glass:rgba(255,255,255,.2); --glass-hover:rgba(255,255,255,.16); --nav-shadow:rgba(0,0,0,.15);
-  --select-arrow:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%238A6A57' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
-}
-@media (prefers-color-scheme: dark){
-  :root{
-    --hero-top:#B8400C; --hero-bottom:#E0732A;
-    --accent:#FF8A4D; --accent-deep:#FF9F6B; --on-accent:#2B1A10;
-    --menu-top:#C2490F; --menu-bottom:#E47E36; --menu-text:#fff;
-    --page-bg:#17100B; --surface:rgba(38,27,20,.92); --surface-2:#2B1E15; --oval:#241811;
-    --text:#FBEFE6; --text-muted:#C9AE9C; --border:rgba(255,255,255,.12);
-    --success:#5CD08B; --success-soft:rgba(92,208,139,.16);
-    --warn:#F2B84B; --warn-soft:rgba(242,184,75,.16);
-    --danger:#FF8F85; --danger-soft:rgba(255,143,133,.16);
-    --scrim:rgba(0,0,0,.6); --shadow:0 12px 40px rgba(0,0,0,.45);
-    --bar:#FF8A4D; --bar-2:#B8400C;
-    --white:#fff; --ink:#2B1A10; --glass:rgba(255,255,255,.2); --glass-hover:rgba(255,255,255,.16); --nav-shadow:rgba(0,0,0,.35);
-    --select-arrow:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23C9AE9C' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
-  }
+  color-scheme: light;
+  /* HERO */
+  --hero-top:#F16524;
+  --hero-bottom:#FF9B52;
+  /* BRAND */
+  --accent:#F16524;
+  --accent-deep:#D94E13;
+  --on-accent:#FFFFFF;
+  /* MENU */
+  --menu-top:#E95B1B;
+  --menu-bottom:#FF8A3D;
+  --menu-text:#FFFFFF;
+  /* BACKGROUND */
+  --page-bg:#FFFFFF;
+  --surface:#FFFFFF;
+  --surface-2:#F7F7F7;
+  --oval:#FFFFFF;
+  /* TEXT */
+  --text:#171717;
+  --text-muted:#737373;
+  --border:#EAEAEA;
+  /* STATUS */
+  --success:#239B56;
+  --success-soft:rgba(35,155,86,.12);
+  --warn:#A66A00;
+  --warn-soft:rgba(230,155,30,.13);
+  --danger:#D93636;
+  --danger-soft:rgba(217,54,54,.10);
+  /* EFFECT */
+  --scrim:rgba(0,0,0,.45);
+  --shadow:0 8px 32px rgba(0,0,0,.055);
+  /* CHART */
+  --bar:#F16524;
+  --bar-2:#FFAB69;
+  /* COMMON */
+  --white:#FFFFFF;
+  --ink:#171717;
+  --glass:rgba(255,255,255,.20);
+  --glass-hover:rgba(255,255,255,.16);
+  --nav-shadow:rgba(0,0,0,.12);
+  --select-arrow:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23737373' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
 }
 
 /* ============================================================ พื้นฐาน */
@@ -83,7 +100,7 @@ a{color:inherit}
 @media (max-width:760px){.nav-links{display:none}.menu-btn{margin-left:auto}}
 
 /* ============================================================ ฮีโร่ */
-.hero{position:relative;height:100dvh;min-height:560px;overflow:hidden;display:grid;place-items:center;
+.hero{position:relative;height:75dvh;min-height:560px;overflow:hidden;display:grid;place-items:center;
   background:linear-gradient(180deg,var(--hero-top),var(--hero-bottom));border-radius:0 0 44px 44px}
 .hero-art{position:absolute;inset:0;opacity:.8;pointer-events:none;
   -webkit-mask-image:linear-gradient(to bottom,black 45%,transparent 94%);mask-image:linear-gradient(to bottom,black 45%,transparent 94%)}
@@ -114,6 +131,23 @@ a{color:inherit}
 @media (max-width:600px){.br-sm{display:inline}.oval{height:min(70dvh,560px)}.hero-content{gap:12px}}
 
 /* ============================================================ เนื้อหา */
+
+/* ============================================================
+   MODERN WHITE DASHBOARD — ส้มเฉพาะจุดเน้น ตัวอักษรดำ พื้นขาว
+   ============================================================ */
+body{background:#FFFFFF;color:#171717}
+.card{background:#FFFFFF;border:1px solid #EEEEEE;box-shadow:0 4px 24px rgba(0,0,0,.045);border-radius:24px}
+.kpi{background:#FAFAFA;border:1px solid #EEEEEE;border-radius:20px}
+.card h2{color:#171717;font-weight:700}
+.input,.select{background:#FFFFFF;border:1px solid #E5E5E5;color:#171717}
+.btn.primary{background:#F16524;color:#FFFFFF;box-shadow:0 4px 12px rgba(241,101,36,.18)}
+.btn.primary:hover{background:#D94E13}
+.tablewrap{background:#FFFFFF;border-color:#EEEEEE}
+thead th{background:#F7F7F7;color:#555555}
+tbody tr:hover td{background:#FFF3EC}
+.sec{background:#FFFFFF;border-color:#EEEEEE}
+.fill{background:linear-gradient(90deg,#F16524,#FFAB69)}
+
 main{max-width:1400px;margin:0 auto;padding:clamp(20px,4vw,48px) clamp(16px,3vw,32px) 80px;display:grid;grid-template-columns:minmax(0,1fr);gap:clamp(18px,2.4vw,28px)}
 .card{background:var(--surface);border:1px solid var(--border);border-radius:28px;padding:clamp(18px,2.4vw,28px);
   box-shadow:var(--shadow);scroll-margin-top:90px;min-width:0}
@@ -295,7 +329,7 @@ footer{max-width:1400px;margin:0 auto;padding:0 clamp(16px,3vw,32px) 48px;color:
       <div class="field"><label for="fStatus">สถานะเอกสาร</label>
         <select class="select" id="fStatus">
           <option value="">ทั้งหมด</option><option value="complete">ครบ 5 ฉบับ</option>
-          <option value="incomplete">ยังไม่ครบ</option><option value="warn">มีข้อควรตรวจ</option>
+          <option value="incomplete">ยังไม่ครบ</option><option value="warn">มีข้อควรตรวจ</option><option value="review">รอตรวจ (ซิงก์แล้ว)</option><option value="waitpdf">รอ PDF</option>
         </select></div>
       <div class="field"><label for="fVendor">ผู้ขาย/ผู้รับจ้าง</label><select class="select" id="fVendor"></select></div>
       <button class="btn small" id="clearBtn" type="button">ล้างตัวกรอง</button>
@@ -321,6 +355,12 @@ footer{max-width:1400px;margin:0 auto;padding:0 clamp(16px,3vw,32px) 48px;color:
     <div class="head"><div><h2>งานที่ยังรอ PDF จาก e-GP</h2>
       <p class="sub">เอกสารแต่ละฉบับที่ยังไม่ครบในชีต — ส่ง PDF ฉบับนั้นเพื่อเติมคอลัมน์ที่ระบุ</p></div></div>
     <div class="todo" id="todoList"></div>
+  </section>
+
+  <section class="card" id="review" aria-label="คิวตรวจ">
+    <div class="head"><div><h2>คิวตรวจ</h2>
+      <p class="sub" id="reviewSub">เรื่องที่ Python เติมค่าแล้ว รอคนตรวจ แล้วเปลี่ยนสถานะเป็น “ยืนยันแล้ว” ในชีต</p></div></div>
+    <div class="todo" id="reviewList"></div>
   </section>
 
   <section class="card" id="registry" aria-label="ทะเบียนงาน">
@@ -413,10 +453,11 @@ const FIELDS = [
   {k:'vendor',h:'ผู้ขาย/ผู้รับจ้าง',g:'pdf'},{k:'offer',h:'ราคาที่ผู้ขายเสนอ',g:'pdf'},{k:'agreed',h:'ราคาที่ตกลง',g:'pdf'},
   {k:'win_date',h:'วันที่ประกาศผู้ชนะ',g:'pdf'},{k:'po_no',h:'เลขที่ใบสั่งซื้อ/จ้าง',g:'pdf'},{k:'po_date',h:'วันที่ใบสั่งซื้อ/จ้าง',g:'pdf'},
   {k:'vat',h:'ภาษีมูลค่าเพิ่ม (มี/ไม่มี)',g:'pdf'},{k:'days',h:'กำหนดส่งมอบ (วัน)',g:'pdf'},{k:'due',h:'ครบกำหนดส่งมอบวันที่',g:'pdf'},
-  {k:'warranty',h:'ระยะเวลารับประกัน',g:'pdf'},{k:'egp',h:'เลขที่โครงการ e-GP',g:'pdf'},{k:'contract',h:'เลขคุมสัญญา',g:'pdf'}
+  {k:'warranty',h:'ระยะเวลารับประกัน',g:'pdf'},{k:'egp',h:'เลขที่โครงการ e-GP',g:'pdf'},{k:'contract',h:'เลขคุมสัญญา',g:'pdf'},
+  {k:'st',h:'สถานะ (Python)',g:'ctrl'},{k:'files',h:'ไฟล์ที่อ่านแล้ว',g:'ctrl'},{k:'notes',h:'ข้อสังเกต',g:'ctrl'}
 ];
 const GROUPS = {
-  job:{t:'ข้อมูลงาน (กรอกเอง)'}, pdf:{t:'จากเอกสาร e-GP ฉบับ 02–06'}, preset:{t:'ค่าตั้งต้น / ราคากลาง'}, unused:{t:'คอลัมน์ที่ไม่ได้ใช้'}
+  job:{t:'ข้อมูลงาน (กรอกเอง)'}, pdf:{t:'จากเอกสาร e-GP ฉบับ 02–06'}, preset:{t:'ค่าตั้งต้น / ราคากลาง'}, ctrl:{t:'สถานะการซิงก์ (Python)'}, unused:{t:'คอลัมน์ที่ไม่ได้ใช้'}
 };
 const DATE_KEYS = ['sign_date','cp_date','rep_date','ord_date','res_date','win_date','po_date','due'];
 const MONEY_KEYS = ['amount','central','offer','agreed'];
@@ -540,7 +581,7 @@ function buildJobs(table) {
     if (!raw.title && !raw.seq && !raw.amount) continue;
     const dt = {}; DATE_KEYS.forEach(k => dt[k] = parseDate(raw[k]));
     const mo = {}; MONEY_KEYS.forEach(k => mo[k] = parseMoney(raw[k]));
-    const j = {id:jobs.length, raw, cells, dt, mo, seqN:parseInt(raw.seq, 10)};
+    const j = {id:jobs.length, raw, cells, dt, mo, seqN:parseInt(raw.seq, 10), st:raw.st || ''};
     j.amt = mo.agreed ?? mo.amount ?? mo.central ?? mo.offer;
     const ref = dt.sign_date.d || dt.rep_date.d || dt.po_date.d;
     j.fy = fiscalYear(ref); j.refDate = ref;
@@ -555,6 +596,7 @@ function buildJobs(table) {
     const vals = MONEY_KEYS.map(k => mo[k]).filter(v => v != null);
     if (new Set(vals.map(v => v.toFixed(2))).size > 1) j.warns.push('ยอดเงินในแต่ละช่องไม่เท่ากัน (จำนวนเงิน / ราคากลาง / ราคาที่เสนอ / ราคาที่ตกลง)');
     if (dt.po_date.d && dt.due.d && dt.due.d < dt.po_date.d) j.warns.push('ครบกำหนดส่งมอบ อยู่ก่อนวันที่ใบสั่ง');
+    if (raw.notes) raw.notes.split('; ').filter(Boolean).forEach(n => j.warns.push('จาก Python: ' + n));
     j.hay = Object.values(raw).join(' ').toLowerCase();
     jobs.push(j);
   }
@@ -566,12 +608,20 @@ const label = k => FIELDS.find(f => f.k === k)?.h || k;
 const S = {headers:[], map:{}, jobs:[], src:null, at:null, err:null,
   f:{q:'', fy:'', kind:'', status:'', vendor:''}, sort:{key:'sign', dir:-1}, showEmpty:false, open:null, busy:false};
 
+function statusOk(j, s) {
+  if (s === 'complete') return j.done === 5;
+  if (s === 'incomplete') return j.done < 5;
+  if (s === 'warn') return j.warns.length > 0;
+  if (s === 'review') return j.st === 'รอตรวจ';
+  if (s === 'waitpdf') return j.st === 'รอ PDF';
+  return true;
+}
 function filtered() {
   const f = S.f, q = f.q.trim().toLowerCase();
   return S.jobs.filter(j =>
     (!q || j.hay.includes(q)) && (!f.fy || String(j.fy) === f.fy) && (!f.kind || j.raw.kind === f.kind) &&
     (!f.vendor || j.raw.vendor === f.vendor) &&
-    (!f.status || (f.status === 'complete' ? j.done === 5 : f.status === 'incomplete' ? j.done < 5 : j.warns.length > 0)));
+    (!f.status || statusOk(j, f.status)));
 }
 const SORTERS = {
   seq:j => j.seqN ?? -1, sign:j => j.refDate?.getTime() ?? 0, title:j => j.raw.title, amt:j => j.amt ?? -1,
@@ -637,6 +687,17 @@ function renderCharts(list) {
     : '<p class="empty-note">ยังไม่มีงานที่ระบุผู้ขาย</p>';
 }
 
+function renderReview(list) {
+  const rv = list.filter(j => j.st === 'รอตรวจ');
+  const wp = list.filter(j => j.st === 'รอ PDF').length;
+  $('#reviewSub').textContent = `รอตรวจ ${rv.length} เรื่อง · รอ PDF ${wp} เรื่อง · เปลี่ยนสถานะเป็น “ยืนยันแล้ว” หลังตรวจเสร็จ`;
+  $('#reviewList').innerHTML = rv.length ? rv.map(j =>
+    `<div class="todo-row"><div class="num">${esc(j.raw.seq || j.id + 1)}</div>
+      <h3>${esc(j.raw.title || '(ไม่มีชื่องาน)')}<small>${j.warns.length ? j.warns.length + ' ข้อสังเกต' : 'ไม่มีข้อสังเกต'}</small></h3>
+      <div class="pills"><button class="pill" type="button" data-open="${j.id}">เปิดดูและตรวจ</button></div></div>`).join('')
+    : '<p class="empty-note">ไม่มีเรื่องที่รอตรวจ</p>';
+}
+
 function renderTodo(list) {
   const colsOf = s => s.req.map(k => S.map[k] != null ? colLetter(S.map[k]) : '?').join(', ');
   $('#todoList').innerHTML = STAGES.map((st, i) => {
@@ -662,7 +723,7 @@ function renderTable(list) {
     <tbody>${rows.map(j => `<tr>
       <td class="mono">${esc(j.raw.seq || j.id + 1)}</td>
       <td class="hide-sm">${esc(fmtDate(j.refDate))}</td>
-      <td><div class="t">${esc(j.raw.title || '(ไม่มีชื่องาน)')}</div><div class="s">${esc(j.raw.vendor || 'ยังไม่ระบุผู้ขาย')}${j.raw.kind ? ' · ' + esc(j.raw.kind) : ''}</div>
+      <td><div class="t">${esc(j.raw.title || '(ไม่มีชื่องาน)')}</div><div class="s">${esc(j.raw.vendor || 'ยังไม่ระบุผู้ขาย')}${j.raw.kind ? ' · ' + esc(j.raw.kind) : ''}${j.st ? ' · <b>' + esc(j.st) + '</b>' : ''}</div>
         <div class="m-only"><span class="mono">${fmtMoney(j.amt)}</span> บาท<div style="margin-top:6px">${stageDots(j)}${j.warns.length ? ` <span class="warnbadge">${ic('alert')}${j.warns.length}</span>` : ''}</div></div></td>
       <td class="num mono hide-sm">${fmtMoney(j.amt)}</td>
       <td class="hide-sm mono">${esc(j.raw.egp) || '<span class="dim">—</span>'}</td>
@@ -674,7 +735,7 @@ function renderTable(list) {
 
 function renderAll() {
   const list = filtered();
-  renderKpis(list); renderCharts(list); renderTodo(list); renderTable(list); renderSource();
+  renderKpis(list); renderCharts(list); renderTodo(list); renderReview(list); renderTable(list); renderSource();
   $('#sheetLink').href = `https://docs.google.com/spreadsheets/d/${CFG.sheetId}/edit`;
   $('#menuFoot').textContent = S.src ? S.src.label : '';
   $('#foot').innerHTML = `แหล่งข้อมูล: ${esc(S.src ? S.src.label : '—')} · ปีงบประมาณไทย (ต.ค.–ก.ย.) · ข้อมูลทั้งหมดอ่านจากชีต หน้านี้ไม่แก้ไขชีต`;
