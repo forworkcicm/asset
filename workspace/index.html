@@ -1954,7 +1954,7 @@ async function fetchSheetViaDrive(fileId) {
    ลงชื่อเข้าใช้ Google แล้วอ่านผ่าน Sheets API ด้วยสิทธิ์ของผู้ใช้เอง
    ไม่มีรหัสหรือข้อมูลชีตอยู่ในไฟล์นี้ โทเคนอยู่ในหน่วยความจำของแท็บ ~1 ชั่วโมง ปิดหน้าแล้วหาย
    ===================================================================== */
-const GOOGLE_CLIENT_ID = ''; /* OAuth Client ID ชนิด Web application (ไม่ใช่ความลับ) ใส่ที่นี่เพื่อใช้ทุกเครื่อง หรือวางในช่องบนหน้านี้ก็ได้ */
+const GOOGLE_CLIENT_ID = '766179343799-1e0hbmv9d3esv75ui4b6tnmu13roper6.apps.googleusercontent.com'; /* OAuth Client ID ชนิด Web application (ไม่ใช่ความลับ) ใส่ที่นี่เพื่อใช้ทุกเครื่อง หรือวางในช่องบนหน้านี้ก็ได้ */
 const GOOGLE_SCOPES = ['https://www.googleapis.com/auth/spreadsheets.readonly', 'https://www.googleapis.com/auth/userinfo.email'];
 const GS_API = 'https://sheets.googleapis.com/v4/spreadsheets';
 const SHEET_TABS = ['ข้อมูลงาน', 'บุคลากร', 'ผู้ขาย', 'ตั้งค่า', 'data', EXTRA_SHEET, HOLIDAY_SHEET];
