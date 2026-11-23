@@ -722,7 +722,8 @@ const COLUMNS = {
   'เลขที่ใบสั่งซื้อ/จ้าง': 'po_no', 'วันที่ใบสั่งซื้อ/จ้าง': 'po_date',
   'กำหนดส่งมอบ (วัน)': 'delivery_days', 'ครบกำหนดส่งมอบวันที่': 'due_date', 'ระยะเวลารับประกัน': 'warranty',
   'วันที่ประเมินผู้ส่งมอบ (FM-PUR-02)': 'eval_date_02', 'วันที่ประเมินหลังการขาย (FM-PUR-09)': 'eval_date_09',
-  'เลขที่โครงการ e-GP': 'egp_project_no', 'เลขคุมสัญญา': 'contract_ctrl_no'
+  'เลขที่โครงการ e-GP': 'egp_project_no', 'เลขคุมสัญญา': 'contract_ctrl_no',
+  'สถานะ': 'status', 'หมายเหตุ': 'note'
 };
 const JOB_KEYS = Object.values(COLUMNS);
 const KEY_LABEL = Object.fromEntries(Object.entries(COLUMNS).map(([h, k]) => [k, h]));
@@ -1493,6 +1494,11 @@ function nextAction(gates, statuses) {
   return { gate: 5, text: 'ผ่านครบ 4 ด่าน รอตรวจรับพัสดุ' };
 }
 
+/* สถานะที่ถือว่า "✓ สำเร็จ" โดยไม่ต้องผ่านด่านจัดจ้าง (คอลัมน์ "สถานะ" ในชีตข้อมูลงาน)
+   เทียบจากคำขึ้นต้น ส่วนเหตุผลต่อท้ายแก้ได้อิสระ · ว่างหรือข้อความอื่น (เช่น "เรียบร้อย") = ยังดำเนินการตามปกติ กันปิดงานโดยไม่ตั้งใจ */
+const CLOSED_STATUS = ['ไม่จ้างซ่อม', 'ไม่มีค่าใช้จ่าย', 'ไม่ส่งซ่อม'];
+function closedStatus(job) { const t = norm(job && job.status); return CLOSED_STATUS.some((p) => t.startsWith(p)) ? t : ''; }
+
 /* =====================================================================
    ชุดทดสอบในตัว (ปุ่ม "ตรวจสอบระบบ")
    ===================================================================== */
@@ -1616,6 +1622,11 @@ function runSelfTests(sampleJob, pmap, vmap, conf) {
       return { ok: !!c && c.ok === false && c.level === 'warn', detail: c ? c.detail : 'ไม่พบการตรวจ' };
     });
   }
+  t('สถานะปิดงาน: ไม่จ้างซ่อม / ไม่มีค่าใช้จ่าย / ไม่ส่งซ่อม = สำเร็จ · เรียบร้อย ว่าง ข้อความอื่น = ยังดำเนินการ', () => {
+    const yes = ['ไม่จ้างซ่อม เนื่องจากไม่มีอะไหล่ทดแทน', 'ไม่มีค่าใช้จ่าย เนื่องจากอยู่ในประกัน', 'ไม่ส่งซ่อม', '  ไม่ส่งซ่อม  '].every((x) => !!closedStatus({ status: x }));
+    const no = ['เรียบร้อย', '', '   ', 'รอส่งซ่อม'].every((x) => !closedStatus({ status: x })) && !closedStatus({});
+    return { ok: yes && no };
+  });
   return res;
 }
 
@@ -2810,40 +2821,44 @@ function renderDash() {
   const years = Array.from(new Set(all.map(fyOf).filter(Boolean))).sort((x, y) => y - x);
   const list = dashFy === 'all' ? all : all.filter((a) => String(fyOf(a)) === String(dashFy));
   const n = list.length;
+  /* งานที่ปิดด้วยสถานะ (ไม่จ้างซ่อม / ไม่มีค่าใช้จ่าย / ไม่ส่งซ่อม) = ✓ สำเร็จ ไม่นับเป็นปัญหา ไม่ค้างในด่าน ไม่รวมในตัวชี้วัดและสรุปตามผู้ขาย */
+  const open = list.filter((a) => !closedStatus(a.job));
+  const nOpen = open.length, nClosed = n - nOpen;
   const totalAmt = list.reduce((s, a) => s + (a.res.ctx.amount_cents || 0), 0);
-  const fills = list.map((a) => autoFilledCount(a.job, a));
-  const avgFill = n ? Math.round(fills.reduce((s, x) => s + x, 0) / n) : 0;
-  const issues = list.reduce((s, a) => s + a.statuses.filter((x) => x.n <= 6 && x.state === 'blocked').length + a.gates.reduce((t, g) => t + g.errors, 0), 0);
-  const withNext = list.filter((a) => a.next && a.next.text).length;
-  const withRatio = list.filter((a) => a.ratios).length;
-  const passedAll = list.filter((a) => a.gates.every((g) => g.state === 'passed')).length;
-  const funnel = GATES.map((g, i) => ({ g, reached: list.filter((a) => a.gates[i].state !== 'waiting').length, passed: list.filter((a) => a.gates[i].state === 'passed').length }));
+  const fills = open.map((a) => autoFilledCount(a.job, a));
+  const avgFill = nOpen ? Math.round(fills.reduce((s, x) => s + x, 0) / nOpen) : 0;
+  const issues = open.reduce((s, a) => s + a.statuses.filter((x) => x.n <= 6 && x.state === 'blocked').length + a.gates.reduce((t, g) => t + g.errors, 0), 0);
+  const withNext = open.filter((a) => a.next && a.next.text).length;
+  const withRatio = open.filter((a) => a.ratios).length;
+  const passedAll = open.filter((a) => a.gates.every((g) => g.state === 'passed')).length;
+  const funnel = GATES.map((g, i) => ({ g, reached: open.filter((a) => a.gates[i].state !== 'waiting').length, passed: open.filter((a) => a.gates[i].state === 'passed').length }));
   const byVendor = new Map();
-  list.forEach((a) => { const v = norm(a.job.vendor) || '(ยังไม่เลือกผู้ขาย)'; const o = byVendor.get(v) || { n: 0, c: 0 }; o.n++; o.c += a.res.ctx.amount_cents || 0; byVendor.set(v, o); });
+  open.forEach((a) => { const v = norm(a.job.vendor) || '(ยังไม่เลือกผู้ขาย)'; const o = byVendor.get(v) || { n: 0, c: 0 }; o.n++; o.c += a.res.ctx.amount_cents || 0; byVendor.set(v, o); });
   $('#v-dash').innerHTML =
-    '<div class="sec-head"><div><span class="eyebrow">ระบบที่ 3 · Data Analytics</span><h2>แดชบอร์ดผู้บริหาร</h2><p>สรุปทุกงานในทะเบียน ตัวเลขค่าซ่อมเทียบมูลค่าคงเหลือคิดแบบเดียวกันทุกงาน · ' + n + ' งาน วงเงินรวม ฿' + money(totalAmt) + '</p></div>' +
+    '<div class="sec-head"><div><span class="eyebrow">ระบบที่ 3 · Data Analytics</span><h2>แดชบอร์ดผู้บริหาร</h2><p>สรุปทุกงานในทะเบียน ตัวเลขค่าซ่อมเทียบมูลค่าคงเหลือคิดแบบเดียวกันทุกงาน · ' + n + ' งาน' + (nClosed ? ' (✓ สำเร็จ · ปิดงานด้วยสถานะ ' + nClosed + ' งาน)' : '') + ' วงเงินรวม ฿' + money(totalAmt) + '</p></div>' +
     '<div class="field" style="min-width:200px"><label for="dashFy">ปีงบประมาณ (จากวันที่ลงนามหนังสือ)</label><select class="select" id="dashFy"><option value="all">ทุกปีงบประมาณ</option>' +
     years.map((y) => '<option value="' + y + '"' + (String(y) === String(dashFy) ? ' selected' : '') + '>ปีงบประมาณ ' + y + '</option>').join('') + '</select></div></div>' +
     '<p class="srcline">ข้อมูลจากชีต “' + esc(REAL_SHEET.title) + '” · ' + esc(sourceText()) + '</p>' +
     '<div><span class="eyebrow" style="margin-bottom:8px">ผลที่คาดว่าจะได้รับ วัดจากทะเบียนตอนนี้</span><div class="outcomes">' +
     '<div class="outcome"><span class="k">ลดการพิมพ์ซ้ำ</span><span class="v">' + avgFill + ' ช่อง</span><span class="f">ต่องาน ที่ระบบเติมให้เองจากแถวเดียว ทั้งวันที่ ราคา ตำแหน่ง ข้อมูลผู้ขาย ผู้ลงนาม และข้อความ e-GP</span></div>' +
     '<div class="outcome"><span class="k">ลดเอกสารผิดและไม่ครบ</span><span class="v">' + issues + ' จุด</span><span class="f">ที่ระบบจับได้ก่อนพิมพ์และก่อนส่งข้ามหน่วย ทั้งช่องว่าง ชื่อไม่ตรงชีต เลขซ้ำ และราคาเกินราคากลาง</span></div>' +
-    '<div class="outcome"><span class="k">ผู้ปฏิบัติคนอื่นทำงานแทนได้</span><span class="v">' + withNext + '/' + n + '</span><span class="f">งานที่บอกได้ว่าอยู่ด่านไหนและต้องทำอะไรต่อ ดูได้ในคอลัมน์ขั้นถัดไป</span></div>' +
-    '<div class="outcome"><span class="k">ค่าซ่อมเทียบมูลค่าคงเหลือ</span><span class="v">' + withRatio + '/' + n + '</span><span class="f">งานที่มีตัวเลขเทียบครบ 3 ตัวในรูปแบบเดียวกัน ส่วนที่เหลือรอข้อมูลครุภัณฑ์ในระบบที่ 2</span></div></div></div>' +
+    '<div class="outcome"><span class="k">ผู้ปฏิบัติคนอื่นทำงานแทนได้</span><span class="v">' + withNext + '/' + nOpen + '</span><span class="f">งานที่บอกได้ว่าอยู่ด่านไหนและต้องทำอะไรต่อ ดูได้ในคอลัมน์ขั้นถัดไป</span></div>' +
+    '<div class="outcome"><span class="k">ค่าซ่อมเทียบมูลค่าคงเหลือ</span><span class="v">' + withRatio + '/' + nOpen + '</span><span class="f">งานที่มีตัวเลขเทียบครบ 3 ตัวในรูปแบบเดียวกัน ส่วนที่เหลือรอข้อมูลครุภัณฑ์ในระบบที่ 2</span></div></div></div>' +
     '<div class="box"><div class="row"><div><h3>ค่าซ่อมเทียบมูลค่าคงเหลือ รายงาน</h3><p class="sub">แถบ: ส่วนลายคือค่าเสื่อมสะสม ส่วนส้มคือมูลค่าคงเหลือ · กดชื่องานเพื่อเปิด</p></div></div>' +
     '<div class="tbl-wrap" style="margin-top:12px"><table class="t" style="min-width:1080px"><thead><tr><th>งาน</th><th class="r">ราคาทุน</th><th style="width:150px">มูลค่าคงเหลือ</th><th class="r">ค่าซ่อม</th><th class="r">÷ คงเหลือ</th><th class="r">÷ ราคาทุน</th><th class="r">สะสม ÷ ราคาทุน</th><th>ด่าน</th><th>ขั้นถัดไป</th></tr></thead><tbody>' +
     (list.map((a) => {
       const m = a.asset.model, r = a.ratios;
       const cur = a.gates.find((g) => g.state !== 'passed');
+      const closed = closedStatus(a.job);
       return '<tr><td style="min-width:220px"><a href="#docs" data-pick="' + esc(a.job.id) + '" style="color:var(--ink);font-weight:600">' + esc(jobLabel(a.job)) + '</a><div style="font-size:12px;color:var(--muted)">' + esc(norm(a.job.vendor) || '—') + '</div></td>' +
         '<td class="r">' + (m ? money(m.input.costCents) : '–') + '</td>' +
         '<td>' + (m ? '<div class="splitbar" style="height:10px"><span class="acc" style="width:' + (m.snapshot.accumulatedCents / m.input.costCents * 100) + '%"></span><span class="bk" style="width:' + (m.snapshot.bookValueCents / m.input.costCents * 100) + '%"></span></div><div class="num" style="font-size:12px;margin-top:3px">' + money(m.snapshot.bookValueCents) + '</div>' : '<span style="color:var(--muted);font-size:12.5px">ยังไม่คำนวณ</span>') + '</td>' +
         '<td class="r">' + money(a.res.ctx.amount_cents) + '</td><td class="r">' + (r ? pctText(r.vsBook) : '–') + '</td><td class="r">' + (r ? pctText(r.vsCost) : '–') + '</td><td class="r">' + (r ? pctText(r.cumVsCost) : '–') + '</td>' +
-        '<td>' + (cur ? '<span style="font-size:12px;color:var(--muted)">ด่าน ' + cur.no + '</span> ' + stGate(cur) : pill('ok', '✓', 'ครบ 4 ด่าน')) + '</td>' +
-        '<td style="min-width:220px;font-size:12.5px">' + esc(a.next.text) + '</td></tr>';
+        '<td>' + (closed ? pill('ok', '✓', 'สำเร็จ') : cur ? '<span style="font-size:12px;color:var(--muted)">ด่าน ' + cur.no + '</span> ' + stGate(cur) : pill('ok', '✓', 'ครบ 4 ด่าน')) + '</td>' +
+        '<td style="min-width:220px;font-size:12.5px">' + (closed ? 'ปิดงานแล้ว · ' + esc(closed) + (s_(a.job.note) ? '<div style="color:var(--muted);margin-top:2px">หมายเหตุ: ' + esc(s_(a.job.note)) + '</div>' : '') : esc(a.next.text)) + '</td></tr>';
     }).join('') || '<tr><td colspan="9" class="empty">ไม่มีงานในปีงบประมาณนี้</td></tr>') + '</tbody></table></div></div>' +
-    '<div class="cols"><div class="box"><h3>งานในแต่ละด่าน</h3><p class="sub">ถึงด่านแล้ว / ผ่านด่าน · ผ่านครบ 4 ด่าน ' + passedAll + ' งาน</p><div class="funnel" style="margin-top:14px">' +
-    funnel.map((f) => '<div class="fn"><span>ด่าน ' + f.g.no + ' → ' + esc(f.g.to) + '</span><div class="bar2" role="img" aria-label="ผ่าน ' + f.passed + ' จาก ' + n + ' งาน"><span style="width:' + (n ? f.passed / n * 100 : 0) + '%"></span></div><span class="n">' + f.passed + '/' + f.reached + '</span></div>').join('') + '</div></div>' +
+    '<div class="cols"><div class="box"><h3>งานในแต่ละด่าน</h3><p class="sub">ถึงด่านแล้ว / ผ่านด่าน · ผ่านครบ 4 ด่าน ' + passedAll + ' งาน' + (nClosed ? ' · ปิดงานแล้ว ' + nClosed + ' งาน (ไม่เข้าด่าน)' : '') + '</p><div class="funnel" style="margin-top:14px">' +
+    funnel.map((f) => '<div class="fn"><span>ด่าน ' + f.g.no + ' → ' + esc(f.g.to) + '</span><div class="bar2" role="img" aria-label="ผ่าน ' + f.passed + ' จาก ' + nOpen + ' งาน"><span style="width:' + (nOpen ? f.passed / nOpen * 100 : 0) + '%"></span></div><span class="n">' + f.passed + '/' + f.reached + '</span></div>').join('') + '</div></div>' +
     '<div class="box"><h3>สรุปตามผู้ขาย/ผู้รับจ้าง</h3><div class="tbl-wrap" style="margin-top:12px"><table class="t"><thead><tr><th>ผู้ขาย/ผู้รับจ้าง</th><th class="r">งาน</th><th class="r">วงเงินรวม</th></tr></thead><tbody>' +
     Array.from(byVendor.entries()).sort((x, y) => y[1].c - x[1].c).map(([v, o]) => '<tr><td>' + esc(v) + '</td><td class="r">' + o.n + '</td><td class="r">' + money(o.c) + '</td></tr>').join('') + '</tbody></table></div></div></div>';
 }
