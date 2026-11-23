@@ -434,9 +434,33 @@ function captureVals(){
 
 /* ---------- สร้างรายการ ---------- */
 let rows=[];
+/* ลำดับเครื่องตามชีต บันทึกมิเตอร์ (แถวที่ 1 → 20)
+   จับคู่ด้วย uid ก่อน เพื่อให้ลำดับไม่เปลี่ยนเมื่อแก้รหัสเครื่อง ถ้าไม่พบ uid จึงจับคู่ด้วยรหัสเครื่อง
+   เครื่องที่เพิ่มใหม่ภายหลังจะต่อท้ายสุดตามลำดับที่เพิ่ม
+   ในเครื่องสี ช่องขาว-ดำ มาก่อนช่องสี เหมือนในชีต */
+const ORDER=[
+  ['m13','0A3HBJNJCO00029J'],
+  ['m10','07RRB1BG900000GR'],
+  ['m9', '07RUBJMK10001BW'],
+  ['m7', '07RUBJKK00005E'],
+  ['m12','0A3HB1DH60005EB'],
+  ['m11','0A3HB1DH60003RK'],
+  ['m8', '07RUBJKK0000SA'],
+  ['m6', '0A3HBJNJCOOO1ML'],
+  ['m5', '0A3HBJNJCOO02BR'],
+  ['m3', '07RUBJPJC00004Y'],
+  ['m14','0A3HBJNJBOOONL'],
+  ['m1', '07RRBJMK100009N'],
+  ['m2', '0A3HB1DH600055M'],
+  ['m4', '0A3HBJNJCOO017H']
+];
+function rankOf(m){
+  let i=ORDER.findIndex(o=>o[0]===m.uid);
+  if(i<0) i=ORDER.findIndex(o=>o[1]===m.serial);
+  return i<0 ? ORDER.length : i;
+}
 function buildList(){
-  const order=p=>{ const m=/ชั้น\s*(\d+)/.exec(p); return (p.includes('ปิยชาติ')?100:0)+(m?+m[1]:50); };
-  MC.sort((a,b)=>order(a.place)-order(b.place)||a.place.localeCompare(b.place,'th')||a.dept.localeCompare(b.dept,'th'));
+  MC.sort((a,b)=>rankOf(a)-rankOf(b));   // sort เสถียร เครื่องใหม่จึงคงลำดับที่เพิ่ม
   rows=[]; let html='', lastPlace=null, no=0;
   MC.forEach((m,mi)=>{
     if(m.place!==lastPlace){ html+=`<h2 class="grp">${esc(m.place)||'ยังไม่ได้ระบุสถานที่'}</h2>`; lastPlace=m.place; }
