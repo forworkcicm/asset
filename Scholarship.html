@@ -10,18 +10,18 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- Lucide Icons CDN -->
     <script src="https://unpkg.com/lucide@latest"></script>
-    <!-- Google Fonts: Prompt & Sarabun -->
+    <!-- Google Fonts: Google Sans (+ Noto Sans Thai fallback) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@300;400;500;600;700&family=Noto+Sans+Thai:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
     <script>
         tailwind.config = {
             theme: {
                 extend: {
                     fontFamily: {
-                        sans: ['Sarabun', 'sans-serif'],
-                        heading: ['Prompt', 'sans-serif'],
+                        sans: ['"Google Sans"', '"Noto Sans Thai"', 'sans-serif'],
+                        heading: ['"Google Sans"', '"Noto Sans Thai"', 'sans-serif'],
                     },
                     colors: {
                         navy: {
@@ -43,13 +43,15 @@
         };
     </script>
     <style>
+        html, body, button, input, select, textarea {
+            font-family: 'Google Sans', 'Noto Sans Thai', sans-serif;
+        }
         body {
-            font-family: 'Sarabun', sans-serif;
             background-color: #f4f7fa;
             color: #1e293b;
         }
         h1, h2, h3, h4, .font-heading {
-            font-family: 'Prompt', sans-serif;
+            font-family: 'Google Sans', 'Noto Sans Thai', sans-serif;
         }
         .tabular-nums {
             font-variant-numeric: tabular-nums;
@@ -3182,6 +3184,9 @@ function upsertExpense(ss, x) {
         // 15. INITIALIZATION
         // ==========================================
         window.addEventListener('DOMContentLoaded', () => {
+            if (window.Chart) {
+                Chart.defaults.font.family = "'Google Sans', 'Noto Sans Thai', sans-serif";
+            }
             loadDB();
             populateDropdowns();
             resetExpenseForm();
