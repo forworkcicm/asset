@@ -2854,18 +2854,18 @@ function renderDash() {
     '<div class="outcome"><span class="k">ผู้ปฏิบัติคนอื่นทำงานแทนได้</span><span class="v">' + withNext + '/' + nOpen + '</span><span class="f">งานที่บอกได้ว่าอยู่ด่านไหนและต้องทำอะไรต่อ ดูได้ในคอลัมน์ขั้นถัดไป</span></div>' +
     '<div class="outcome"><span class="k">ค่าซ่อมเทียบมูลค่าคงเหลือ</span><span class="v">' + withRatio + '/' + nOpen + '</span><span class="f">งานที่มีตัวเลขเทียบครบ 3 ตัวในรูปแบบเดียวกัน ส่วนที่เหลือรอข้อมูลครุภัณฑ์ในระบบที่ 2</span></div></div></div>' +
     '<div class="box"><div class="row"><div><h3>ค่าซ่อมเทียบมูลค่าคงเหลือ รายงาน</h3><p class="sub">แถบ: ส่วนลายคือค่าเสื่อมสะสม ส่วนส้มคือมูลค่าคงเหลือ · กดชื่องานเพื่อเปิด</p></div></div>' +
-    '<div class="tbl-wrap" style="margin-top:12px"><table class="t" style="min-width:1080px"><thead><tr><th>งาน</th><th class="r">ราคาทุน</th><th style="width:150px">มูลค่าคงเหลือ</th><th class="r">ค่าซ่อม</th><th class="r">÷ คงเหลือ</th><th class="r">÷ ราคาทุน</th><th class="r">สะสม ÷ ราคาทุน</th><th>ด่าน</th><th>สถานะ</th></tr></thead><tbody>' +
+    '<div class="tbl-wrap" style="margin-top:12px"><table class="t" style="min-width:900px"><thead><tr><th>งาน</th><th class="r">ราคาทุน</th><th style="width:150px">มูลค่าคงเหลือ</th><th class="r">ค่าซ่อม</th><th>ด่าน</th><th>สถานะ</th></tr></thead><tbody>' +
     (list.map((a) => {
-      const m = a.asset.model, r = a.ratios;
+      const m = a.asset.model;
       const cur = a.gates.find((g) => g.state !== 'passed');
       const closed = closedStatus(a.job);
       return '<tr><td style="min-width:220px"><a href="#docs" data-pick="' + esc(a.job.id) + '" style="color:var(--ink);font-weight:600">' + esc(jobLabel(a.job)) + '</a><div style="font-size:12px;color:var(--muted)">' + esc(norm(a.job.vendor) || '—') + '</div></td>' +
         '<td class="r">' + (m ? money(m.input.costCents) : '–') + '</td>' +
         '<td>' + (m ? '<div class="splitbar" style="height:10px"><span class="acc" style="width:' + (m.snapshot.accumulatedCents / m.input.costCents * 100) + '%"></span><span class="bk" style="width:' + (m.snapshot.bookValueCents / m.input.costCents * 100) + '%"></span></div><div class="num" style="font-size:12px;margin-top:3px">' + money(m.snapshot.bookValueCents) + '</div>' : '<span style="color:var(--muted);font-size:12.5px">ยังไม่คำนวณ</span>') + '</td>' +
-        '<td class="r">' + money(a.res.ctx.amount_cents) + '</td><td class="r">' + (r ? pctText(r.vsBook) : '–') + '</td><td class="r">' + (r ? pctText(r.vsCost) : '–') + '</td><td class="r">' + (r ? pctText(r.cumVsCost) : '–') + '</td>' +
+        '<td class="r">' + money(a.res.ctx.amount_cents) + '</td>' +
         '<td>' + (closed ? pill('ok', '✓', 'สำเร็จ') : cur ? '<span style="font-size:12px;color:var(--muted)">ด่าน ' + cur.no + '</span> ' + stGate(cur) : pill('ok', '✓', 'ครบ 4 ด่าน')) + '</td>' +
         '<td style="min-width:220px;font-size:12.5px">' + (closed ? 'ปิดงานแล้ว · ' + esc(closed) + (s_(a.job.note) ? '<div style="color:var(--muted);margin-top:2px">หมายเหตุ: ' + esc(s_(a.job.note)) + '</div>' : '') : (a.next.text === ALL_GATES_TEXT && !blank(a.job.erp_receipt_no) ? pill('done', '✓', 'สำเร็จ') : esc(a.next.text))) + '</td></tr>';
-    }).join('') || '<tr><td colspan="9" class="empty">ไม่มีงานในปีงบประมาณนี้</td></tr>') + '</tbody></table></div></div>' +
+    }).join('') || '<tr><td colspan="6" class="empty">ไม่มีงานในปีงบประมาณนี้</td></tr>') + '</tbody></table></div></div>' +
     '<div class="cols"><div class="box"><h3>งานในแต่ละด่าน</h3><p class="sub">ถึงด่านแล้ว / ผ่านด่าน · ผ่านครบ 4 ด่าน ' + passedAll + ' งาน' + (nClosed ? ' · ปิดงานแล้ว ' + nClosed + ' งาน (ไม่เข้าด่าน)' : '') + '</p><div class="funnel" style="margin-top:14px">' +
     funnel.map((f) => '<div class="fn"><span>ด่าน ' + f.g.no + ' → ' + esc(f.g.to) + '</span><div class="bar2" role="img" aria-label="ผ่าน ' + f.passed + ' จาก ' + nOpen + ' งาน"><span style="width:' + (nOpen ? f.passed / nOpen * 100 : 0) + '%"></span></div><span class="n">' + f.passed + '/' + f.reached + '</span></div>').join('') + '</div></div>' +
     '<div class="box"><h3>สรุปตามผู้ขาย/ผู้รับจ้าง</h3><div class="tbl-wrap" style="margin-top:12px"><table class="t"><thead><tr><th>ผู้ขาย/ผู้รับจ้าง</th><th class="r">งาน</th><th class="r">วงเงินรวม</th></tr></thead><tbody>' +
