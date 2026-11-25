@@ -33,6 +33,9 @@
   --hot: #FF5B33;
   --grey: #9E9E9E;
   --grey-soft: #EDEDED;
+  --done: #1a7f46;
+  --done-soft: #e3f4e8;
+  --done-ink: #14532d;
   --on-dark: #ffffff;
   --shadow: .32cqw 1.18cqh 1.42cqw rgb(44 35 29 / 11%), 0 .18cqh .42cqw rgb(44 35 29 / 3.5%);
   --shadow-ui: 0 10px 26px rgb(44 35 29 / 8%), 0 1px 3px rgb(44 35 29 / 5%);
@@ -272,6 +275,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .st { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px 3px 4px; border-radius: 999px; font-size: 12.5px; font-weight: 700; white-space: nowrap; }
 .st i { width: 18px; height: 18px; border-radius: 50%; display: grid; place-items: center; font-style: normal; font-size: 11px; line-height: 1; font-family: var(--font-num); font-weight: 700; flex: none; }
 .st.ok { background: #eceae8; color: var(--ink); } .st.ok i { background: var(--ink); color: #fff; }
+.st.done { background: var(--done-soft); color: var(--done-ink); } .st.done i { background: var(--done); color: #fff; }
 .st.bad { background: var(--soft); color: var(--o8); } .st.bad i { background: var(--o6); color: #fff; }
 .st.warn { background: var(--soft-2); color: var(--o8); box-shadow: inset 0 0 0 1.5px var(--o2); } .st.warn i { background: transparent; color: var(--o7); box-shadow: inset 0 0 0 1.5px var(--o7); }
 .st.wait { background: transparent; color: var(--muted); box-shadow: inset 0 0 0 1.5px var(--grey); } .st.wait i { border: 1.5px dashed var(--grey); color: var(--muted); }
@@ -2860,7 +2864,7 @@ function renderDash() {
         '<td>' + (m ? '<div class="splitbar" style="height:10px"><span class="acc" style="width:' + (m.snapshot.accumulatedCents / m.input.costCents * 100) + '%"></span><span class="bk" style="width:' + (m.snapshot.bookValueCents / m.input.costCents * 100) + '%"></span></div><div class="num" style="font-size:12px;margin-top:3px">' + money(m.snapshot.bookValueCents) + '</div>' : '<span style="color:var(--muted);font-size:12.5px">ยังไม่คำนวณ</span>') + '</td>' +
         '<td class="r">' + money(a.res.ctx.amount_cents) + '</td><td class="r">' + (r ? pctText(r.vsBook) : '–') + '</td><td class="r">' + (r ? pctText(r.vsCost) : '–') + '</td><td class="r">' + (r ? pctText(r.cumVsCost) : '–') + '</td>' +
         '<td>' + (closed ? pill('ok', '✓', 'สำเร็จ') : cur ? '<span style="font-size:12px;color:var(--muted)">ด่าน ' + cur.no + '</span> ' + stGate(cur) : pill('ok', '✓', 'ครบ 4 ด่าน')) + '</td>' +
-        '<td style="min-width:220px;font-size:12.5px">' + (closed ? 'ปิดงานแล้ว · ' + esc(closed) + (s_(a.job.note) ? '<div style="color:var(--muted);margin-top:2px">หมายเหตุ: ' + esc(s_(a.job.note)) + '</div>' : '') : (a.next.text === ALL_GATES_TEXT && !blank(a.job.erp_receipt_no) ? '✓สำเร็จ' : esc(a.next.text))) + '</td></tr>';
+        '<td style="min-width:220px;font-size:12.5px">' + (closed ? 'ปิดงานแล้ว · ' + esc(closed) + (s_(a.job.note) ? '<div style="color:var(--muted);margin-top:2px">หมายเหตุ: ' + esc(s_(a.job.note)) + '</div>' : '') : (a.next.text === ALL_GATES_TEXT && !blank(a.job.erp_receipt_no) ? pill('done', '✓', 'สำเร็จ') : esc(a.next.text))) + '</td></tr>';
     }).join('') || '<tr><td colspan="9" class="empty">ไม่มีงานในปีงบประมาณนี้</td></tr>') + '</tbody></table></div></div>' +
     '<div class="cols"><div class="box"><h3>งานในแต่ละด่าน</h3><p class="sub">ถึงด่านแล้ว / ผ่านด่าน · ผ่านครบ 4 ด่าน ' + passedAll + ' งาน' + (nClosed ? ' · ปิดงานแล้ว ' + nClosed + ' งาน (ไม่เข้าด่าน)' : '') + '</p><div class="funnel" style="margin-top:14px">' +
     funnel.map((f) => '<div class="fn"><span>ด่าน ' + f.g.no + ' → ' + esc(f.g.to) + '</span><div class="bar2" role="img" aria-label="ผ่าน ' + f.passed + ' จาก ' + nOpen + ' งาน"><span style="width:' + (nOpen ? f.passed / nOpen * 100 : 0) + '%"></span></div><span class="n">' + f.passed + '/' + f.reached + '</span></div>').join('') + '</div></div>' +
