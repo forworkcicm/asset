@@ -1,0 +1,3206 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบติดตามค่าใช้จ่ายทุนพัฒนาบุคลากร (ต่างประเทศ)</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Lucide Icons CDN -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Google Fonts: Prompt & Sarabun -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Sarabun', 'sans-serif'],
+                        heading: ['Prompt', 'sans-serif'],
+                    },
+                    colors: {
+                        navy: {
+                            50: '#f0f4f8',
+                            100: '#d9e2ec',
+                            200: '#bcccdc',
+                            300: '#9fb3c8',
+                            400: '#829ab1',
+                            500: '#627d98',
+                            600: '#486581',
+                            700: '#334e68',
+                            800: '#243b53',
+                            900: '#102a43',
+                            950: '#0a1929',
+                        }
+                    }
+                }
+            }
+        };
+    </script>
+    <style>
+        body {
+            font-family: 'Sarabun', sans-serif;
+            background-color: #f4f7fa;
+            color: #1e293b;
+        }
+        h1, h2, h3, h4, .font-heading {
+            font-family: 'Prompt', sans-serif;
+        }
+        .tabular-nums {
+            font-variant-numeric: tabular-nums;
+        }
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+        /* Print Styles for Summary Report */
+        @media print {
+            header, footer, .no-print, #toast-container, #custom-modal {
+                display: none !important;
+            }
+            body {
+                background-color: #ffffff !important;
+                color: #000000 !important;
+            }
+            main {
+                max-width: 100% !important;
+                padding: 0 !important;
+                margin: 0 !important;
+            }
+            .print-card {
+                box-shadow: none !important;
+                border: none !important;
+                padding: 0 !important;
+            }
+            table {
+                font-size: 11px !important;
+                border-collapse: collapse !important;
+                width: 100% !important;
+            }
+            th, td {
+                border: 1px solid #cbd5e1 !important;
+                padding: 6px 8px !important;
+            }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+    <!-- Toast Notification Container -->
+    <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2"></div>
+
+    <!-- Confirmation / Alert Modal -->
+    <div id="custom-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-xl max-w-md w-full p-6 border border-slate-100">
+            <div class="flex items-center gap-3 mb-3">
+                <div id="modal-icon-bg" class="p-2.5 rounded-xl bg-amber-100 text-amber-600">
+                    <i data-lucide="alert-triangle" class="w-6 h-6"></i>
+                </div>
+                <h3 id="modal-title" class="text-lg font-bold text-slate-800">ยืนยันการทำรายการ</h3>
+            </div>
+            <p id="modal-message" class="text-slate-600 text-sm mb-6 leading-relaxed"></p>
+            <div class="flex justify-end gap-2.5">
+                <button id="modal-cancel-btn" class="px-4 py-2 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-100 transition">ยกเลิก</button>
+                <button id="modal-confirm-btn" class="px-4 py-2 rounded-xl text-sm font-medium bg-navy-800 text-white hover:bg-navy-900 transition shadow-sm">ยืนยัน</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Top Header -->
+    <header class="bg-gradient-to-r from-navy-900 via-navy-800 to-sky-900 text-white shadow-md sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between py-3.5 gap-3">
+                <!-- Brand -->
+                <div class="flex items-center gap-3">
+                    <div class="bg-white/15 p-2.5 rounded-xl backdrop-blur-sm border border-white/10">
+                        <i data-lucide="graduation-cap" class="w-7 h-7 text-sky-300"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-base sm:text-lg font-bold tracking-tight text-white leading-tight">ระบบติดตามค่าใช้จ่ายทุนพัฒนาบุคลากร</h1>
+                        <p class="text-[11px] text-sky-200/90">เดินทางไปฝึกอบรม / ศึกษาต่อ ณ ต่างประเทศ • เชื่อมต่อ Google Sheets 2 ทาง</p>
+                    </div>
+                </div>
+
+                <!-- Data Management & Sync Tools -->
+                <div class="flex flex-wrap items-center gap-2 text-xs">
+                    <!-- Google Sheets Sync Status Pill -->
+                    <div id="sync-status-pill" onclick="switchTab('config')" class="cursor-pointer flex items-center gap-2 bg-slate-900/60 hover:bg-slate-900/80 text-white px-3 py-1.5 rounded-xl border border-white/15 transition" title="คลิกเพื่อตั้งค่าการเชื่อมต่อ Google Sheets">
+                        <span id="sync-dot" class="w-2.5 h-2.5 rounded-full bg-amber-400"></span>
+                        <div class="leading-tight">
+                            <div id="sync-status-text" class="font-semibold text-[11px]">โหมดออฟไลน์ (Local)</div>
+                            <div id="sync-last-time" class="text-[10px] text-sky-200/80">ยังไม่เชื่อมต่อ Sheet</div>
+                        </div>
+                    </div>
+
+                    <button id="btn-sync-now" onclick="syncFromGoogleSheets(true)" class="flex items-center gap-1.5 bg-sky-500 hover:bg-sky-400 text-navy-950 font-bold px-3 py-2 rounded-xl transition shadow-sm" title="ดึงข้อมูลล่าสุดจาก Google Sheets ทันที">
+                        <i id="sync-icon" data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+                        <span>Sync เดี๋ยวนี้</span>
+                    </button>
+
+                    <button onclick="exportJSON()" class="flex items-center gap-1.5 bg-white/10 hover:bg-white/20 text-white px-3 py-2 rounded-xl transition border border-white/15" title="สำรองข้อมูลทั้งหมดเป็นไฟล์ JSON">
+                        <i data-lucide="download" class="w-3.5 h-3.5 text-sky-300"></i>
+                        <span class="hidden sm:inline">JSON</span>
+                    </button>
+                    <label class="flex items-center gap-1.5 bg-white/10 hover:bg-white/20 text-white px-3 py-2 rounded-xl transition border border-white/15 cursor-pointer" title="นำเข้าข้อมูลจากไฟล์ JSON">
+                        <i data-lucide="upload" class="w-3.5 h-3.5 text-emerald-300"></i>
+                        <span class="hidden sm:inline">Import</span>
+                        <input type="file" id="import-json-input" accept=".json" class="hidden" onchange="importJSON(event)">
+                    </label>
+                    <button onclick="exportCSV()" class="flex items-center gap-1.5 bg-emerald-600/90 hover:bg-emerald-600 text-white px-3 py-2 rounded-xl transition shadow-sm" title="ส่งออกรายการค่าใช้จ่ายเป็น CSV สำหรับ Excel">
+                        <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5"></i>
+                        <span>CSV</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Navigation Tabs -->
+            <nav class="flex overflow-x-auto gap-1 pt-1 pb-0 no-scrollbar border-t border-white/10">
+                <button onclick="switchTab('dashboard')" id="tab-dashboard" class="nav-tab flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 border-sky-400 text-white whitespace-nowrap transition">
+                    <i data-lucide="layout-dashboard" class="w-4 h-4"></i>
+                    <span>1. แดชบอร์ดภาพรวม</span>
+                </button>
+                <button onclick="switchTab('summary')" id="tab-summary" class="nav-tab flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 border-transparent text-sky-200 hover:text-white whitespace-nowrap transition">
+                    <i data-lucide="table-2" class="w-4 h-4"></i>
+                    <span>2. สรุปการเบิกจ่าย (รายงวด)</span>
+                </button>
+                <button onclick="switchTab('register')" id="tab-register" class="nav-tab flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 border-transparent text-sky-200 hover:text-white whitespace-nowrap transition">
+                    <i data-lucide="users" class="w-4 h-4"></i>
+                    <span>3. ทะเบียนผู้รับทุน (02)</span>
+                </button>
+                <button onclick="switchTab('plans')" id="tab-plans" class="nav-tab flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 border-transparent text-sky-200 hover:text-white whitespace-nowrap transition">
+                    <i data-lucide="wallet" class="w-4 h-4"></i>
+                    <span>4. แผนวงเงินรายปีทุน (03)</span>
+                </button>
+                <button onclick="switchTab('expenses')" id="tab-expenses" class="nav-tab flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 border-transparent text-sky-200 hover:text-white whitespace-nowrap transition">
+                    <i data-lucide="receipt" class="w-4 h-4"></i>
+                    <span>5. บันทึกค่าใช้จ่าย (04_Master)</span>
+                </button>
+                <button onclick="switchTab('config')" id="tab-config" class="nav-tab flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 border-transparent text-sky-200 hover:text-white whitespace-nowrap transition">
+                    <i data-lucide="cloud-cog" class="w-4 h-4"></i>
+                    <span>6. เชื่อมต่อ Google Sheets & ตั้งค่า</span>
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+
+        <!-- ==================== 1. DASHBOARD VIEW ==================== -->
+        <section id="view-dashboard" class="space-y-6">
+            <!-- Top Filter Bar -->
+            <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                    <h2 class="text-base font-bold text-navy-900 flex items-center gap-2">
+                        <i data-lucide="bar-chart-3" class="w-5 h-5 text-sky-600"></i>
+                        สรุปสถานะการเบิกจ่ายและงบประมาณทุนพัฒนาบุคลากร
+                    </h2>
+                    <p class="text-xs text-slate-500 mt-0.5">คำนวณผลแบบ Real-time ตามปีการศึกษา (เริ่มเดือน <span id="dash-acad-month-label" class="font-semibold text-navy-700">สิงหาคม</span>) และปีงบประมาณไทย (ต.ค.–ก.ย.)</p>
+                </div>
+                <div class="flex flex-wrap items-center gap-3">
+                    <div class="flex items-center gap-2">
+                        <label for="dash-filter-acad" class="text-xs font-semibold text-slate-600">ปีการศึกษา:</label>
+                        <select id="dash-filter-acad" onchange="renderDashboard()" class="bg-slate-50 border border-slate-300 text-slate-800 text-sm rounded-xl px-3 py-1.5 focus:ring-2 focus:ring-sky-500 focus:border-sky-500">
+                            <option value="ALL">ทั้งหมด</option>
+                            <option value="2566">2566</option>
+                            <option value="2567">2567</option>
+                            <option value="2568">2568</option>
+                            <option value="2569">2569</option>
+                            <option value="2570">2570</option>
+                        </select>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <label for="dash-filter-fiscal" class="text-xs font-semibold text-slate-600">ปีงบประมาณ:</label>
+                        <select id="dash-filter-fiscal" onchange="renderDashboard()" class="bg-slate-50 border border-slate-300 text-slate-800 text-sm rounded-xl px-3 py-1.5 focus:ring-2 focus:ring-sky-500 focus:border-sky-500">
+                            <option value="ALL">ทั้งหมด</option>
+                            <option value="2567">2567</option>
+                            <option value="2568">2568</option>
+                            <option value="2569">2569</option>
+                            <option value="2570">2570</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- KPI Cards -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200/80 relative overflow-hidden">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">วงเงินอนุมัติรวม (เพดาน)</p>
+                            <h3 id="kpi-total-budget" class="text-2xl font-bold text-navy-900 mt-1.5 tabular-nums">0.00</h3>
+                            <p class="text-xs text-slate-500 mt-1">บาท (ตามแผนปีทุนที่กรอง)</p>
+                        </div>
+                        <div class="p-2.5 bg-navy-50 text-navy-700 rounded-xl">
+                            <i data-lucide="landmark" class="w-5 h-5"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200/80 relative overflow-hidden">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">เบิกจ่ายแล้วรวม (Paid)</p>
+                            <h3 id="kpi-total-paid" class="text-2xl font-bold text-emerald-700 mt-1.5 tabular-nums">0.00</h3>
+                            <p id="kpi-paid-pct" class="text-xs font-medium text-emerald-600 mt-1">คิดเป็น 0.00% ของวงเงิน</p>
+                        </div>
+                        <div class="p-2.5 bg-emerald-50 text-emerald-600 rounded-xl">
+                            <i data-lucide="check-circle-2" class="w-5 h-5"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200/80 relative overflow-hidden">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">อนุมัติแล้ว - รอจ่าย</p>
+                            <h3 id="kpi-total-pending" class="text-2xl font-bold text-amber-600 mt-1.5 tabular-nums">0.00</h3>
+                            <p id="kpi-pending-pct" class="text-xs font-medium text-amber-600 mt-1">ผูกพันงบประมาณแล้ว</p>
+                        </div>
+                        <div class="p-2.5 bg-amber-50 text-amber-600 rounded-xl">
+                            <i data-lucide="clock" class="w-5 h-5"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200/80 relative overflow-hidden">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">วงเงินคงเหลือสุทธิ</p>
+                            <h3 id="kpi-total-remaining" class="text-2xl font-bold text-sky-700 mt-1.5 tabular-nums">0.00</h3>
+                            <p id="kpi-rem-pct" class="text-xs font-medium text-sky-600 mt-1">คงเหลือ 100.00%</p>
+                        </div>
+                        <div class="p-2.5 bg-sky-50 text-sky-600 rounded-xl">
+                            <i data-lucide="piggy-bank" class="w-5 h-5"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts Row -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200/80 lg:col-span-2">
+                    <div class="flex items-center justify-between mb-4">
+                        <div>
+                            <h3 class="text-sm font-bold text-navy-900">เปรียบเทียบวงเงินอนุมัติ vs ยอดเบิกจ่ายจริงรายบุคคล</h3>
+                            <p class="text-xs text-slate-500">แสดงยอดเบิกจ่ายแล้ว + อนุมัติรอจ่าย เทียบกับเพดานวงเงินรวม</p>
+                        </div>
+                    </div>
+                    <div class="h-72 relative">
+                        <canvas id="chart-scholar-comparison"></canvas>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200/80">
+                    <div class="mb-4">
+                        <h3 class="text-sm font-bold text-navy-900">สัดส่วนค่าใช้จ่ายตามหมวดหมู่หลัก</h3>
+                        <p class="text-xs text-slate-500">รวมรายการที่จ่ายแล้วและอนุมัติรอจ่าย</p>
+                    </div>
+                    <div class="h-72 relative flex items-center justify-center">
+                        <canvas id="chart-category-breakdown"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Summary Table of Annual Plans & Alerts -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200/80 overflow-hidden">
+                <div class="p-5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div>
+                        <h3 class="text-sm font-bold text-navy-900 flex items-center gap-2">
+                            <i data-lucide="shield-alert" class="w-4 h-4 text-amber-500"></i>
+                            ตารางติดตามสถานะวงเงินรายปีทุน (เฝ้าระวังเพดานวงเงิน 80% ขึ้นไป)
+                        </h3>
+                        <p class="text-xs text-slate-500">ตรวจสอบสถานะวงเงินรายคน × รายปีทุน พร้อมแจ้งเตือนเมื่อใช้เกิน 80% หรือเกินเพดาน</p>
+                    </div>
+                    <div class="flex items-center gap-3 text-xs">
+                        <span class="inline-flex items-center gap-1 text-emerald-700"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> ปกติ (&lt;80%)</span>
+                        <span class="inline-flex items-center gap-1 text-amber-700"><span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span> ใกล้เต็ม (80-100%)</span>
+                        <span class="inline-flex items-center gap-1 text-rose-700"><span class="w-2.5 h-2.5 rounded-full bg-rose-500"></span> เกินวงเงิน (&gt;100%)</span>
+                    </div>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm text-left">
+                        <thead class="bg-slate-50 text-slate-600 text-xs uppercase font-semibold border-b border-slate-200">
+                            <tr>
+                                <th class="py-3 px-4">รหัสแผน</th>
+                                <th class="py-3 px-4">ผู้รับทุน</th>
+                                <th class="py-3 px-4 text-center">ปีทุนที่</th>
+                                <th class="py-3 px-4 text-center">ปีการศึกษา / ปีงบฯ</th>
+                                <th class="py-3 px-4 text-right">วงเงินสูงสุด (บาท)</th>
+                                <th class="py-3 px-4 text-right">เบิกจ่ายแล้ว (บาท)</th>
+                                <th class="py-3 px-4 text-right">รอจ่าย (บาท)</th>
+                                <th class="py-3 px-4 text-right">คงเหลือ (บาท)</th>
+                                <th class="py-3 px-4 text-right">% ใช้ไป</th>
+                                <th class="py-3 px-4 text-center">สถานะวงเงิน</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dashboard-plan-tbody" class="divide-y divide-slate-100"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== 2. SUMMARY REPORT BY INSTALLMENT VIEW ==================== -->
+        <section id="view-summary" class="hidden space-y-5">
+            <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200/80 space-y-4 no-print">
+                <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+                    <div>
+                        <h2 class="text-base font-bold text-navy-900 flex items-center gap-2">
+                            <i data-lucide="table-2" class="w-5 h-5 text-sky-600"></i>
+                            สรุปการเบิกจ่ายเงินทุนศึกษาต่อ/ทุนนำเสนอผลงาน โครงการพัฒนาบุคลากร
+                        </h2>
+                        <p class="text-xs text-slate-500 mt-0.5">
+                            ดึงข้อมูลอัตโนมัติจากทะเบียนผู้รับทุน (02_Register), แผนวงเงินรายปีทุน (03_Annual Capital Limit) และบันทึกค่าใช้จ่าย (04_Master_Data)
+                        </p>
+                    </div>
+                    <div class="flex flex-wrap items-center gap-2">
+                        <button onclick="exportSummaryCSV()" class="inline-flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-3.5 py-2 rounded-xl transition shadow-sm">
+                            <i data-lucide="file-spreadsheet" class="w-4 h-4"></i>
+                            <span>Export CSV (Excel)</span>
+                        </button>
+                        <button onclick="window.print()" class="inline-flex items-center gap-1.5 bg-navy-800 hover:bg-navy-900 text-white text-xs font-semibold px-3.5 py-2 rounded-xl transition shadow-sm">
+                            <i data-lucide="printer" class="w-4 h-4"></i>
+                            <span>พิมพ์รายงาน</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Filters Row -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 pt-3 border-t border-slate-100">
+                    <div class="relative">
+                        <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2"></i>
+                        <input type="text" id="sum-search" oninput="renderSummaryReport()" placeholder="ค้นหาชื่อ-สกุล หรือรหัสผู้รับทุน..." class="w-full pl-9 pr-3 py-2 rounded-xl border border-slate-300 text-xs focus:ring-2 focus:ring-sky-500 focus:border-sky-500">
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <label for="sum-filter-type" class="text-xs font-semibold text-slate-600 whitespace-nowrap">ประเภททุน:</label>
+                        <select id="sum-filter-type" onchange="renderSummaryReport()" class="flex-1 bg-slate-50 border border-slate-300 text-slate-800 text-xs rounded-xl px-3 py-2 focus:ring-2 focus:ring-sky-500">
+                            <option value="ALL">ทั้งหมด</option>
+                        </select>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <label for="sum-fiscal-mode" class="text-xs font-semibold text-slate-600 whitespace-nowrap">เกณฑ์จับคู่งวด:</label>
+                        <select id="sum-fiscal-mode" onchange="renderSummaryReport()" class="flex-1 bg-slate-50 border border-slate-300 text-slate-800 text-xs rounded-xl px-3 py-2 focus:ring-2 focus:ring-sky-500">
+                            <option value="payment">ยึดตามปีงบประมาณจ่ายจริง (วันที่จ่าย)</option>
+                            <option value="plan">ยึดตามปีงบประมาณผูกพัน (แผนปีทุน)</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Summary Table Card -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200/80 overflow-hidden print-card">
+                <div class="px-5 py-4 border-b border-slate-100 bg-gradient-to-r from-navy-900 to-navy-800 text-white">
+                    <h3 class="text-sm sm:text-base font-bold tracking-wide">
+                        สรุปการเบิกจ่ายเงินทุนศึกษาต่อ/ทุนนำเสนอผลงาน โครงการพัฒนาบุคลากร
+                    </h3>
+                    <p id="summary-subtitle" class="text-[11px] text-sky-200 mt-0.5">
+                        เกณฑ์การคำนวณ: ยึดตามปีงบประมาณจ่ายจริง (ไม่รวมรายการสถานะ ร่าง/ยกเลิก)
+                    </p>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-xs sm:text-sm text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-100 text-navy-900 font-bold border-b border-slate-300 text-xs">
+                                <th class="py-3 px-3 text-center whitespace-nowrap border-r border-slate-200 w-12">ที่</th>
+                                <th class="py-3 px-3 whitespace-nowrap border-r border-slate-200 min-w-[200px]">ชื่อ-สกุล</th>
+                                <th class="py-3 px-3 text-right whitespace-nowrap border-r border-slate-200">อนุมัติทุน/ปี</th>
+                                <th class="py-3 px-3 text-center whitespace-nowrap border-r border-slate-200 min-w-[180px]">ระยะเวลา</th>
+                                <th class="py-3 px-3 text-right whitespace-nowrap border-r border-slate-200 bg-sky-50/80 text-sky-900">ทุน 2568</th>
+                                <th class="py-3 px-3 text-right whitespace-nowrap border-r border-slate-200 bg-sky-50/50">ปีงบประมาณ 2568<br><span class="font-medium text-[11px] text-slate-600">งวดที่ 1</span></th>
+                                <th class="py-3 px-3 text-right whitespace-nowrap border-r border-slate-200 bg-sky-50/50">ปีงบประมาณ 2568<br><span class="font-medium text-[11px] text-slate-600">งวดที่ 2</span></th>
+                                <th class="py-3 px-3 text-right whitespace-nowrap border-r border-slate-200 bg-indigo-50/80 text-indigo-900">ทุน</th>
+                                <th class="py-3 px-3 text-right whitespace-nowrap border-r border-slate-200 bg-indigo-50/50">ปีงบประมาณ 2569<br><span class="font-medium text-[11px] text-slate-600">งวดที่ 1</span></th>
+                                <th class="py-3 px-3 text-right whitespace-nowrap border-r border-slate-200 bg-indigo-50/50">ปีงบประมาณ 2569<br><span class="font-medium text-[11px] text-slate-600">งวดที่ 2</span></th>
+                                <th class="py-3 px-3 text-right whitespace-nowrap border-r border-slate-200 bg-navy-100/80 text-navy-900">รวมทุน</th>
+                                <th class="py-3 px-3 text-right whitespace-nowrap bg-emerald-50/80 text-emerald-900">รวมเงินเบิกจ่าย</th>
+                            </tr>
+                        </thead>
+                        <tbody id="summary-tbody" class="divide-y divide-slate-200"></tbody>
+                        <tfoot id="summary-tfoot" class="bg-navy-50 border-t-2 border-navy-800 font-bold text-navy-900"></tfoot>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== 3. REGISTER VIEW ==================== -->
+        <section id="view-register" class="hidden space-y-6">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 rounded-2xl shadow-sm border border-slate-200/80">
+                <div>
+                    <h2 class="text-base font-bold text-navy-900 flex items-center gap-2">
+                        <i data-lucide="users" class="w-5 h-5 text-sky-600"></i>
+                        ทะเบียนผู้รับทุนพัฒนาบุคลากร (02_Register)
+                    </h2>
+                    <p class="text-xs text-slate-500 mt-0.5">1 แถว = 1 ผู้รับทุน พร้อมสรุปยอดวงเงินและสถานะการเบิกจ่ายสะสมตลอดโครงการ</p>
+                </div>
+                <button onclick="toggleScholarForm()" class="inline-flex items-center justify-center gap-2 bg-navy-800 hover:bg-navy-900 text-white text-sm font-medium px-4 py-2.5 rounded-xl transition shadow-sm">
+                    <i data-lucide="user-plus" class="w-4 h-4"></i>
+                    <span>เพิ่มผู้รับทุนรายใหม่</span>
+                </button>
+            </div>
+
+            <!-- Add/Edit Scholar Form -->
+            <div id="scholar-form-card" class="hidden bg-white p-6 rounded-2xl shadow-md border border-sky-200">
+                <div class="flex items-center justify-between pb-3 mb-4 border-b border-slate-100">
+                    <h3 id="scholar-form-title" class="text-base font-bold text-navy-900">เพิ่มข้อมูลผู้รับทุนรายใหม่</h3>
+                    <button onclick="toggleScholarForm(false)" class="text-slate-400 hover:text-slate-600 p-1">
+                        <i data-lucide="x" class="w-5 h-5"></i>
+                    </button>
+                </div>
+                <form id="scholar-form" onsubmit="saveScholar(event)" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <input type="hidden" id="sch-edit-mode" value="">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">รหัสผู้รับทุน *</label>
+                        <input type="text" id="sch-id" required placeholder="เช่น SCH-004" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm focus:ring-2 focus:ring-sky-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">ชื่อ-นามสกุล (พร้อมคำนำหน้า/ตำแหน่ง) *</label>
+                        <input type="text" id="sch-name" required placeholder="เช่น พญ.สมหญิง ใจดี" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm focus:ring-2 focus:ring-sky-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">ประเภททุน *</label>
+                        <select id="sch-type" required class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-sky-500"></select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">สถาบัน / มหาวิทยาลัย / โรงพยาบาล *</label>
+                        <input type="text" id="sch-institution" required placeholder="เช่น Harvard Medical School" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm focus:ring-2 focus:ring-sky-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">ประเทศ *</label>
+                        <input type="text" id="sch-country" required placeholder="เช่น สหรัฐอเมริกา" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm focus:ring-2 focus:ring-sky-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">สถานะทุน *</label>
+                        <select id="sch-status" required class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-sky-500">
+                            <option value="ยังไม่เริ่ม">ยังไม่เริ่ม</option>
+                            <option value="อยู่ระหว่างดำเนินการ" selected>อยู่ระหว่างดำเนินการ</option>
+                            <option value="สิ้นสุดแล้ว">สิ้นสุดแล้ว</option>
+                            <option value="ชะลอ/เลื่อนการเดินทาง">ชะลอ/เลื่อนการเดินทาง</option>
+                            <option value="ยกเลิกทุน">ยกเลิกทุน</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">วันที่เริ่มต้นรับทุน *</label>
+                        <input type="date" id="sch-start" required class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm focus:ring-2 focus:ring-sky-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">วันที่สิ้นสุดรับทุน *</label>
+                        <input type="date" id="sch-end" required class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm focus:ring-2 focus:ring-sky-500">
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">จำนวนปีทุน *</label>
+                            <input type="number" id="sch-years" min="1" max="10" value="1" required class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm focus:ring-2 focus:ring-sky-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">วงเงินต่อปี (บาท) *</label>
+                            <input type="number" id="sch-annual-cap" step="0.01" value="1500000" required class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm focus:ring-2 focus:ring-sky-500">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">เลขที่หนังสืออนุมัติ (คอลัมน์ O)</label>
+                        <input type="text" id="sch-approval-doc" placeholder="เช่น อว 78.07/1234" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm focus:ring-2 focus:ring-sky-500">
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">หมายเหตุ (คอลัมน์ P)</label>
+                        <input type="text" id="sch-note" placeholder="ระบุหมายเหตุเพิ่มเติม..." class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm focus:ring-2 focus:ring-sky-500">
+                    </div>
+                    <div class="md:col-span-3 flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-slate-100">
+                        <label class="inline-flex items-center gap-2 text-xs text-slate-600 cursor-pointer" id="auto-create-plans-wrapper">
+                            <input type="checkbox" id="sch-auto-plans" checked class="rounded text-sky-600 focus:ring-sky-500">
+                            <span>สร้างแผนวงเงินรายปีทุน (03_Annual Capital Limit) ให้อัตโนมัติตามจำนวนปีทุน</span>
+                        </label>
+                        <div class="flex gap-2">
+                            <button type="button" onclick="toggleScholarForm(false)" class="px-4 py-2 rounded-xl text-sm text-slate-600 hover:bg-slate-100">ยกเลิก</button>
+                            <button type="submit" class="px-5 py-2 rounded-xl text-sm font-medium bg-navy-800 text-white hover:bg-navy-900 shadow-sm">บันทึกข้อมูลผู้รับทุน</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Scholars Cards -->
+            <div id="scholars-grid" class="grid grid-cols-1 gap-4"></div>
+        </section>
+
+        <!-- ==================== 4. ANNUAL CAPITAL LIMIT VIEW ==================== -->
+        <section id="view-plans" class="hidden space-y-6">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 rounded-2xl shadow-sm border border-slate-200/80">
+                <div>
+                    <h2 class="text-base font-bold text-navy-900 flex items-center gap-2">
+                        <i data-lucide="wallet" class="w-5 h-5 text-sky-600"></i>
+                        แผนวงเงินรายปีทุน (03_Annual Capital Limit)
+                    </h2>
+                    <p class="text-xs text-slate-500 mt-0.5">1 แถว = 1 คน × 1 ปีทุน เชื่อมโยงปีทุนกับปีการศึกษาและปีงบประมาณไทยเพื่อควบคุมเพดานรายปี</p>
+                </div>
+                <button onclick="togglePlanForm()" class="inline-flex items-center justify-center gap-2 bg-navy-800 hover:bg-navy-900 text-white text-sm font-medium px-4 py-2.5 rounded-xl transition shadow-sm">
+                    <i data-lucide="plus-circle" class="w-4 h-4"></i>
+                    <span>เพิ่มแผนวงเงินรายปีทุน</span>
+                </button>
+            </div>
+
+            <!-- Add/Edit Plan Form -->
+            <div id="plan-form-card" class="hidden bg-white p-6 rounded-2xl shadow-md border border-sky-200">
+                <div class="flex items-center justify-between pb-3 mb-4 border-b border-slate-100">
+                    <h3 id="plan-form-title" class="text-base font-bold text-navy-900">เพิ่มแผนวงเงินรายปีทุน</h3>
+                    <button onclick="togglePlanForm(false)" class="text-slate-400 hover:text-slate-600 p-1">
+                        <i data-lucide="x" class="w-5 h-5"></i>
+                    </button>
+                </div>
+                <form id="plan-form" onsubmit="savePlan(event)" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <input type="hidden" id="plan-edit-mode" value="">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">รหัสแผน *</label>
+                        <input type="text" id="plan-id" required placeholder="เช่น PL-006" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm focus:ring-2 focus:ring-sky-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">ผู้รับทุน *</label>
+                        <select id="plan-sch-id" required class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-sky-500"></select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">ปีทุนที่ (Grant Year) *</label>
+                        <input type="number" id="plan-grant-year" min="1" max="10" value="1" required class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm focus:ring-2 focus:ring-sky-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">วันที่เริ่มต้นปีทุน *</label>
+                        <input type="date" id="plan-start" required onchange="previewPlanAutoFields()" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm focus:ring-2 focus:ring-sky-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">วันที่สิ้นสุดปีทุน *</label>
+                        <input type="date" id="plan-end" required class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm focus:ring-2 focus:ring-sky-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">ปีงบประมาณผูกพัน (พ.ศ.) *</label>
+                        <input type="number" id="plan-fiscal-year" required placeholder="เช่น 2568" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm focus:ring-2 focus:ring-sky-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">วงเงินสูงสุดตามประกาศ (บาท) *</label>
+                        <input type="number" id="plan-max-cap" step="0.01" value="1500000" required class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm focus:ring-2 focus:ring-sky-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">วงเงินหลักการ / อนุมัติเบื้องต้น (บาท)</label>
+                        <input type="number" id="plan-principle-cap" step="0.01" placeholder="เว้นว่างได้" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm focus:ring-2 focus:ring-sky-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">วันที่หนังสือขออนุมัติหลักการ (คอลัมน์ L)</label>
+                        <input type="date" id="plan-principle-date" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm focus:ring-2 focus:ring-sky-500">
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">หมายเหตุ (คอลัมน์ S)</label>
+                        <input type="text" id="plan-note" placeholder="หมายเหตุแผนปีทุน..." class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm focus:ring-2 focus:ring-sky-500">
+                    </div>
+                    <div class="bg-slate-50 rounded-xl p-3 border border-slate-200 flex flex-col justify-center">
+                        <span class="text-[11px] text-slate-500">คำนวณอัตโนมัติจากวันที่เริ่ม:</span>
+                        <span id="plan-acad-preview" class="text-sm font-bold text-navy-800">ปีการศึกษา: -</span>
+                    </div>
+                    <div class="md:col-span-3 flex justify-end gap-2 pt-3 border-t border-slate-100">
+                        <button type="button" onclick="togglePlanForm(false)" class="px-4 py-2 rounded-xl text-sm text-slate-600 hover:bg-slate-100">ยกเลิก</button>
+                        <button type="submit" class="px-5 py-2 rounded-xl text-sm font-medium bg-navy-800 text-white hover:bg-navy-900 shadow-sm">บันทึกแผนวงเงิน</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Plans Table -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200/80 overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm text-left">
+                        <thead class="bg-slate-50 text-slate-600 text-xs uppercase font-semibold border-b border-slate-200">
+                            <tr>
+                                <th class="py-3 px-4">รหัสแผน</th>
+                                <th class="py-3 px-4">ผู้รับทุน</th>
+                                <th class="py-3 px-4 text-center">ปีทุนที่</th>
+                                <th class="py-3 px-4">ช่วงวันที่ปีทุน</th>
+                                <th class="py-3 px-4 text-center">ปีการศึกษา</th>
+                                <th class="py-3 px-4 text-center">ปีงบฯ ผูกพัน</th>
+                                <th class="py-3 px-4 text-right">วงเงินสูงสุด</th>
+                                <th class="py-3 px-4 text-right">วงเงินหลักการ</th>
+                                <th class="py-3 px-4 text-right">เบิกจ่ายแล้ว</th>
+                                <th class="py-3 px-4 text-right">อนุมัติรอจ่าย</th>
+                                <th class="py-3 px-4 text-right">คงเหลือ</th>
+                                <th class="py-3 px-4 text-right">% ใช้ไป</th>
+                                <th class="py-3 px-4 text-center">สถานะ</th>
+                                <th class="py-3 px-4 text-center">จัดการ</th>
+                            </tr>
+                        </thead>
+                        <tbody id="plans-tbody" class="divide-y divide-slate-100"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== 5. MASTER DATA / EXPENSES VIEW ==================== -->
+        <section id="view-expenses" class="hidden space-y-6">
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200/80 p-5">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-100">
+                    <div>
+                        <h2 class="text-base font-bold text-navy-900 flex items-center gap-2">
+                            <i data-lucide="receipt" class="w-5 h-5 text-sky-600"></i>
+                            บันทึกและติดตามรายการค่าใช้จ่าย (04_Master_Data)
+                        </h2>
+                        <p class="text-xs text-slate-500 mt-0.5">บันทึกการเบิกจ่ายรายครั้ง คำนวณปีงบประมาณ ไตรมาส ปีทุน หมวดหมู่หลัก และตรวจสอบวงเงินให้อัตโนมัติ</p>
+                    </div>
+                    <button onclick="resetExpenseForm()" id="btn-new-expense-mode" class="hidden inline-flex items-center gap-1.5 text-xs font-medium bg-amber-100 text-amber-800 px-3 py-1.5 rounded-xl hover:bg-amber-200">
+                        <i data-lucide="plus" class="w-3.5 h-3.5"></i> ยกเลิกการแก้ไข / เพิ่มรายการใหม่
+                    </button>
+                </div>
+
+                <!-- Expense Entry Form -->
+                <form id="expense-form" onsubmit="saveExpense(event)" class="mt-4 space-y-4">
+                    <input type="hidden" id="exp-edit-id" value="">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">ผู้รับทุน *</label>
+                            <select id="exp-sch-id" required onchange="updateExpenseLivePreview()" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-sky-500"></select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">ครั้งที่เบิก *</label>
+                            <input type="number" id="exp-round" min="1" value="1" required class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm focus:ring-2 focus:ring-sky-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">วันที่จ่าย / วันที่ทำรายการ *</label>
+                            <input type="date" id="exp-date" required onchange="updateExpenseLivePreview()" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm focus:ring-2 focus:ring-sky-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">ระบุปีทุนเอง (เว้นว่าง = อัตโนมัติ)</label>
+                            <select id="exp-manual-grant-year" onchange="updateExpenseLivePreview()" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-sky-500">
+                                <option value="">อัตโนมัติ (ตามวันที่จ่าย)</option>
+                                <option value="1">ปีทุนที่ 1</option>
+                                <option value="2">ปีทุนที่ 2</option>
+                                <option value="3">ปีทุนที่ 3</option>
+                                <option value="4">ปีทุนที่ 4</option>
+                            </select>
+                        </div>
+
+                        <div class="sm:col-span-2">
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">รายการค่าใช้จ่ายย่อย *</label>
+                            <select id="exp-subitem" required onchange="updateExpenseLivePreview()" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-sky-500"></select>
+                        </div>
+                        <div class="sm:col-span-2">
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">รายละเอียดตามเอกสารต้นฉบับ (คอลัมน์ O)</label>
+                            <input type="text" id="exp-detail" placeholder="เช่น ค่าตั๋วเครื่องบินไป-กลับ กรุงเทพฯ-โตรอนโต" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm focus:ring-2 focus:ring-sky-500">
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">เลขที่ SAP (คอลัมน์ E)</label>
+                            <input type="text" id="exp-sap" placeholder="เช่น 1900012345" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm focus:ring-2 focus:ring-sky-500">
+                        </div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 mb-1">ช่วงค่าใช้จ่าย-เริ่ม</label>
+                                <input type="date" id="exp-period-start" class="w-full rounded-xl border border-slate-300 px-2.5 py-2 text-xs focus:ring-2 focus:ring-sky-500">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 mb-1">ช่วงค่าใช้จ่าย-สิ้นสุด</label>
+                                <input type="date" id="exp-period-end" class="w-full rounded-xl border border-slate-300 px-2.5 py-2 text-xs focus:ring-2 focus:ring-sky-500">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">แหล่งข้อมูล (คอลัมน์ X)</label>
+                            <select id="exp-source" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-sky-500"></select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">หมายเหตุ (คอลัมน์ Y)</label>
+                            <input type="text" id="exp-note" placeholder="หมายเหตุรายการเบิก..." class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm focus:ring-2 focus:ring-sky-500">
+                        </div>
+
+                        <!-- Currency & Amount Conversion -->
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">สกุลเงิน *</label>
+                            <select id="exp-currency" onchange="handleCurrencyChange()" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-sky-500"></select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">จำนวนเงิน (สกุลต่างประเทศ)</label>
+                            <input type="number" id="exp-foreign-amt" step="0.01" placeholder="0.00" oninput="calcThbFromForeign()" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm focus:ring-2 focus:ring-sky-500 disabled:bg-slate-100">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">อัตราแลกเปลี่ยน (บาท/หน่วย)</label>
+                            <input type="number" id="exp-fx-rate" step="0.0001" placeholder="1.0000" oninput="calcThbFromForeign()" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm focus:ring-2 focus:ring-sky-500 disabled:bg-slate-100">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-navy-900 mb-1">จำนวนเงินขอเบิก (บาท) *</label>
+                            <input type="number" id="exp-thb-amt" step="0.01" required placeholder="0.00" oninput="updateExpenseLivePreview()" class="w-full rounded-xl border-2 border-sky-300 bg-sky-50/40 px-3 py-2 text-sm font-bold text-navy-900 focus:ring-2 focus:ring-sky-500">
+                        </div>
+
+                        <!-- Status & Payment Method -->
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">สถานะการเบิกจ่าย *</label>
+                            <select id="exp-status" required onchange="updateExpenseLivePreview()" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-sky-500"></select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">วิธีการจ่ายเงิน</label>
+                            <select id="exp-method" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-sky-500"></select>
+                        </div>
+
+                        <!-- Live Auto-Calculation Preview -->
+                        <div class="sm:col-span-2 bg-slate-50 border border-slate-200 rounded-xl p-3 flex flex-wrap items-center justify-between gap-2 text-xs">
+                            <div class="space-y-0.5">
+                                <div><span class="text-slate-500">หมวดหมู่หลัก:</span> <span id="prev-category" class="font-bold text-navy-900">-</span></div>
+                                <div>
+                                    <span class="text-slate-500">ปีทุนที่ใช้จริง:</span> <span id="prev-grant-year" class="font-bold text-sky-700">-</span> |
+                                    <span class="text-slate-500">ปีงบฯ จ่ายจริง:</span> <span id="prev-fy-pay" class="font-bold text-navy-800">-</span>
+                                    (<span id="prev-quarter" class="font-semibold text-slate-700">Q-</span>)
+                                </div>
+                            </div>
+                            <div id="prev-audit-badge" class="px-2.5 py-1 rounded-lg bg-emerald-100 text-emerald-800 font-semibold text-[11px]">พร้อมบันทึก</div>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-end gap-2 pt-3 border-t border-slate-100">
+                        <button type="button" onclick="resetExpenseForm()" class="px-4 py-2 rounded-xl text-sm text-slate-600 hover:bg-slate-100">ล้างฟอร์ม</button>
+                        <button type="submit" id="exp-submit-btn" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold bg-navy-800 text-white hover:bg-navy-900 shadow-sm">
+                            <i data-lucide="save" class="w-4 h-4"></i>
+                            <span>บันทึกรายการค่าใช้จ่าย</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Expenses Table & Filters -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200/80 overflow-hidden">
+                <div class="p-4 border-b border-slate-100 flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+                    <div class="flex flex-wrap items-center gap-2">
+                        <div class="relative">
+                            <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2"></i>
+                            <input type="text" id="exp-filter-search" oninput="renderExpensesTable()" placeholder="ค้นหา TXN, รายการ, SAP..." class="pl-9 pr-3 py-1.5 rounded-xl border border-slate-300 text-xs w-52 focus:ring-2 focus:ring-sky-500">
+                        </div>
+                        <select id="exp-filter-sch" onchange="renderExpensesTable()" class="rounded-xl border border-slate-300 px-3 py-1.5 text-xs bg-slate-50">
+                            <option value="ALL">ผู้รับทุนทั้งหมด</option>
+                        </select>
+                        <select id="exp-filter-status" onchange="renderExpensesTable()" class="rounded-xl border border-slate-300 px-3 py-1.5 text-xs bg-slate-50">
+                            <option value="ALL">ทุกสถานะ</option>
+                        </select>
+                        <select id="exp-filter-fy" onchange="renderExpensesTable()" class="rounded-xl border border-slate-300 px-3 py-1.5 text-xs bg-slate-50">
+                            <option value="ALL">ทุกปีงบประมาณ</option>
+                            <option value="2567">ปีงบฯ 2567</option>
+                            <option value="2568">ปีงบฯ 2568</option>
+                            <option value="2569">ปีงบฯ 2569</option>
+                            <option value="2570">ปีงบฯ 2570</option>
+                        </select>
+                    </div>
+                    <div class="text-xs text-slate-600 flex items-center gap-3">
+                        <span>แสดง <strong id="exp-count-label" class="text-navy-900">0</strong> รายการ</span>
+                        <span class="bg-sky-50 text-sky-900 px-3 py-1 rounded-lg font-bold border border-sky-200">
+                            รวม: <span id="exp-filtered-sum" class="tabular-nums">0.00</span> บาท
+                        </span>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-xs sm:text-sm text-left">
+                        <thead class="bg-slate-50 text-slate-600 text-xs uppercase font-semibold border-b border-slate-200">
+                            <tr>
+                                <th class="py-3 px-3">TXN_ID</th>
+                                <th class="py-3 px-3">ผู้รับทุน</th>
+                                <th class="py-3 px-3 text-center">ครั้งที่</th>
+                                <th class="py-3 px-3">วันที่จ่าย (พ.ศ.)</th>
+                                <th class="py-3 px-3 text-center">ปีทุน / ปีงบฯ</th>
+                                <th class="py-3 px-3">รายการย่อย / หมวดหมู่หลัก</th>
+                                <th class="py-3 px-3 text-right">จำนวนเงิน (บาท)</th>
+                                <th class="py-3 px-3 text-center">สถานะ</th>
+                                <th class="py-3 px-3 text-center">ตรวจสอบ</th>
+                                <th class="py-3 px-3 text-center">จัดการ</th>
+                            </tr>
+                        </thead>
+                        <tbody id="expenses-tbody" class="divide-y divide-slate-100"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== 6. CONFIG & GOOGLE SHEETS SYNC VIEW ==================== -->
+        <section id="view-config" class="hidden space-y-6">
+            <div class="bg-white rounded-2xl p-6 shadow-sm border-2 border-sky-200 space-y-5">
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 pb-4 border-b border-slate-100">
+                    <div>
+                        <h2 class="text-base font-bold text-navy-900 flex items-center gap-2">
+                            <i data-lucide="cloud-cog" class="w-5 h-5 text-sky-600"></i>
+                            การเชื่อมต่อและซิงก์ข้อมูล 2 ทางกับ Google Sheets (Two-Way Auto-Sync)
+                        </h2>
+                        <p class="text-xs text-slate-500 mt-0.5">บันทึกในเว็บ HTML → อัปเดตลง Google Sheets ทันที และเมื่อแก้ใน Google Sheets → เว็บ HTML ดึงข้อมูลมาแสดงอัตโนมัติ</p>
+                    </div>
+                    <div id="cfg-connection-badge" class="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-xs font-semibold">
+                        <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+                        <span>ยังไม่ได้ตั้งค่า Web App URL</span>
+                    </div>
+                </div>
+
+                <!-- Connection Settings Form -->
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-end">
+                    <div class="lg:col-span-6">
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Google Apps Script Web App URL *</label>
+                        <input type="url" id="cfg-gas-url" placeholder="https://script.google.com/macros/s/AKfycb.../exec" class="w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-xs font-mono focus:ring-2 focus:ring-sky-500">
+                    </div>
+                    <div class="lg:col-span-3">
+                        <label class="block text-xs font-bold text-slate-700 mb-1">รหัสความปลอดภัย (API Token)</label>
+                        <input type="text" id="cfg-gas-token" placeholder="เช่น SCHOLAR2026" class="w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm focus:ring-2 focus:ring-sky-500">
+                    </div>
+                    <div class="lg:col-span-3">
+                        <label class="block text-xs font-bold text-slate-700 mb-1">ดึงข้อมูลอัตโนมัติ (Auto-Poll)</label>
+                        <select id="cfg-poll-interval" class="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm bg-white focus:ring-2 focus:ring-sky-500">
+                            <option value="15000">ทุก 15 วินาที (แนะนำ)</option>
+                            <option value="30000">ทุก 30 วินาที</option>
+                            <option value="60000">ทุก 1 นาที</option>
+                            <option value="0">ปิด Auto-Poll (ซิงก์เมื่อกด/เปิดแท็บ)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="flex flex-wrap items-center justify-between gap-3 pt-2">
+                    <div class="flex flex-wrap items-center gap-2">
+                        <button onclick="saveGoogleSheetsSettings()" class="inline-flex items-center gap-2 bg-navy-800 hover:bg-navy-900 text-white text-xs font-semibold px-4 py-2.5 rounded-xl transition shadow-sm">
+                            <i data-lucide="save" class="w-4 h-4"></i>
+                            <span>บันทึกการตั้งค่า & ทดสอบเชื่อมต่อ</span>
+                        </button>
+                        <button onclick="pushAllLocalToSheets()" class="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-4 py-2.5 rounded-xl transition shadow-sm" title="ส่งข้อมูลทั้งหมดในหน้าเว็บขึ้นไปเขียนลง Google Sheets">
+                            <i data-lucide="cloud-upload" class="w-4 h-4"></i>
+                            <span>ส่งข้อมูลทั้งหมดขึ้น Google Sheets (Push All)</span>
+                        </button>
+                        <button onclick="disconnectGoogleSheets()" class="inline-flex items-center gap-1.5 text-rose-600 hover:bg-rose-50 text-xs font-medium px-3 py-2.5 rounded-xl transition">
+                            <i data-lucide="unlink" class="w-3.5 h-3.5"></i>
+                            <span>ยกเลิกการเชื่อมต่อ</span>
+                        </button>
+                    </div>
+                    <span class="text-[11px] text-slate-500">* ระบบใช้ <code class="bg-slate-100 px-1 rounded">LockService</code> และข้ามคอลัมน์สูตรอัตโนมัติ สูตรในชีตไม่เสียหาย 100%</span>
+                </div>
+
+                <!-- Apps Script Code & 4-Step Guide -->
+                <div class="bg-slate-900 text-slate-100 rounded-2xl p-5 space-y-4">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-700 pb-3">
+                        <div>
+                            <h3 class="text-sm font-bold text-sky-300 flex items-center gap-2">
+                                <i data-lucide="code-2" class="w-4 h-4"></i>
+                                โค้ด Google Apps Script (Code.gs) สำหรับติดตั้งใน Google Sheets
+                            </h3>
+                            <p class="text-xs text-slate-400 mt-0.5">ขั้นตอน: 1. เปิด Google Sheets &gt; <strong>ส่วนขยาย (Extensions) &gt; Apps Script</strong> &gt; 2. วางโค้ดนี้ทับทั้งหมด &gt; 3. กด <strong>ทำให้ใช้งานได้ (Deploy) &gt; การทำให้ใช้งานได้รายการใหม่ &gt; เว็บแอป</strong> (ผู้มีสิทธิ์เข้าถึง: <strong>ทุกคน / Anyone</strong>) &gt; 4. นำ URL มาวางด้านบน</p>
+                        </div>
+                        <button onclick="copyAppsScriptCode()" class="shrink-0 inline-flex items-center gap-1.5 bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold text-xs px-3.5 py-2 rounded-xl transition">
+                            <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+                            <span>คัดลอกโค้ด Code.gs</span>
+                        </button>
+                    </div>
+                    <pre id="gas-code-block" class="text-[11px] font-mono text-emerald-300 overflow-x-auto max-h-64 leading-relaxed select-all bg-slate-950/70 p-4 rounded-xl border border-slate-800"></pre>
+                </div>
+            </div>
+
+            <!-- System Parameters & Dropdown Lists -->
+            <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200/80">
+                <h2 class="text-base font-bold text-navy-900 flex items-center gap-2 mb-1">
+                    <i data-lucide="settings" class="w-5 h-5 text-sky-600"></i>
+                    ตั้งค่าพารามิเตอร์การคำนวณและตัวเลือกมาตรฐาน (01_Config)
+                </h2>
+                <p class="text-xs text-slate-500 mb-6">กำหนดกฎการคำนวณปีการศึกษาและจัดการรายการตัวเลือกมาตรฐาน (Dropdown Lists)</p>
+
+                <!-- Academic Year Start Month Setting -->
+                <div class="bg-sky-50/70 border border-sky-200 rounded-2xl p-5 mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div>
+                        <h3 class="text-sm font-bold text-navy-900">เดือนที่เริ่มต้นปีการศึกษา (Academic Year Start Month)</h3>
+                        <p class="text-xs text-slate-600 mt-1">สูตรคำนวณ: หากเดือนที่เริ่มรับทุน &lt; เดือนที่กำหนด จะนับเป็น <code class="bg-white px-1.5 py-0.5 rounded border text-navy-800">ปี พ.ศ. - 1</code> มิฉะนั้นนับเป็น <code class="bg-white px-1.5 py-0.5 rounded border text-navy-800">ปี พ.ศ.</code> (ค่ามาตรฐาน = เดือน 8 สิงหาคม)</p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <select id="cfg-acad-month" onchange="updateAcademicStartMonth()" class="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-navy-900 focus:ring-2 focus:ring-sky-500">
+                            <option value="1">1 - มกราคม</option>
+                            <option value="2">2 - กุมภาพันธ์</option>
+                            <option value="3">3 - มีนาคม</option>
+                            <option value="4">4 - เมษายน</option>
+                            <option value="5">5 - พฤษภาคม</option>
+                            <option value="6">6 - มิถุนายน</option>
+                            <option value="7">7 - กรกฎาคม</option>
+                            <option value="8" selected>8 - สิงหาคม (ค่าเริ่มต้น)</option>
+                            <option value="9">9 - กันยายน</option>
+                            <option value="10">10 - ตุลาคม</option>
+                            <option value="11">11 - พฤศจิกายน</option>
+                            <option value="12">12 - ธันวาคม</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Sub-item to Category Mapping Manager -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="border border-slate-200 rounded-2xl p-5">
+                        <h3 class="text-sm font-bold text-navy-900 mb-3">การจับคู่รายการย่อย → หมวดหมู่ค่าใช้จ่ายหลัก</h3>
+                        <form onsubmit="addSubItemMapping(event)" class="flex flex-col sm:flex-row gap-2 mb-4">
+                            <input type="text" id="cfg-new-subitem" required placeholder="ชื่อรายการย่อยใหม่..." class="flex-1 rounded-xl border border-slate-300 px-3 py-2 text-xs">
+                            <select id="cfg-new-subitem-cat" required class="rounded-xl border border-slate-300 px-3 py-2 text-xs bg-white"></select>
+                            <button type="submit" class="bg-navy-800 text-white text-xs font-medium px-3.5 py-2 rounded-xl hover:bg-navy-900 whitespace-nowrap">+ เพิ่ม</button>
+                        </form>
+                        <div class="max-h-72 overflow-y-auto divide-y divide-slate-100 border border-slate-100 rounded-xl" id="cfg-mapping-list"></div>
+                    </div>
+
+                    <!-- Other Dropdowns -->
+                    <div class="space-y-6">
+                        <div class="border border-slate-200 rounded-2xl p-5">
+                            <h3 class="text-sm font-bold text-navy-900 mb-3">สกุลเงินที่รองรับ (Currencies)</h3>
+                            <form onsubmit="addConfigListItem(event, 'currencies', 'cfg-new-currency')" class="flex gap-2 mb-3">
+                                <input type="text" id="cfg-new-currency" required placeholder="เช่น AUD, CHF..." class="flex-1 rounded-xl border border-slate-300 px-3 py-2 text-xs uppercase">
+                                <button type="submit" class="bg-navy-800 text-white text-xs font-medium px-3.5 py-2 rounded-xl hover:bg-navy-900">+ เพิ่ม</button>
+                            </form>
+                            <div id="cfg-currencies-list" class="flex flex-wrap gap-2"></div>
+                        </div>
+
+                        <div class="border border-slate-200 rounded-2xl p-5">
+                            <h3 class="text-sm font-bold text-navy-900 mb-3">วิธีการจ่ายเงิน (Payment Methods)</h3>
+                            <form onsubmit="addConfigListItem(event, 'paymentMethods', 'cfg-new-method')" class="flex gap-2 mb-3">
+                                <input type="text" id="cfg-new-method" required placeholder="เช่น โอนเข้าบัญชีต่างประเทศโดยตรง..." class="flex-1 rounded-xl border border-slate-300 px-3 py-2 text-xs">
+                                <button type="submit" class="bg-navy-800 text-white text-xs font-medium px-3.5 py-2 rounded-xl hover:bg-navy-900">+ เพิ่ม</button>
+                            </form>
+                            <div id="cfg-methods-list" class="flex flex-wrap gap-2"></div>
+                        </div>
+
+                        <div class="pt-2 flex justify-end">
+                            <button onclick="confirmResetData()" class="inline-flex items-center gap-1.5 text-rose-600 hover:bg-rose-50 px-3 py-2 rounded-xl text-xs font-medium transition">
+                                <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
+                                <span>รีเซ็ตข้อมูลในเครื่องเป็นค่าเริ่มต้น</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-slate-200 py-4 mt-8">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 gap-2">
+            <p>ระบบติดตามค่าใช้จ่ายทุนพัฒนาบุคลากร (เดินทางไปฝึกอบรม/ศึกษาต่อ ณ ต่างประเทศ)</p>
+            <p>GitHub Pages Edition • Two-Way Sync with Google Sheets</p>
+        </div>
+    </footer>
+
+    <!-- ==================== JAVASCRIPT LOGIC ==================== -->
+    <script>
+        // ==========================================
+        // 1. INITIAL DEFAULT DATA & STATE
+        // ==========================================
+        const STORAGE_KEY = 'scholarship_tracker_db_v2';
+        const SYNC_CONFIG_KEY = 'scholarship_tracker_gas_cfg_v1';
+
+        const DEFAULT_DATA = {
+            config: {
+                academicStartMonth: 8,
+                scholarshipTypes: [
+                    'ทุนศึกษาต่อ/ฝึกอบรม ณ ต่างประเทศ',
+                    'ทุนนำเสนอผลงาน ณ ต่างประเทศ',
+                    'ทุนพัฒนาบุคลากรสายสนับสนุน',
+                    'ทุนฝึกอบรมระยะสั้น ณ ต่างประเทศ',
+                    'ทุนวิจัยหลังปริญญาเอก (Postdoctoral)'
+                ],
+                categories: [
+                    '1. ค่าเดินทาง',
+                    '2. ค่าธรรมเนียมวีซ่าและเอกสารเดินทาง',
+                    '3. ค่าธรรมเนียมการศึกษา/ฝึกอบรม',
+                    '4. ค่าใช้จ่ายประจำเดือน/ค่าครองชีพ',
+                    '5. ค่าประกันสุขภาพ/อุบัติเหตุ',
+                    '6. ค่าเครื่องแต่งกาย/ตั้งถิ่นฐาน',
+                    '7. ค่าใช้จ่ายอื่นๆ'
+                ],
+                subItemMap: {
+                    'ค่าตั๋วโดยสารเครื่องบิน': '1. ค่าเดินทาง',
+                    'ค่าภาษีสนามบินและค่าธรรมเนียมน้ำมัน': '1. ค่าเดินทาง',
+                    'ค่ารถรับส่งสนามบิน': '1. ค่าเดินทาง',
+                    'ค่าธรรมเนียมวีซ่า': '2. ค่าธรรมเนียมวีซ่าและเอกสารเดินทาง',
+                    'ค่าตรวจสุขภาพ/เอกสารเดินทาง': '2. ค่าธรรมเนียมวีซ่าและเอกสารเดินทาง',
+                    'ค่าเล่าเรียน/ค่าลงทะเบียนฝึกอบรม': '3. ค่าธรรมเนียมการศึกษา/ฝึกอบรม',
+                    'ค่าธรรมเนียมมหาวิทยาลัย': '3. ค่าธรรมเนียมการศึกษา/ฝึกอบรม',
+                    'ค่าใช้จ่ายประจำเดือนเหมาจ่าย': '4. ค่าใช้จ่ายประจำเดือน/ค่าครองชีพ',
+                    'ค่าที่พัก': '4. ค่าใช้จ่ายประจำเดือน/ค่าครองชีพ',
+                    'ค่าประกันสุขภาพ': '5. ค่าประกันสุขภาพ/อุบัติเหตุ',
+                    'ค่าเครื่องแต่งกาย': '6. ค่าเครื่องแต่งกาย/ตั้งถิ่นฐาน',
+                    'ค่าใช้จ่ายอื่นๆ ตามจริง': '7. ค่าใช้จ่ายอื่นๆ'
+                },
+                statuses: [
+                    'ร่าง',
+                    'รอตรวจสอบเอกสาร',
+                    'รออนุมัติ',
+                    'อนุมัติแล้ว-รอจ่าย',
+                    'จ่ายแล้ว',
+                    'ยกเลิก'
+                ],
+                currencies: ['THB', 'USD', 'CAD', 'SGD', 'GBP', 'EUR', 'JPY', 'AUD'],
+                paymentMethods: [
+                    'โอนเข้าบัญชีผู้รับทุน',
+                    'โอนต่างประเทศ (T/T)',
+                    'จ่ายตรงสถาบัน',
+                    'เงินสด/เช็ค'
+                ],
+                dataSources: [
+                    'บันทึกใหม่ในระบบ',
+                    'ย้ายจากชีตรายบุคคล (มีรายละเอียด)',
+                    'ยอดรวมยกมา (รอจำแนกรายการ)'
+                ]
+            },
+            scholars: [
+                {
+                    id: 'SCH-001',
+                    name: 'พญ.ณัฐสุดา อ่วมแป้น',
+                    type: 'ทุนศึกษาต่อ/ฝึกอบรม ณ ต่างประเทศ',
+                    institution: 'McMaster University',
+                    country: 'แคนาดา',
+                    startDate: '2025-06-01',
+                    endDate: '2027-05-31',
+                    grantYears: 2,
+                    annualCap: 1500000,
+                    status: 'อยู่ระหว่างดำเนินการ',
+                    approvalDoc: '',
+                    note: ''
+                },
+                {
+                    id: 'SCH-002',
+                    name: 'อ.นพ.ภวิษณุ์ ผดุงศักดิ์สวัสดิ์',
+                    type: 'ทุนศึกษาต่อ/ฝึกอบรม ณ ต่างประเทศ',
+                    institution: 'Yong Loo Lin School of Medicine, National University of Singapore',
+                    country: 'สาธารณรัฐสิงคโปร์',
+                    startDate: '2025-08-11',
+                    endDate: '2027-08-10',
+                    grantYears: 2,
+                    annualCap: 1500000,
+                    status: 'อยู่ระหว่างดำเนินการ',
+                    approvalDoc: '',
+                    note: ''
+                },
+                {
+                    id: 'SCH-003',
+                    name: 'พญ.ณฤชนก เลิศกุศล',
+                    type: 'ทุนศึกษาต่อ/ฝึกอบรม ณ ต่างประเทศ',
+                    institution: 'Illinois Eye and Ear Infirmary, University of Illinois at Chicago',
+                    country: 'สหรัฐอเมริกา',
+                    startDate: '2025-07-07',
+                    endDate: '2026-07-06',
+                    grantYears: 1,
+                    annualCap: 1500000,
+                    status: 'อยู่ระหว่างดำเนินการ',
+                    approvalDoc: '',
+                    note: ''
+                }
+            ],
+            plans: [
+                {
+                    id: 'PL-001',
+                    scholarId: 'SCH-001',
+                    grantYear: 1,
+                    startDate: '2025-06-01',
+                    endDate: '2026-05-31',
+                    fiscalYear: 2568,
+                    maxCap: 1500000,
+                    principleCap: null,
+                    principleDate: '',
+                    note: ''
+                },
+                {
+                    id: 'PL-002',
+                    scholarId: 'SCH-001',
+                    grantYear: 2,
+                    startDate: '2026-06-01',
+                    endDate: '2027-05-31',
+                    fiscalYear: 2569,
+                    maxCap: 1500000,
+                    principleCap: null,
+                    principleDate: '',
+                    note: ''
+                },
+                {
+                    id: 'PL-003',
+                    scholarId: 'SCH-002',
+                    grantYear: 1,
+                    startDate: '2025-08-11',
+                    endDate: '2026-08-10',
+                    fiscalYear: 2568,
+                    maxCap: 1500000,
+                    principleCap: null,
+                    principleDate: '',
+                    note: ''
+                },
+                {
+                    id: 'PL-004',
+                    scholarId: 'SCH-002',
+                    grantYear: 2,
+                    startDate: '2026-08-11',
+                    endDate: '2027-08-10',
+                    fiscalYear: 2569,
+                    maxCap: 1500000,
+                    principleCap: null,
+                    principleDate: '',
+                    note: ''
+                },
+                {
+                    id: 'PL-005',
+                    scholarId: 'SCH-003',
+                    grantYear: 1,
+                    startDate: '2025-07-07',
+                    endDate: '2026-07-06',
+                    fiscalYear: 2568,
+                    maxCap: 1500000,
+                    principleCap: null,
+                    principleDate: '',
+                    note: ''
+                }
+            ],
+            expenses: [
+                {
+                    id: 'TX-0001',
+                    scholarId: 'SCH-001',
+                    round: 1,
+                    sapNo: '',
+                    paymentDate: '2025-06-30',
+                    manualGrantYear: '',
+                    subItem: 'ค่าธรรมเนียมวีซ่า',
+                    detail: 'ค่าธรรมเนียมvisa',
+                    periodStart: '',
+                    periodEnd: '',
+                    currency: 'THB',
+                    foreignAmount: null,
+                    exchangeRate: null,
+                    thbAmount: 5712.84,
+                    status: 'จ่ายแล้ว',
+                    paymentMethod: 'โอนเข้าบัญชีผู้รับทุน',
+                    dataSource: 'ย้ายจากชีตรายบุคคล (มีรายละเอียด)',
+                    note: ''
+                },
+                {
+                    id: 'TX-0002',
+                    scholarId: 'SCH-001',
+                    round: 1,
+                    sapNo: '',
+                    paymentDate: '2025-06-30',
+                    manualGrantYear: '',
+                    subItem: 'ค่าตั๋วโดยสารเครื่องบิน',
+                    detail: 'ค่าตั๋วโดยสารเครื่องบิน',
+                    periodStart: '',
+                    periodEnd: '',
+                    currency: 'THB',
+                    foreignAmount: null,
+                    exchangeRate: null,
+                    thbAmount: 45635.00,
+                    status: 'จ่ายแล้ว',
+                    paymentMethod: 'โอนเข้าบัญชีผู้รับทุน',
+                    dataSource: 'ย้ายจากชีตรายบุคคล (มีรายละเอียด)',
+                    note: ''
+                },
+                {
+                    id: 'TX-0003',
+                    scholarId: 'SCH-001',
+                    round: 1,
+                    sapNo: '',
+                    paymentDate: '2025-06-30',
+                    manualGrantYear: '',
+                    subItem: 'ค่าใช้จ่ายประจำเดือนเหมาจ่าย',
+                    detail: 'คชจ.ประจำเดือน ( 6 เดือน )',
+                    periodStart: '2025-06-01',
+                    periodEnd: '2025-11-30',
+                    currency: 'THB',
+                    foreignAmount: null,
+                    exchangeRate: null,
+                    thbAmount: 235296.04,
+                    status: 'จ่ายแล้ว',
+                    paymentMethod: 'โอนเข้าบัญชีผู้รับทุน',
+                    dataSource: 'ย้ายจากชีตรายบุคคล (มีรายละเอียด)',
+                    note: 'ช่วงเวลา 6 เดือนแรก'
+                },
+                {
+                    id: 'TX-0004',
+                    scholarId: 'SCH-001',
+                    round: 2,
+                    sapNo: '',
+                    paymentDate: '2025-12-15',
+                    manualGrantYear: '1',
+                    subItem: 'ค่าใช้จ่ายประจำเดือนเหมาจ่าย',
+                    detail: 'คชจ.ประจำเดือน งวดที่ 2',
+                    periodStart: '2025-12-01',
+                    periodEnd: '2026-05-31',
+                    currency: 'THB',
+                    foreignAmount: null,
+                    exchangeRate: null,
+                    thbAmount: 292242.86,
+                    status: 'จ่ายแล้ว',
+                    paymentMethod: 'โอนเข้าบัญชีผู้รับทุน',
+                    dataSource: 'ย้ายจากชีตรายบุคคล (มีรายละเอียด)',
+                    note: ''
+                },
+                {
+                    id: 'TX-0005',
+                    scholarId: 'SCH-002',
+                    round: 1,
+                    sapNo: '',
+                    paymentDate: '2025-08-20',
+                    manualGrantYear: '1',
+                    subItem: 'ค่าเล่าเรียน/ค่าลงทะเบียนฝึกอบรม',
+                    detail: 'ค่าธรรมเนียมฝึกอบรมและค่าครองชีพปีที่ 1',
+                    periodStart: '2025-08-11',
+                    periodEnd: '2026-08-10',
+                    currency: 'THB',
+                    foreignAmount: null,
+                    exchangeRate: null,
+                    thbAmount: 1376432.43,
+                    status: 'จ่ายแล้ว',
+                    paymentMethod: 'โอนเข้าบัญชีผู้รับทุน',
+                    dataSource: 'ย้ายจากชีตรายบุคคล (มีรายละเอียด)',
+                    note: ''
+                },
+                {
+                    id: 'TX-0006',
+                    scholarId: 'SCH-003',
+                    round: 1,
+                    sapNo: '',
+                    paymentDate: '2025-07-15',
+                    manualGrantYear: '1',
+                    subItem: 'ค่าใช้จ่ายประจำเดือนเหมาจ่าย',
+                    detail: 'ค่าครองชีพและค่าใช้จ่ายปีที่ 1',
+                    periodStart: '2025-07-07',
+                    periodEnd: '2026-07-06',
+                    currency: 'THB',
+                    foreignAmount: null,
+                    exchangeRate: null,
+                    thbAmount: 1031448.10,
+                    status: 'จ่ายแล้ว',
+                    paymentMethod: 'โอนเข้าบัญชีผู้รับทุน',
+                    dataSource: 'ย้ายจากชีตรายบุคคล (มีรายละเอียด)',
+                    note: ''
+                }
+            ]
+        };
+
+        let db = null;
+        let syncConfig = { url: '', token: 'SCHOLAR2026', pollInterval: 15000 };
+        let pollTimer = null;
+        let isSyncing = false;
+        let currentActiveTab = 'dashboard';
+        let chartComparisonInstance = null;
+        let chartCategoryInstance = null;
+
+        // ==========================================
+        // 2. LOCAL STORAGE & DATA LOADING
+        // ==========================================
+        function cloneDefaultData() {
+            return JSON.parse(JSON.stringify(DEFAULT_DATA));
+        }
+
+        function loadDB() {
+            try {
+                const saved = localStorage.getItem(STORAGE_KEY);
+                if (saved) {
+                    const parsed = JSON.parse(saved);
+                    db = {
+                        config: Object.assign({}, cloneDefaultData().config, parsed.config || {}),
+                        scholars: Array.isArray(parsed.scholars) ? parsed.scholars : [],
+                        plans: Array.isArray(parsed.plans) ? parsed.plans : [],
+                        expenses: Array.isArray(parsed.expenses) ? parsed.expenses : []
+                    };
+                } else {
+                    db = cloneDefaultData();
+                    saveDB();
+                }
+            } catch (e) {
+                console.error('Error loading DB:', e);
+                db = cloneDefaultData();
+            }
+
+            try {
+                const savedSync = localStorage.getItem(SYNC_CONFIG_KEY);
+                if (savedSync) {
+                    syncConfig = Object.assign({ url: '', token: 'SCHOLAR2026', pollInterval: 15000 }, JSON.parse(savedSync));
+                }
+            } catch (e) {
+                console.error('Error loading sync config:', e);
+            }
+        }
+
+        function saveDB() {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(db));
+            } catch (e) {
+                console.error('Error saving DB:', e);
+            }
+        }
+
+        function saveSyncConfig() {
+            try {
+                localStorage.setItem(SYNC_CONFIG_KEY, JSON.stringify(syncConfig));
+            } catch (e) {
+                console.error('Error saving sync config:', e);
+            }
+        }
+
+        // ==========================================
+        // 3. FORMULA & CALCULATION ENGINE
+        // ==========================================
+        function calcAcademicYear(dateStr) {
+            if (!dateStr) return null;
+            const d = new Date(dateStr);
+            if (isNaN(d)) return null;
+            const yearBE = d.getFullYear() + 543;
+            const month = d.getMonth() + 1;
+            const startMonth = parseInt(db.config.academicStartMonth) || 8;
+            return month < startMonth ? yearBE - 1 : yearBE;
+        }
+
+        function calcFiscalYear(dateStr) {
+            if (!dateStr) return null;
+            const d = new Date(dateStr);
+            if (isNaN(d)) return null;
+            const yearBE = d.getFullYear() + 543;
+            const month = d.getMonth() + 1;
+            return month >= 10 ? yearBE + 1 : yearBE;
+        }
+
+        function calcFiscalQuarter(dateStr) {
+            if (!dateStr) return null;
+            const d = new Date(dateStr);
+            if (isNaN(d)) return null;
+            const month = d.getMonth() + 1;
+            const shifted = ((month - 10 + 12) % 12) + 1;
+            return Math.ceil(shifted / 3);
+        }
+
+        function resolveEffectiveGrantYear(exp) {
+            if (exp.manualGrantYear !== '' && exp.manualGrantYear !== null && exp.manualGrantYear !== undefined) {
+                return parseInt(exp.manualGrantYear);
+            }
+            if (!exp.paymentDate || !exp.scholarId) return 1;
+            const payDate = new Date(exp.paymentDate);
+            const matchedPlan = db.plans.find(p => {
+                if (p.scholarId !== exp.scholarId) return false;
+                const s = new Date(p.startDate);
+                const e = new Date(p.endDate);
+                return payDate >= s && payDate <= e;
+            });
+            return matchedPlan ? parseInt(matchedPlan.grantYear) : 1;
+        }
+
+        function getCategoryForSubItem(subItem) {
+            return db.config.subItemMap[subItem] || '7. ค่าใช้จ่ายอื่นๆ';
+        }
+
+        function getScholarById(id) {
+            return db.scholars.find(s => s.id === id) || null;
+        }
+
+        function computePlanMetrics(plan) {
+            let paid = 0;
+            let pending = 0;
+            db.expenses.forEach(exp => {
+                if (exp.scholarId !== plan.scholarId) return;
+                const effYear = resolveEffectiveGrantYear(exp);
+                if (effYear !== parseInt(plan.grantYear)) return;
+                const amt = parseFloat(exp.thbAmount) || 0;
+                if (exp.status === 'จ่ายแล้ว') paid += amt;
+                else if (exp.status === 'อนุมัติแล้ว-รอจ่าย') pending += amt;
+            });
+            const maxCap = parseFloat(plan.maxCap) || 0;
+            const totalUsed = paid + pending;
+            const remaining = maxCap - totalUsed;
+            const pct = maxCap > 0 ? (totalUsed / maxCap) * 100 : 0;
+
+            let statusText = 'ปกติ';
+            let statusClass = 'bg-emerald-100 text-emerald-800';
+            if (pct > 100) {
+                statusText = 'เกินวงเงิน';
+                statusClass = 'bg-rose-100 text-rose-800';
+            } else if (pct >= 80) {
+                statusText = 'ใกล้เต็มวงเงิน';
+                statusClass = 'bg-amber-100 text-amber-800';
+            }
+
+            return {
+                academicYear: calcAcademicYear(plan.startDate),
+                paid,
+                pending,
+                totalUsed,
+                remaining,
+                pct,
+                statusText,
+                statusClass
+            };
+        }
+
+        function computeScholarMetrics(sch) {
+            const totalApproved = (parseFloat(sch.annualCap) || 0) * (parseInt(sch.grantYears) || 1);
+            let paid = 0;
+            let pending = 0;
+            db.expenses.forEach(exp => {
+                if (exp.scholarId !== sch.id) return;
+                const amt = parseFloat(exp.thbAmount) || 0;
+                if (exp.status === 'จ่ายแล้ว') paid += amt;
+                else if (exp.status === 'อนุมัติแล้ว-รอจ่าย') pending += amt;
+            });
+            const remaining = totalApproved - paid - pending;
+            const pct = totalApproved > 0 ? ((paid + pending) / totalApproved) * 100 : 0;
+            return {
+                academicYear: calcAcademicYear(sch.startDate),
+                totalApproved,
+                paid,
+                pending,
+                remaining,
+                pct
+            };
+        }
+
+        function auditExpense(exp) {
+            const issues = [];
+            if (!getScholarById(exp.scholarId)) issues.push('ไม่พบรหัสผู้รับทุน');
+            if (!(parseFloat(exp.thbAmount) > 0)) issues.push('ยอดเงินต้องมากกว่า 0');
+            const effYear = resolveEffectiveGrantYear(exp);
+            const plan = db.plans.find(p => p.scholarId === exp.scholarId && parseInt(p.grantYear) === effYear);
+            if (!plan) {
+                issues.push('ไม่พบแผนปีทุนที่ ' + effYear);
+            } else {
+                const m = computePlanMetrics(plan);
+                if (m.pct > 100) issues.push('เกินเพดานปีทุน');
+            }
+            return issues.length === 0 ? { ok: true, text: 'ถูกต้อง' } : { ok: false, text: issues.join(', ') };
+        }
+
+        // ==========================================
+        // 4. FORMATTING HELPERS
+        // ==========================================
+        function formatMoney(num) {
+            const n = parseFloat(num);
+            if (isNaN(n)) return '0.00';
+            return n.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        function formatThaiDate(dateStr) {
+            if (!dateStr) return '-';
+            const d = new Date(dateStr);
+            if (isNaN(d)) return dateStr;
+            const dd = String(d.getDate()).padStart(2, '0');
+            const mm = String(d.getMonth() + 1).padStart(2, '0');
+            const yyyy = d.getFullYear() + 543;
+            return `${dd}/${mm}/${yyyy}`;
+        }
+
+        function formatShortDateDMY(dateStr) {
+            if (!dateStr) return '-';
+            const d = new Date(dateStr);
+            if (isNaN(d)) return dateStr;
+            const dd = String(d.getDate()).padStart(2, '0');
+            const mm = String(d.getMonth() + 1).padStart(2, '0');
+            const yyyy = d.getFullYear();
+            return `${dd}/${mm}/${yyyy}`;
+        }
+
+        function getThaiMonthName(m) {
+            const names = ['', 'มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน', 'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
+            return names[parseInt(m)] || '';
+        }
+
+        function generateNextId(prefix, list, padLen) {
+            let maxNum = 0;
+            list.forEach(item => {
+                if (item.id && item.id.startsWith(prefix)) {
+                    const num = parseInt(item.id.replace(prefix, ''), 10);
+                    if (!isNaN(num) && num > maxNum) maxNum = num;
+                }
+            });
+            return prefix + String(maxNum + 1).padStart(padLen, '0');
+        }
+
+        // ==========================================
+        // 5. GOOGLE SHEETS TWO-WAY SYNC ENGINE
+        // ==========================================
+        function updateSyncStatusUI(state, message) {
+            const dot = document.getElementById('sync-dot');
+            const text = document.getElementById('sync-status-text');
+            const timeEl = document.getElementById('sync-last-time');
+            const cfgBadge = document.getElementById('cfg-connection-badge');
+            const icon = document.getElementById('sync-icon');
+
+            if (icon) {
+                if (state === 'syncing') icon.classList.add('animate-spin');
+                else icon.classList.remove('animate-spin');
+            }
+
+            if (state === 'connected') {
+                dot.className = 'w-2.5 h-2.5 rounded-full bg-emerald-400';
+                text.textContent = 'เชื่อมต่อ Google Sheets แล้ว';
+                timeEl.textContent = message || 'ซิงก์ล่าสุด: ' + new Date().toLocaleTimeString('th-TH');
+                if (cfgBadge) {
+                    cfgBadge.className = 'inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold';
+                    cfgBadge.innerHTML = '<span class="w-2 h-2 rounded-full bg-emerald-500"></span><span>เชื่อมต่อ Google Sheets สำเร็จ</span>';
+                }
+            } else if (state === 'syncing') {
+                dot.className = 'w-2.5 h-2.5 rounded-full bg-sky-400 animate-pulse';
+                text.textContent = 'กำลังซิงก์ข้อมูล...';
+                timeEl.textContent = message || 'รอการตอบกลับจาก Sheet';
+            } else if (state === 'error') {
+                dot.className = 'w-2.5 h-2.5 rounded-full bg-rose-500';
+                text.textContent = 'ซิงก์ไม่สำเร็จ';
+                timeEl.textContent = message || 'ตรวจสอบ URL / Token';
+                if (cfgBadge) {
+                    cfgBadge.className = 'inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs font-semibold';
+                    cfgBadge.innerHTML = '<span class="w-2 h-2 rounded-full bg-rose-500"></span><span>เชื่อมต่อไม่สำเร็จ</span>';
+                }
+            } else {
+                dot.className = 'w-2.5 h-2.5 rounded-full bg-amber-400';
+                text.textContent = 'โหมดออฟไลน์ (Local)';
+                timeEl.textContent = 'ยังไม่เชื่อมต่อ Sheet';
+                if (cfgBadge) {
+                    cfgBadge.className = 'inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-xs font-semibold';
+                    cfgBadge.innerHTML = '<span class="w-2 h-2 rounded-full bg-amber-500"></span><span>ยังไม่ได้ตั้งค่า Web App URL</span>';
+                }
+            }
+        }
+
+        async function syncFromGoogleSheets(manual = false) {
+            if (!syncConfig.url) {
+                if (manual) {
+                    showToast('กรุณาตั้งค่า Google Apps Script Web App URL ในแท็บที่ 6 ก่อนครับ', 'error');
+                    switchTab('config');
+                }
+                return;
+            }
+            if (isSyncing) return;
+            isSyncing = true;
+            updateSyncStatusUI('syncing');
+
+            try {
+                const sep = syncConfig.url.includes('?') ? '&' : '?';
+                const url = `${syncConfig.url}${sep}action=pull&token=${encodeURIComponent(syncConfig.token || '')}&t=${Date.now()}`;
+                const resp = await fetch(url, { method: 'GET', redirect: 'follow' });
+                if (!resp.ok) throw new Error('HTTP ' + resp.status);
+                const result = await resp.json();
+                if (!result.ok) throw new Error(result.error || 'Pull failed');
+
+                if (result.data) {
+                    if (Array.isArray(result.data.scholars)) db.scholars = result.data.scholars;
+                    if (Array.isArray(result.data.plans)) db.plans = result.data.plans;
+                    if (Array.isArray(result.data.expenses)) db.expenses = result.data.expenses;
+                    if (result.data.config) {
+                        db.config = Object.assign({}, db.config, result.data.config);
+                    }
+                    saveDB();
+                    populateDropdowns();
+                    renderActiveView();
+                }
+
+                updateSyncStatusUI('connected');
+                if (manual) showToast('ดึงข้อมูลล่าสุดจาก Google Sheets เรียบร้อยแล้ว');
+            } catch (err) {
+                console.error('Sync pull error:', err);
+                updateSyncStatusUI('error', err.message);
+                if (manual) showToast('ดึงข้อมูลไม่สำเร็จ: ' + err.message, 'error');
+            } finally {
+                isSyncing = false;
+            }
+        }
+
+        async function pushMutationToSheets(action, payload) {
+            if (!syncConfig.url) return;
+            updateSyncStatusUI('syncing', 'กำลังบันทึกลง Google Sheets...');
+            try {
+                const resp = await fetch(syncConfig.url, {
+                    method: 'POST',
+                    redirect: 'follow',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify({
+                        token: syncConfig.token || '',
+                        action: action,
+                        payload: payload
+                    })
+                });
+                const result = await resp.json();
+                if (!result.ok) throw new Error(result.error || 'Push failed');
+                updateSyncStatusUI('connected', 'บันทึกลง Sheet แล้ว: ' + new Date().toLocaleTimeString('th-TH'));
+            } catch (err) {
+                console.error('Push error:', err);
+                updateSyncStatusUI('error', 'บันทึก Local แล้ว แต่ส่งขึ้น Sheet ไม่สำเร็จ');
+                showToast('บันทึกในเครื่องแล้ว แต่ส่งขึ้น Google Sheets ไม่สำเร็จ: ' + err.message, 'error');
+            }
+        }
+
+        function startAutoPoll() {
+            if (pollTimer) clearInterval(pollTimer);
+            const interval = parseInt(syncConfig.pollInterval) || 0;
+            if (syncConfig.url && interval > 0) {
+                pollTimer = setInterval(() => {
+                    if (!document.hidden) syncFromGoogleSheets(false);
+                }, interval);
+            }
+        }
+
+        async function saveGoogleSheetsSettings() {
+            const url = document.getElementById('cfg-gas-url').value.trim();
+            const token = document.getElementById('cfg-gas-token').value.trim();
+            const interval = parseInt(document.getElementById('cfg-poll-interval').value) || 0;
+
+            if (!url || !url.startsWith('https://script.google.com/')) {
+                showToast('กรุณากรอก Google Apps Script Web App URL ที่ขึ้นต้นด้วย https://script.google.com/', 'error');
+                return;
+            }
+
+            syncConfig = { url, token, pollInterval: interval };
+            saveSyncConfig();
+            startAutoPoll();
+            await syncFromGoogleSheets(true);
+        }
+
+        function pushAllLocalToSheets() {
+            if (!syncConfig.url) {
+                showToast('กรุณาบันทึก Web App URL ก่อนส่งข้อมูลขึ้น Google Sheets', 'error');
+                return;
+            }
+            showConfirmModal(
+                'ยืนยันการส่งข้อมูลทั้งหมดขึ้น Google Sheets',
+                'ระบบจะนำข้อมูลผู้รับทุน แผนวงเงิน และค่าใช้จ่ายทั้งหมดในหน้าเว็บ ส่งไปอัปเดตลงใน Google Sheets (โดยไม่ทำลายคอลัมน์สูตร) ต้องการดำเนินการต่อหรือไม่?',
+                async () => {
+                    await pushMutationToSheets('pushAll', {
+                        scholars: db.scholars,
+                        plans: db.plans,
+                        expenses: db.expenses
+                    });
+                    showToast('ส่งข้อมูลทั้งหมดขึ้น Google Sheets เรียบร้อยแล้ว');
+                }
+            );
+        }
+
+        function disconnectGoogleSheets() {
+            showConfirmModal(
+                'ยกเลิกการเชื่อมต่อ Google Sheets',
+                'ต้องการยกเลิกการเชื่อมต่อกับ Google Sheets และกลับไปใช้โหมดออฟไลน์ (Local Storage) หรือไม่?',
+                () => {
+                    syncConfig.url = '';
+                    saveSyncConfig();
+                    if (pollTimer) clearInterval(pollTimer);
+                    document.getElementById('cfg-gas-url').value = '';
+                    updateSyncStatusUI('offline');
+                    showToast('ยกเลิกการเชื่อมต่อ Google Sheets แล้ว');
+                }
+            );
+        }
+
+        // ==========================================
+        // 6. NAVIGATION, MODAL & TOAST UI
+        // ==========================================
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            const bg = type === 'error' ? 'bg-rose-600' : 'bg-navy-900';
+            const icon = type === 'error' ? 'alert-circle' : 'check-circle-2';
+            toast.className = `${bg} text-white px-4 py-3 rounded-xl shadow-lg text-xs sm:text-sm flex items-center gap-2.5 max-w-sm border border-white/10 transition-all duration-300`;
+            toast.innerHTML = `<i data-lucide="${icon}" class="w-4 h-4 shrink-0 text-sky-300"></i><span>${message}</span>`;
+            container.appendChild(toast);
+            lucide.createIcons();
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-2');
+                setTimeout(() => toast.remove(), 300);
+            }, 3500);
+        }
+
+        let modalConfirmCallback = null;
+        function showConfirmModal(title, message, onConfirm) {
+            document.getElementById('modal-title').textContent = title;
+            document.getElementById('modal-message').textContent = message;
+            modalConfirmCallback = onConfirm;
+            const modal = document.getElementById('custom-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeConfirmModal() {
+            const modal = document.getElementById('custom-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            modalConfirmCallback = null;
+        }
+
+        document.getElementById('modal-cancel-btn').addEventListener('click', closeConfirmModal);
+        document.getElementById('modal-confirm-btn').addEventListener('click', () => {
+            if (typeof modalConfirmCallback === 'function') modalConfirmCallback();
+            closeConfirmModal();
+        });
+
+        function renderActiveView() {
+            if (currentActiveTab === 'dashboard') renderDashboard();
+            if (currentActiveTab === 'summary') renderSummaryReport();
+            if (currentActiveTab === 'register') renderRegister();
+            if (currentActiveTab === 'plans') renderPlans();
+            if (currentActiveTab === 'expenses') {
+                renderExpensesTable();
+                updateExpenseLivePreview();
+            }
+            if (currentActiveTab === 'config') renderConfig();
+        }
+
+        function switchTab(tabName) {
+            currentActiveTab = tabName;
+            const views = ['dashboard', 'summary', 'register', 'plans', 'expenses', 'config'];
+            views.forEach(v => {
+                document.getElementById(`view-${v}`).classList.add('hidden');
+                const btn = document.getElementById(`tab-${v}`);
+                btn.classList.remove('border-sky-400', 'text-white');
+                btn.classList.add('border-transparent', 'text-sky-200');
+            });
+
+            document.getElementById(`view-${tabName}`).classList.remove('hidden');
+            const activeBtn = document.getElementById(`tab-${tabName}`);
+            activeBtn.classList.remove('border-transparent', 'text-sky-200');
+            activeBtn.classList.add('border-sky-400', 'text-white');
+
+            populateDropdowns();
+            renderActiveView();
+            lucide.createIcons();
+        }
+
+        // ==========================================
+        // 7. POPULATE DROPDOWNS
+        // ==========================================
+        function populateDropdowns() {
+            // Scholarship types
+            const schTypeSel = document.getElementById('sch-type');
+            if (schTypeSel) {
+                const prev = schTypeSel.value;
+                schTypeSel.innerHTML = db.config.scholarshipTypes.map(t => `<option value="${t}">${t}</option>`).join('');
+                if (prev && db.config.scholarshipTypes.includes(prev)) schTypeSel.value = prev;
+            }
+
+            // Summary filter types
+            const sumTypeSel = document.getElementById('sum-filter-type');
+            if (sumTypeSel) {
+                const prev = sumTypeSel.value;
+                const allTypes = Array.from(new Set([
+                    ...db.config.scholarshipTypes,
+                    ...db.scholars.map(s => s.type).filter(Boolean)
+                ]));
+                sumTypeSel.innerHTML = `<option value="ALL">ทั้งหมด</option>` + allTypes.map(t => `<option value="${t}">${t}</option>`).join('');
+                if (prev && (prev === 'ALL' || allTypes.includes(prev))) sumTypeSel.value = prev;
+            }
+
+            // Scholars selects
+            const scholarOptions = db.scholars.map(s => `<option value="${s.id}">${s.id} - ${s.name}</option>`).join('');
+            ['plan-sch-id', 'exp-sch-id'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    const prev = el.value;
+                    el.innerHTML = scholarOptions || '<option value="">-- ยังไม่มีข้อมูลผู้รับทุน --</option>';
+                    if (prev && db.scholars.some(s => s.id === prev)) el.value = prev;
+                }
+            });
+
+            const expFilterSch = document.getElementById('exp-filter-sch');
+            if (expFilterSch) {
+                const prev = expFilterSch.value;
+                expFilterSch.innerHTML = `<option value="ALL">ผู้รับทุนทั้งหมด</option>` + scholarOptions;
+                if (prev) expFilterSch.value = prev;
+            }
+
+            // Sub-items
+            const subItems = Object.keys(db.config.subItemMap);
+            const expSub = document.getElementById('exp-subitem');
+            if (expSub) {
+                const prev = expSub.value;
+                expSub.innerHTML = subItems.map(s => `<option value="${s}">${s}</option>`).join('');
+                if (prev && subItems.includes(prev)) expSub.value = prev;
+            }
+
+            // Currencies
+            const expCur = document.getElementById('exp-currency');
+            if (expCur) {
+                const prev = expCur.value;
+                expCur.innerHTML = db.config.currencies.map(c => `<option value="${c}">${c}</option>`).join('');
+                expCur.value = prev && db.config.currencies.includes(prev) ? prev : 'THB';
+                handleCurrencyChange();
+            }
+
+            // Statuses
+            const expStatus = document.getElementById('exp-status');
+            if (expStatus) {
+                const prev = expStatus.value;
+                expStatus.innerHTML = db.config.statuses.map(s => `<option value="${s}">${s}</option>`).join('');
+                expStatus.value = prev && db.config.statuses.includes(prev) ? prev : 'จ่ายแล้ว';
+            }
+
+            const expFilterStatus = document.getElementById('exp-filter-status');
+            if (expFilterStatus) {
+                const prev = expFilterStatus.value;
+                expFilterStatus.innerHTML = `<option value="ALL">ทุกสถานะ</option>` + db.config.statuses.map(s => `<option value="${s}">${s}</option>`).join('');
+                if (prev) expFilterStatus.value = prev;
+            }
+
+            // Payment Methods
+            const expMethod = document.getElementById('exp-method');
+            if (expMethod) {
+                const prev = expMethod.value;
+                expMethod.innerHTML = db.config.paymentMethods.map(m => `<option value="${m}">${m}</option>`).join('');
+                if (prev && db.config.paymentMethods.includes(prev)) expMethod.value = prev;
+            }
+
+            // Data Sources
+            const expSource = document.getElementById('exp-source');
+            if (expSource) {
+                const prev = expSource.value;
+                expSource.innerHTML = db.config.dataSources.map(d => `<option value="${d}">${d}</option>`).join('');
+                if (prev && db.config.dataSources.includes(prev)) expSource.value = prev;
+            }
+
+            // Config new subitem category
+            const cfgCat = document.getElementById('cfg-new-subitem-cat');
+            if (cfgCat) {
+                cfgCat.innerHTML = db.config.categories.map(c => `<option value="${c}">${c}</option>`).join('');
+            }
+        }
+
+        // ==========================================
+        // 8. DASHBOARD RENDERING
+        // ==========================================
+        function renderDashboard() {
+            const acadFilter = document.getElementById('dash-filter-acad').value;
+            const fiscalFilter = document.getElementById('dash-filter-fiscal').value;
+            document.getElementById('dash-acad-month-label').textContent = getThaiMonthName(db.config.academicStartMonth);
+
+            const filteredPlans = db.plans.filter(p => {
+                const acad = String(calcAcademicYear(p.startDate));
+                const fy = String(p.fiscalYear);
+                const matchAcad = acadFilter === 'ALL' || acad === acadFilter;
+                const matchFy = fiscalFilter === 'ALL' || fy === fiscalFilter;
+                return matchAcad && matchFy;
+            });
+
+            let totalBudget = 0;
+            let totalPaid = 0;
+            let totalPending = 0;
+
+            const tbody = document.getElementById('dashboard-plan-tbody');
+            if (filteredPlans.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="10" class="py-8 text-center text-slate-400">ไม่พบแผนวงเงินตามเงื่อนไขที่เลือก</td></tr>`;
+            } else {
+                tbody.innerHTML = filteredPlans.map(p => {
+                    const sch = getScholarById(p.scholarId);
+                    const m = computePlanMetrics(p);
+                    totalBudget += parseFloat(p.maxCap) || 0;
+                    totalPaid += m.paid;
+                    totalPending += m.pending;
+
+                    return `
+                        <tr class="hover:bg-slate-50 transition">
+                            <td class="py-3 px-4 font-mono text-xs font-semibold text-navy-800">${p.id}</td>
+                            <td class="py-3 px-4 font-semibold text-slate-800">${sch ? sch.name : p.scholarId}</td>
+                            <td class="py-3 px-4 text-center"><span class="bg-slate-100 px-2 py-0.5 rounded-lg text-xs font-semibold">ปี ${p.grantYear}</span></td>
+                            <td class="py-3 px-4 text-center text-xs text-slate-600">${m.academicYear || '-'} / ${p.fiscalYear || '-'}</td>
+                            <td class="py-3 px-4 text-right tabular-nums">${formatMoney(p.maxCap)}</td>
+                            <td class="py-3 px-4 text-right tabular-nums text-emerald-700 font-medium">${formatMoney(m.paid)}</td>
+                            <td class="py-3 px-4 text-right tabular-nums text-amber-600">${formatMoney(m.pending)}</td>
+                            <td class="py-3 px-4 text-right tabular-nums font-semibold ${m.remaining < 0 ? 'text-rose-600' : 'text-sky-700'}">${formatMoney(m.remaining)}</td>
+                            <td class="py-3 px-4 text-right tabular-nums font-bold">${m.pct.toFixed(1)}%</td>
+                            <td class="py-3 px-4 text-center"><span class="px-2.5 py-1 rounded-full text-xs font-semibold ${m.statusClass}">${m.statusText}</span></td>
+                        </tr>
+                    `;
+                }).join('');
+            }
+
+            const totalRemaining = totalBudget - totalPaid - totalPending;
+            const paidPct = totalBudget > 0 ? (totalPaid / totalBudget) * 100 : 0;
+            const remPct = totalBudget > 0 ? (totalRemaining / totalBudget) * 100 : 0;
+
+            document.getElementById('kpi-total-budget').textContent = formatMoney(totalBudget);
+            document.getElementById('kpi-total-paid').textContent = formatMoney(totalPaid);
+            document.getElementById('kpi-paid-pct').textContent = `คิดเป็น ${paidPct.toFixed(1)}% ของวงเงิน`;
+            document.getElementById('kpi-total-pending').textContent = formatMoney(totalPending);
+            document.getElementById('kpi-total-remaining').textContent = formatMoney(totalRemaining);
+            document.getElementById('kpi-rem-pct').textContent = `คงเหลือ ${remPct.toFixed(1)}%`;
+
+            renderDashboardCharts(filteredPlans);
+        }
+
+        function renderDashboardCharts(filteredPlans) {
+            try {
+                // 1. Scholar Comparison Bar Chart
+                const scholarMap = {};
+                filteredPlans.forEach(p => {
+                    const sch = getScholarById(p.scholarId);
+                    const label = sch ? sch.name.split(' ')[0] : p.scholarId;
+                    if (!scholarMap[p.scholarId]) {
+                        scholarMap[p.scholarId] = { label, budget: 0, used: 0 };
+                    }
+                    const m = computePlanMetrics(p);
+                    scholarMap[p.scholarId].budget += parseFloat(p.maxCap) || 0;
+                    scholarMap[p.scholarId].used += m.totalUsed;
+                });
+
+                const labels = Object.values(scholarMap).map(x => x.label);
+                const budgets = Object.values(scholarMap).map(x => x.budget);
+                const useds = Object.values(scholarMap).map(x => x.used);
+
+                const ctx1 = document.getElementById('chart-scholar-comparison').getContext('2d');
+                if (chartComparisonInstance) chartComparisonInstance.destroy();
+                chartComparisonInstance = new Chart(ctx1, {
+                    type: 'bar',
+                    data: {
+                        labels,
+                        datasets: [
+                            { label: 'วงเงินอนุมัติ (บาท)', data: budgets, backgroundColor: '#cbd5e1', borderRadius: 6 },
+                            { label: 'ใช้ไป/ผูกพัน (บาท)', data: useds, backgroundColor: '#0284c7', borderRadius: 6 }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { position: 'bottom' } },
+                        scales: { y: { beginAtZero: true } }
+                    }
+                });
+
+                // 2. Category Breakdown Doughnut Chart
+                const catTotals = {};
+                const validKeys = new Set(filteredPlans.map(p => `${p.scholarId}_${p.grantYear}`));
+                db.expenses.forEach(exp => {
+                    if (exp.status !== 'จ่ายแล้ว' && exp.status !== 'อนุมัติแล้ว-รอจ่าย') return;
+                    const key = `${exp.scholarId}_${resolveEffectiveGrantYear(exp)}`;
+                    if (filteredPlans.length > 0 && !validKeys.has(key)) return;
+                    const cat = getCategoryForSubItem(exp.subItem);
+                    catTotals[cat] = (catTotals[cat] || 0) + (parseFloat(exp.thbAmount) || 0);
+                });
+
+                const catLabels = Object.keys(catTotals);
+                const catValues = Object.values(catTotals);
+                const ctx2 = document.getElementById('chart-category-breakdown').getContext('2d');
+                if (chartCategoryInstance) chartCategoryInstance.destroy();
+                chartCategoryInstance = new Chart(ctx2, {
+                    type: 'doughnut',
+                    data: {
+                        labels: catLabels.length ? catLabels : ['ยังไม่มีข้อมูล'],
+                        datasets: [{
+                            data: catValues.length ? catValues : [1],
+                            backgroundColor: catValues.length
+                                ? ['#0284c7', '#10b981', '#f59e0b', '#6366f1', '#ec4899', '#14b8a6', '#64748b']
+                                : ['#e2e8f0']
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } } }
+                    }
+                });
+            } catch (err) {
+                console.error('Chart render error:', err);
+            }
+        }
+
+        // ==========================================
+        // 9. SUMMARY REPORT BY INSTALLMENT (10 COLUMNS)
+        // ==========================================
+        function getSummaryReportRows() {
+            const searchEl = document.getElementById('sum-search');
+            const typeEl = document.getElementById('sum-filter-type');
+            const modeEl = document.getElementById('sum-fiscal-mode');
+
+            const search = searchEl ? searchEl.value.trim().toLowerCase() : '';
+            const typeFilter = typeEl ? typeEl.value : 'ALL';
+            const fiscalMode = modeEl ? modeEl.value : 'payment';
+
+            const filteredScholars = db.scholars.filter(sch => {
+                const matchSearch = !search ||
+                    sch.name.toLowerCase().includes(search) ||
+                    sch.id.toLowerCase().includes(search);
+                const matchType = typeFilter === 'ALL' || sch.type === typeFilter;
+                return matchSearch && matchType;
+            });
+
+            return filteredScholars.map((sch, idx) => {
+                const plan2568 = db.plans
+                    .filter(p => p.scholarId === sch.id && parseInt(p.fiscalYear) === 2568)
+                    .reduce((sum, p) => sum + (parseFloat(p.maxCap) || 0), 0);
+
+                const plan2569 = db.plans
+                    .filter(p => p.scholarId === sch.id && parseInt(p.fiscalYear) === 2569)
+                    .reduce((sum, p) => sum + (parseFloat(p.maxCap) || 0), 0);
+
+                let fy68_r1 = 0;
+                let fy68_r2 = 0;
+                let fy69_r1 = 0;
+                let fy69_r2 = 0;
+
+                db.expenses.forEach(exp => {
+                    if (exp.scholarId !== sch.id) return;
+                    if (exp.status === 'ร่าง' || exp.status === 'ยกเลิก') return;
+
+                    let fy = calcFiscalYear(exp.paymentDate);
+                    if (fiscalMode === 'plan') {
+                        const effYear = resolveEffectiveGrantYear(exp);
+                        const matchedPlan = db.plans.find(p => p.scholarId === sch.id && parseInt(p.grantYear) === effYear);
+                        if (matchedPlan && matchedPlan.fiscalYear) {
+                            fy = parseInt(matchedPlan.fiscalYear);
+                        }
+                    }
+
+                    const amt = parseFloat(exp.thbAmount) || 0;
+                    const round = parseInt(exp.round) || 1;
+
+                    if (fy === 2568) {
+                        if (round === 1) fy68_r1 += amt;
+                        else if (round >= 2) fy68_r2 += amt;
+                    } else if (fy === 2569) {
+                        if (round === 1) fy69_r1 += amt;
+                        else if (round >= 2) fy69_r2 += amt;
+                    }
+                });
+
+                const durationText = `${formatShortDateDMY(sch.startDate)} - ${formatShortDateDMY(sch.endDate)} (${sch.grantYears} ปี)`;
+                const totalPlan = plan2568 + plan2569;
+                const totalDisbursed = fy68_r1 + fy68_r2 + fy69_r1 + fy69_r2;
+
+                return {
+                    index: idx + 1,
+                    id: sch.id,
+                    name: sch.name,
+                    annualCap: parseFloat(sch.annualCap) || 0,
+                    duration: durationText,
+                    plan2568,
+                    fy68_r1,
+                    fy68_r2,
+                    plan2569,
+                    fy69_r1,
+                    fy69_r2,
+                    totalPlan,
+                    totalDisbursed
+                };
+            });
+        }
+
+        function renderSummaryReport() {
+            const rows = getSummaryReportRows();
+            const tbody = document.getElementById('summary-tbody');
+            const tfoot = document.getElementById('summary-tfoot');
+            const subtitle = document.getElementById('summary-subtitle');
+            const mode = document.getElementById('sum-fiscal-mode') ? document.getElementById('sum-fiscal-mode').value : 'payment';
+
+            if (subtitle) {
+                subtitle.textContent = mode === 'payment'
+                    ? 'เกณฑ์การคำนวณ: ยึดตามปีงบประมาณจ่ายจริง (วันที่จ่าย) • ไม่รวมรายการสถานะ ร่าง/ยกเลิก'
+                    : 'เกณฑ์การคำนวณ: ยึดตามปีงบประมาณผูกพัน (แผนปีทุน) • ไม่รวมรายการสถานะ ร่าง/ยกเลิก';
+            }
+
+            if (rows.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="12" class="py-10 text-center text-slate-400">ไม่พบข้อมูลผู้รับทุนที่ตรงตามเงื่อนไขการค้นหา</td></tr>`;
+                tfoot.innerHTML = '';
+                return;
+            }
+
+            const totals = { annualCap: 0, plan2568: 0, fy68_r1: 0, fy68_r2: 0, plan2569: 0, fy69_r1: 0, fy69_r2: 0, totalPlan: 0, totalDisbursed: 0 };
+            const fmtCell = (val) => val > 0 ? formatMoney(val) : '<span class="text-slate-300">-</span>';
+
+            tbody.innerHTML = rows.map(r => {
+                totals.annualCap += r.annualCap;
+                totals.plan2568 += r.plan2568;
+                totals.fy68_r1 += r.fy68_r1;
+                totals.fy68_r2 += r.fy68_r2;
+                totals.plan2569 += r.plan2569;
+                totals.fy69_r1 += r.fy69_r1;
+                totals.fy69_r2 += r.fy69_r2;
+                totals.totalPlan += r.totalPlan;
+                totals.totalDisbursed += r.totalDisbursed;
+
+                return `
+                    <tr class="hover:bg-slate-50 transition">
+                        <td class="py-3 px-3 text-center font-semibold text-slate-600 border-r border-slate-100">${r.index}</td>
+                        <td class="py-3 px-3 font-semibold text-navy-900 border-r border-slate-100">
+                            <div>${r.name}</div>
+                            <div class="text-[10px] font-normal text-slate-400">${r.id}</div>
+                        </td>
+                        <td class="py-3 px-3 text-right tabular-nums font-medium text-slate-700 border-r border-slate-100">${formatMoney(r.annualCap)}</td>
+                        <td class="py-3 px-3 text-center text-xs text-slate-600 whitespace-nowrap border-r border-slate-100">${r.duration}</td>
+                        <td class="py-3 px-3 text-right tabular-nums font-semibold text-sky-900 bg-sky-50/30 border-r border-slate-100">${fmtCell(r.plan2568)}</td>
+                        <td class="py-3 px-3 text-right tabular-nums text-emerald-700 font-medium border-r border-slate-100">${fmtCell(r.fy68_r1)}</td>
+                        <td class="py-3 px-3 text-right tabular-nums text-emerald-700 font-medium border-r border-slate-100">${fmtCell(r.fy68_r2)}</td>
+                        <td class="py-3 px-3 text-right tabular-nums font-semibold text-indigo-900 bg-indigo-50/30 border-r border-slate-100">${fmtCell(r.plan2569)}</td>
+                        <td class="py-3 px-3 text-right tabular-nums text-emerald-700 font-medium border-r border-slate-100">${fmtCell(r.fy69_r1)}</td>
+                        <td class="py-3 px-3 text-right tabular-nums text-emerald-700 font-medium border-r border-slate-100">${fmtCell(r.fy69_r2)}</td>
+                        <td class="py-3 px-3 text-right tabular-nums font-bold text-navy-900 bg-navy-50/50 border-r border-slate-100">${fmtCell(r.totalPlan)}</td>
+                        <td class="py-3 px-3 text-right tabular-nums font-bold text-emerald-800 bg-emerald-50/40">${fmtCell(r.totalDisbursed)}</td>
+                    </tr>
+                `;
+            }).join('');
+
+            tfoot.innerHTML = `
+                <tr>
+                    <td colspan="2" class="py-3.5 px-3 text-center border-r border-slate-200">รวมทั้งหมด (${rows.length} ราย)</td>
+                    <td class="py-3.5 px-3 text-right tabular-nums border-r border-slate-200">${formatMoney(totals.annualCap)}</td>
+                    <td class="py-3.5 px-3 text-center border-r border-slate-200">-</td>
+                    <td class="py-3.5 px-3 text-right tabular-nums text-sky-900 border-r border-slate-200">${formatMoney(totals.plan2568)}</td>
+                    <td class="py-3.5 px-3 text-right tabular-nums text-emerald-800 border-r border-slate-200">${formatMoney(totals.fy68_r1)}</td>
+                    <td class="py-3.5 px-3 text-right tabular-nums text-emerald-800 border-r border-slate-200">${formatMoney(totals.fy68_r2)}</td>
+                    <td class="py-3.5 px-3 text-right tabular-nums text-indigo-900 border-r border-slate-200">${formatMoney(totals.plan2569)}</td>
+                    <td class="py-3.5 px-3 text-right tabular-nums text-emerald-800 border-r border-slate-200">${formatMoney(totals.fy69_r1)}</td>
+                    <td class="py-3.5 px-3 text-right tabular-nums text-emerald-800 border-r border-slate-200">${formatMoney(totals.fy69_r2)}</td>
+                    <td class="py-3.5 px-3 text-right tabular-nums font-extrabold text-navy-950 bg-navy-100/60 border-r border-slate-200">${formatMoney(totals.totalPlan)}</td>
+                    <td class="py-3.5 px-3 text-right tabular-nums font-extrabold text-emerald-900 bg-emerald-100/60">${formatMoney(totals.totalDisbursed)}</td>
+                </tr>
+            `;
+            lucide.createIcons();
+        }
+
+        function exportSummaryCSV() {
+            const rows = getSummaryReportRows();
+            const headers = [
+                'ที่', 'ชื่อ-สกุล', 'อนุมัติทุน/ปี', 'ระยะเวลา',
+                'ทุน 2568', 'ปีงบประมาณ 2568 งวดที่ 1', 'ปีงบประมาณ 2568 งวดที่ 2',
+                'ทุน', 'ปีงบประมาณ 2569 งวดที่ 1', 'ปีงบประมาณ 2569 งวดที่ 2',
+                'รวมทุน', 'รวมเงินเบิกจ่าย'
+            ];
+
+            const totals = { annualCap: 0, plan2568: 0, fy68_r1: 0, fy68_r2: 0, plan2569: 0, fy69_r1: 0, fy69_r2: 0, totalPlan: 0, totalDisbursed: 0 };
+            const csvRows = rows.map(r => {
+                totals.annualCap += r.annualCap;
+                totals.plan2568 += r.plan2568;
+                totals.fy68_r1 += r.fy68_r1;
+                totals.fy68_r2 += r.fy68_r2;
+                totals.plan2569 += r.plan2569;
+                totals.fy69_r1 += r.fy69_r1;
+                totals.fy69_r2 += r.fy69_r2;
+                totals.totalPlan += r.totalPlan;
+                totals.totalDisbursed += r.totalDisbursed;
+
+                return [
+                    r.index, r.name, r.annualCap.toFixed(2), r.duration,
+                    r.plan2568.toFixed(2), r.fy68_r1.toFixed(2), r.fy68_r2.toFixed(2),
+                    r.plan2569.toFixed(2), r.fy69_r1.toFixed(2), r.fy69_r2.toFixed(2),
+                    r.totalPlan.toFixed(2), r.totalDisbursed.toFixed(2)
+                ].map(val => `"${String(val).replace(/"/g, '""')}"`).join(',');
+            });
+
+            const totalRow = [
+                '', 'รวมทั้งหมด', totals.annualCap.toFixed(2), '',
+                totals.plan2568.toFixed(2), totals.fy68_r1.toFixed(2), totals.fy68_r2.toFixed(2),
+                totals.plan2569.toFixed(2), totals.fy69_r1.toFixed(2), totals.fy69_r2.toFixed(2),
+                totals.totalPlan.toFixed(2), totals.totalDisbursed.toFixed(2)
+            ].map(val => `"${String(val).replace(/"/g, '""')}"`).join(',');
+
+            const csvContent = '\uFEFF' + [headers.join(','), ...csvRows, totalRow].join('\n');
+            downloadTextFile(csvContent, `สรุปการเบิกจ่ายเงินทุนพัฒนาบุคลากร_${new Date().toISOString().split('T')[0]}.csv`, 'text/csv;charset=utf-8;');
+            showToast('ส่งออกตารางสรุปการเบิกจ่าย (CSV) เรียบร้อยแล้ว');
+        }
+
+        // ==========================================
+        // 10. REGISTER (SCHOLARS) CRUD
+        // ==========================================
+        function toggleScholarForm(show) {
+            const card = document.getElementById('scholar-form-card');
+            const isHidden = card.classList.contains('hidden');
+            const shouldShow = show !== undefined ? show : isHidden;
+
+            if (shouldShow) {
+                populateDropdowns();
+                if (!document.getElementById('sch-edit-mode').value) {
+                    document.getElementById('scholar-form').reset();
+                    document.getElementById('sch-id').value = generateNextId('SCH-', db.scholars, 3);
+                    document.getElementById('sch-id').readOnly = false;
+                    document.getElementById('scholar-form-title').textContent = 'เพิ่มข้อมูลผู้รับทุนรายใหม่';
+                    document.getElementById('auto-create-plans-wrapper').classList.remove('hidden');
+                }
+                card.classList.remove('hidden');
+            } else {
+                card.classList.add('hidden');
+                document.getElementById('sch-edit-mode').value = '';
+                document.getElementById('sch-id').readOnly = false;
+            }
+        }
+
+        function editScholar(id) {
+            const sch = getScholarById(id);
+            if (!sch) return;
+            populateDropdowns();
+            document.getElementById('sch-edit-mode').value = sch.id;
+            document.getElementById('sch-id').value = sch.id;
+            document.getElementById('sch-id').readOnly = true;
+            document.getElementById('sch-name').value = sch.name;
+            document.getElementById('sch-type').value = sch.type;
+            document.getElementById('sch-institution').value = sch.institution;
+            document.getElementById('sch-country').value = sch.country;
+            document.getElementById('sch-status').value = sch.status;
+            document.getElementById('sch-start').value = sch.startDate;
+            document.getElementById('sch-end').value = sch.endDate;
+            document.getElementById('sch-years').value = sch.grantYears;
+            document.getElementById('sch-annual-cap').value = sch.annualCap;
+            document.getElementById('sch-approval-doc').value = sch.approvalDoc || '';
+            document.getElementById('sch-note').value = sch.note || '';
+            document.getElementById('scholar-form-title').textContent = 'แก้ไขข้อมูลผู้รับทุน: ' + sch.id;
+            document.getElementById('auto-create-plans-wrapper').classList.add('hidden');
+            document.getElementById('scholar-form-card').classList.remove('hidden');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        async function saveScholar(e) {
+            e.preventDefault();
+            const editId = document.getElementById('sch-edit-mode').value;
+            const schObj = {
+                id: document.getElementById('sch-id').value.trim(),
+                name: document.getElementById('sch-name').value.trim(),
+                type: document.getElementById('sch-type').value,
+                institution: document.getElementById('sch-institution').value.trim(),
+                country: document.getElementById('sch-country').value.trim(),
+                status: document.getElementById('sch-status').value,
+                startDate: document.getElementById('sch-start').value,
+                endDate: document.getElementById('sch-end').value,
+                grantYears: parseInt(document.getElementById('sch-years').value) || 1,
+                annualCap: parseFloat(document.getElementById('sch-annual-cap').value) || 0,
+                approvalDoc: document.getElementById('sch-approval-doc').value.trim(),
+                note: document.getElementById('sch-note').value.trim()
+            };
+
+            if (editId) {
+                const idx = db.scholars.findIndex(s => s.id === editId);
+                if (idx >= 0) db.scholars[idx] = schObj;
+            } else {
+                if (db.scholars.some(s => s.id === schObj.id)) {
+                    showToast('รหัสผู้รับทุนซ้ำ กรุณาใช้รหัสอื่น', 'error');
+                    return;
+                }
+                db.scholars.push(schObj);
+
+                if (document.getElementById('sch-auto-plans').checked) {
+                    const startBase = new Date(schObj.startDate);
+                    for (let y = 1; y <= schObj.grantYears; y++) {
+                        const sDate = new Date(startBase);
+                        sDate.setFullYear(sDate.getFullYear() + (y - 1));
+                        const eDate = new Date(sDate);
+                        eDate.setFullYear(eDate.getFullYear() + 1);
+                        eDate.setDate(eDate.getDate() - 1);
+
+                        const sStr = sDate.toISOString().split('T')[0];
+                        const eStr = eDate.toISOString().split('T')[0];
+                        const newPlan = {
+                            id: generateNextId('PL-', db.plans, 3),
+                            scholarId: schObj.id,
+                            grantYear: y,
+                            startDate: sStr,
+                            endDate: eStr,
+                            fiscalYear: calcFiscalYear(sStr),
+                            maxCap: schObj.annualCap,
+                            principleCap: null,
+                            principleDate: '',
+                            note: ''
+                        };
+                        db.plans.push(newPlan);
+                        pushMutationToSheets('upsertPlan', newPlan);
+                    }
+                }
+            }
+
+            saveDB();
+            toggleScholarForm(false);
+            populateDropdowns();
+            renderRegister();
+            showToast('บันทึกข้อมูลผู้รับทุนเรียบร้อยแล้ว');
+            await pushMutationToSheets('upsertScholar', schObj);
+        }
+
+        function deleteScholar(id) {
+            showConfirmModal(
+                'ลบข้อมูลผู้รับทุน',
+                `ต้องการลบผู้รับทุนรหัส ${id} หรือไม่? (แผนวงเงินและรายการค่าใช้จ่ายที่ผูกอยู่จะไม่ถูกลบอัตโนมัติ)`,
+                async () => {
+                    db.scholars = db.scholars.filter(s => s.id !== id);
+                    saveDB();
+                    populateDropdowns();
+                    renderRegister();
+                    showToast('ลบข้อมูลผู้รับทุนแล้ว');
+                    await pushMutationToSheets('deleteScholar', { id });
+                }
+            );
+        }
+
+        function renderRegister() {
+            const grid = document.getElementById('scholars-grid');
+            if (db.scholars.length === 0) {
+                grid.innerHTML = `<div class="bg-white p-10 rounded-2xl text-center text-slate-400 border border-slate-200">ยังไม่มีข้อมูลผู้รับทุน</div>`;
+                return;
+            }
+
+            grid.innerHTML = db.scholars.map(sch => {
+                const m = computeScholarMetrics(sch);
+                const barWidth = Math.min(100, Math.max(0, m.pct));
+                const barColor = m.pct > 100 ? 'bg-rose-500' : m.pct >= 80 ? 'bg-amber-500' : 'bg-sky-600';
+
+                return `
+                    <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200/80 hover:border-sky-300 transition">
+                        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                            <div class="space-y-1">
+                                <div class="flex flex-wrap items-center gap-2">
+                                    <span class="font-mono text-xs font-bold bg-navy-100 text-navy-800 px-2.5 py-0.5 rounded-lg">${sch.id}</span>
+                                    <h3 class="text-base font-bold text-navy-900">${sch.name}</h3>
+                                    <span class="text-xs px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 font-semibold border border-emerald-200">${sch.status}</span>
+                                </div>
+                                <p class="text-xs text-slate-600">${sch.type} • <strong>${sch.institution}</strong> (${sch.country})</p>
+                                <p class="text-xs text-slate-500">
+                                    ระยะเวลา: ${formatThaiDate(sch.startDate)} – ${formatThaiDate(sch.endDate)} (${sch.grantYears} ปีทุน) |
+                                    ปีการศึกษาที่เริ่ม: <strong>${m.academicYear || '-'}</strong>
+                                    ${sch.approvalDoc ? ` | เลขที่อนุมัติ: ${sch.approvalDoc}` : ''}
+                                </p>
+                            </div>
+                            <div class="flex items-center gap-2 shrink-0">
+                                <button onclick="editScholar('${sch.id}')" class="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-medium transition">
+                                    <i data-lucide="pencil" class="w-3.5 h-3.5"></i> แก้ไข
+                                </button>
+                                <button onclick="deleteScholar('${sch.id}')" class="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs font-medium transition">
+                                    <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> ลบ
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="mt-4 pt-4 border-t border-slate-100 grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+                            <div>
+                                <span class="text-slate-500 block">วงเงินอนุมัติรวม</span>
+                                <span class="font-bold text-navy-900 tabular-nums text-sm">${formatMoney(m.totalApproved)} ฿</span>
+                            </div>
+                            <div>
+                                <span class="text-slate-500 block">เบิกจ่ายแล้ว</span>
+                                <span class="font-bold text-emerald-700 tabular-nums text-sm">${formatMoney(m.paid)} ฿</span>
+                            </div>
+                            <div>
+                                <span class="text-slate-500 block">อนุมัติรอจ่าย</span>
+                                <span class="font-bold text-amber-600 tabular-nums text-sm">${formatMoney(m.pending)} ฿</span>
+                            </div>
+                            <div>
+                                <span class="text-slate-500 block">คงเหลือสุทธิ</span>
+                                <span class="font-bold text-sky-700 tabular-nums text-sm">${formatMoney(m.remaining)} ฿</span>
+                            </div>
+                        </div>
+
+                        <div class="mt-3">
+                            <div class="flex justify-between text-[11px] text-slate-500 mb-1">
+                                <span>ความคืบหน้าการใช้วงเงินสะสม</span>
+                                <span class="font-bold text-navy-800">${m.pct.toFixed(1)}%</span>
+                            </div>
+                            <div class="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
+                                <div class="${barColor} h-2 rounded-full transition-all" style="width: ${barWidth}%"></div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            lucide.createIcons();
+        }
+
+        // ==========================================
+        // 11. ANNUAL CAPITAL LIMIT (PLANS) CRUD
+        // ==========================================
+        function togglePlanForm(show) {
+            const card = document.getElementById('plan-form-card');
+            const isHidden = card.classList.contains('hidden');
+            const shouldShow = show !== undefined ? show : isHidden;
+
+            if (shouldShow) {
+                populateDropdowns();
+                if (!document.getElementById('plan-edit-mode').value) {
+                    document.getElementById('plan-form').reset();
+                    document.getElementById('plan-id').value = generateNextId('PL-', db.plans, 3);
+                    document.getElementById('plan-id').readOnly = false;
+                    document.getElementById('plan-form-title').textContent = 'เพิ่มแผนวงเงินรายปีทุน';
+                    document.getElementById('plan-acad-preview').textContent = 'ปีการศึกษา: -';
+                }
+                card.classList.remove('hidden');
+            } else {
+                card.classList.add('hidden');
+                document.getElementById('plan-edit-mode').value = '';
+                document.getElementById('plan-id').readOnly = false;
+            }
+        }
+
+        function previewPlanAutoFields() {
+            const start = document.getElementById('plan-start').value;
+            const acad = calcAcademicYear(start);
+            const fy = calcFiscalYear(start);
+            document.getElementById('plan-acad-preview').textContent = `ปีการศึกษา: ${acad || '-'} (ปีงบฯ แนะนำ: ${fy || '-'})`;
+            if (fy && !document.getElementById('plan-fiscal-year').value) {
+                document.getElementById('plan-fiscal-year').value = fy;
+            }
+        }
+
+        function editPlan(id) {
+            const p = db.plans.find(x => x.id === id);
+            if (!p) return;
+            populateDropdowns();
+            document.getElementById('plan-edit-mode').value = p.id;
+            document.getElementById('plan-id').value = p.id;
+            document.getElementById('plan-id').readOnly = true;
+            document.getElementById('plan-sch-id').value = p.scholarId;
+            document.getElementById('plan-grant-year').value = p.grantYear;
+            document.getElementById('plan-start').value = p.startDate;
+            document.getElementById('plan-end').value = p.endDate;
+            document.getElementById('plan-fiscal-year').value = p.fiscalYear;
+            document.getElementById('plan-max-cap').value = p.maxCap;
+            document.getElementById('plan-principle-cap').value = p.principleCap !== null && p.principleCap !== undefined ? p.principleCap : '';
+            document.getElementById('plan-principle-date').value = p.principleDate || '';
+            document.getElementById('plan-note').value = p.note || '';
+            document.getElementById('plan-form-title').textContent = 'แก้ไขแผนวงเงิน: ' + p.id;
+            previewPlanAutoFields();
+            document.getElementById('plan-form-card').classList.remove('hidden');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        async function savePlan(e) {
+            e.preventDefault();
+            const editId = document.getElementById('plan-edit-mode').value;
+            const pCapVal = document.getElementById('plan-principle-cap').value;
+            const planObj = {
+                id: document.getElementById('plan-id').value.trim(),
+                scholarId: document.getElementById('plan-sch-id').value,
+                grantYear: parseInt(document.getElementById('plan-grant-year').value) || 1,
+                startDate: document.getElementById('plan-start').value,
+                endDate: document.getElementById('plan-end').value,
+                fiscalYear: parseInt(document.getElementById('plan-fiscal-year').value) || 2568,
+                maxCap: parseFloat(document.getElementById('plan-max-cap').value) || 0,
+                principleCap: pCapVal === '' ? null : parseFloat(pCapVal),
+                principleDate: document.getElementById('plan-principle-date').value,
+                note: document.getElementById('plan-note').value.trim()
+            };
+
+            if (editId) {
+                const idx = db.plans.findIndex(p => p.id === editId);
+                if (idx >= 0) db.plans[idx] = planObj;
+            } else {
+                if (db.plans.some(p => p.id === planObj.id)) {
+                    showToast('รหัสแผนซ้ำ กรุณาใช้รหัสอื่น', 'error');
+                    return;
+                }
+                db.plans.push(planObj);
+            }
+
+            saveDB();
+            togglePlanForm(false);
+            renderPlans();
+            showToast('บันทึกแผนวงเงินรายปีทุนเรียบร้อยแล้ว');
+            await pushMutationToSheets('upsertPlan', planObj);
+        }
+
+        function deletePlan(id) {
+            showConfirmModal('ลบแผนวงเงิน', `ต้องการลบแผนวงเงินรหัส ${id} หรือไม่?`, async () => {
+                db.plans = db.plans.filter(p => p.id !== id);
+                saveDB();
+                renderPlans();
+                showToast('ลบแผนวงเงินแล้ว');
+                await pushMutationToSheets('deletePlan', { id });
+            });
+        }
+
+        function renderPlans() {
+            const tbody = document.getElementById('plans-tbody');
+            if (db.plans.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="14" class="py-8 text-center text-slate-400">ยังไม่มีแผนวงเงินรายปีทุน</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = db.plans.map(p => {
+                const sch = getScholarById(p.scholarId);
+                const m = computePlanMetrics(p);
+                return `
+                    <tr class="hover:bg-slate-50 transition text-xs">
+                        <td class="py-3 px-4 font-mono font-bold text-navy-800">${p.id}</td>
+                        <td class="py-3 px-4 font-semibold text-slate-800 whitespace-nowrap">${sch ? sch.name : p.scholarId}</td>
+                        <td class="py-3 px-4 text-center font-semibold">ปี ${p.grantYear}</td>
+                        <td class="py-3 px-4 whitespace-nowrap text-slate-600">${formatThaiDate(p.startDate)} – ${formatThaiDate(p.endDate)}</td>
+                        <td class="py-3 px-4 text-center">${m.academicYear || '-'}</td>
+                        <td class="py-3 px-4 text-center font-semibold text-navy-800">${p.fiscalYear}</td>
+                        <td class="py-3 px-4 text-right tabular-nums">${formatMoney(p.maxCap)}</td>
+                        <td class="py-3 px-4 text-right tabular-nums text-slate-500">${p.principleCap !== null && p.principleCap !== undefined ? formatMoney(p.principleCap) : '-'}</td>
+                        <td class="py-3 px-4 text-right tabular-nums text-emerald-700 font-medium">${formatMoney(m.paid)}</td>
+                        <td class="py-3 px-4 text-right tabular-nums text-amber-600">${formatMoney(m.pending)}</td>
+                        <td class="py-3 px-4 text-right tabular-nums font-semibold ${m.remaining < 0 ? 'text-rose-600' : 'text-sky-700'}">${formatMoney(m.remaining)}</td>
+                        <td class="py-3 px-4 text-right tabular-nums font-bold">${m.pct.toFixed(1)}%</td>
+                        <td class="py-3 px-4 text-center"><span class="px-2 py-0.5 rounded-full text-[11px] font-semibold ${m.statusClass}">${m.statusText}</span></td>
+                        <td class="py-3 px-4 text-center whitespace-nowrap">
+                            <button onclick="editPlan('${p.id}')" class="p-1.5 text-slate-500 hover:text-navy-800" title="แก้ไข"><i data-lucide="pencil" class="w-3.5 h-3.5"></i></button>
+                            <button onclick="deletePlan('${p.id}')" class="p-1.5 text-rose-400 hover:text-rose-600" title="ลบ"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+            lucide.createIcons();
+        }
+
+        // ==========================================
+        // 12. EXPENSES (MASTER DATA) CRUD
+        // ==========================================
+        function handleCurrencyChange() {
+            const cur = document.getElementById('exp-currency').value;
+            const foreignInput = document.getElementById('exp-foreign-amt');
+            const fxInput = document.getElementById('exp-fx-rate');
+            if (cur === 'THB') {
+                foreignInput.value = '';
+                fxInput.value = '';
+                foreignInput.disabled = true;
+                fxInput.disabled = true;
+            } else {
+                foreignInput.disabled = false;
+                fxInput.disabled = false;
+            }
+        }
+
+        function calcThbFromForeign() {
+            const f = parseFloat(document.getElementById('exp-foreign-amt').value);
+            const r = parseFloat(document.getElementById('exp-fx-rate').value);
+            if (!isNaN(f) && !isNaN(r)) {
+                document.getElementById('exp-thb-amt').value = (f * r).toFixed(2);
+                updateExpenseLivePreview();
+            }
+        }
+
+        function updateExpenseLivePreview() {
+            const schId = document.getElementById('exp-sch-id').value;
+            const payDate = document.getElementById('exp-date').value;
+            const manualGY = document.getElementById('exp-manual-grant-year').value;
+            const subItem = document.getElementById('exp-subitem').value;
+
+            const mockExp = { scholarId: schId, paymentDate: payDate, manualGrantYear: manualGY };
+            const effGY = resolveEffectiveGrantYear(mockExp);
+            const fyPay = calcFiscalYear(payDate);
+            const q = calcFiscalQuarter(payDate);
+
+            document.getElementById('prev-category').textContent = getCategoryForSubItem(subItem);
+            document.getElementById('prev-grant-year').textContent = 'ปีที่ ' + effGY;
+            document.getElementById('prev-fy-pay').textContent = fyPay || '-';
+            document.getElementById('prev-quarter').textContent = q ? 'Q' + q : 'Q-';
+
+            const badge = document.getElementById('prev-audit-badge');
+            const plan = db.plans.find(p => p.scholarId === schId && parseInt(p.grantYear) === effGY);
+            if (!plan && schId) {
+                badge.className = 'px-2.5 py-1 rounded-lg bg-amber-100 text-amber-800 font-semibold text-[11px]';
+                badge.textContent = 'ไม่พบแผนปีทุนที่ ' + effGY;
+            } else {
+                badge.className = 'px-2.5 py-1 rounded-lg bg-emerald-100 text-emerald-800 font-semibold text-[11px]';
+                badge.textContent = 'พร้อมบันทึก';
+            }
+        }
+
+        function resetExpenseForm() {
+            document.getElementById('expense-form').reset();
+            document.getElementById('exp-edit-id').value = '';
+            document.getElementById('exp-date').value = new Date().toISOString().split('T')[0];
+            document.getElementById('exp-currency').value = 'THB';
+            document.getElementById('exp-status').value = 'จ่ายแล้ว';
+            document.getElementById('btn-new-expense-mode').classList.add('hidden');
+            document.getElementById('exp-submit-btn').innerHTML = '<i data-lucide="save" class="w-4 h-4"></i><span>บันทึกรายการค่าใช้จ่าย</span>';
+            handleCurrencyChange();
+            updateExpenseLivePreview();
+            lucide.createIcons();
+        }
+
+        function editExpense(id) {
+            const exp = db.expenses.find(x => x.id === id);
+            if (!exp) return;
+            populateDropdowns();
+            document.getElementById('exp-edit-id').value = exp.id;
+            document.getElementById('exp-sch-id').value = exp.scholarId;
+            document.getElementById('exp-round').value = exp.round;
+            document.getElementById('exp-date').value = exp.paymentDate;
+            document.getElementById('exp-manual-grant-year').value = exp.manualGrantYear || '';
+            document.getElementById('exp-subitem').value = exp.subItem;
+            document.getElementById('exp-detail').value = exp.detail || '';
+            document.getElementById('exp-sap').value = exp.sapNo || '';
+            document.getElementById('exp-period-start').value = exp.periodStart || '';
+            document.getElementById('exp-period-end').value = exp.periodEnd || '';
+            document.getElementById('exp-source').value = exp.dataSource || db.config.dataSources[0];
+            document.getElementById('exp-note').value = exp.note || '';
+            document.getElementById('exp-currency').value = exp.currency || 'THB';
+            handleCurrencyChange();
+            document.getElementById('exp-foreign-amt').value = exp.foreignAmount || '';
+            document.getElementById('exp-fx-rate').value = exp.exchangeRate || '';
+            document.getElementById('exp-thb-amt').value = exp.thbAmount;
+            document.getElementById('exp-status').value = exp.status;
+            document.getElementById('exp-method').value = exp.paymentMethod || db.config.paymentMethods[0];
+
+            document.getElementById('btn-new-expense-mode').classList.remove('hidden');
+            document.getElementById('exp-submit-btn').innerHTML = `<i data-lucide="save" class="w-4 h-4"></i><span>อัปเดตรายการ (${exp.id})</span>`;
+            updateExpenseLivePreview();
+            lucide.createIcons();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        async function saveExpense(e) {
+            e.preventDefault();
+            const editId = document.getElementById('exp-edit-id').value;
+            const cur = document.getElementById('exp-currency').value;
+            const fVal = document.getElementById('exp-foreign-amt').value;
+            const rVal = document.getElementById('exp-fx-rate').value;
+
+            const expObj = {
+                id: editId || generateNextId('TX-', db.expenses, 4),
+                scholarId: document.getElementById('exp-sch-id').value,
+                round: parseInt(document.getElementById('exp-round').value) || 1,
+                sapNo: document.getElementById('exp-sap').value.trim(),
+                paymentDate: document.getElementById('exp-date').value,
+                manualGrantYear: document.getElementById('exp-manual-grant-year').value,
+                subItem: document.getElementById('exp-subitem').value,
+                detail: document.getElementById('exp-detail').value.trim(),
+                periodStart: document.getElementById('exp-period-start').value,
+                periodEnd: document.getElementById('exp-period-end').value,
+                currency: cur,
+                foreignAmount: cur !== 'THB' && fVal !== '' ? parseFloat(fVal) : null,
+                exchangeRate: cur !== 'THB' && rVal !== '' ? parseFloat(rVal) : null,
+                thbAmount: parseFloat(document.getElementById('exp-thb-amt').value) || 0,
+                status: document.getElementById('exp-status').value,
+                paymentMethod: document.getElementById('exp-method').value,
+                dataSource: document.getElementById('exp-source').value,
+                note: document.getElementById('exp-note').value.trim()
+            };
+
+            if (editId) {
+                const idx = db.expenses.findIndex(x => x.id === editId);
+                if (idx >= 0) db.expenses[idx] = expObj;
+            } else {
+                db.expenses.push(expObj);
+            }
+
+            saveDB();
+            resetExpenseForm();
+            renderExpensesTable();
+            showToast(editId ? `อัปเดตรายการ ${expObj.id} แล้ว` : `บันทึกรายการ ${expObj.id} เรียบร้อยแล้ว`);
+            await pushMutationToSheets('upsertExpense', expObj);
+        }
+
+        function deleteExpense(id) {
+            showConfirmModal('ลบรายการค่าใช้จ่าย', `ต้องการลบรายการรหัส ${id} หรือไม่?`, async () => {
+                db.expenses = db.expenses.filter(x => x.id !== id);
+                saveDB();
+                renderExpensesTable();
+                showToast(`ลบรายการ ${id} แล้ว`);
+                await pushMutationToSheets('deleteExpense', { id });
+            });
+        }
+
+        function renderExpensesTable() {
+            const search = (document.getElementById('exp-filter-search').value || '').trim().toLowerCase();
+            const schFilter = document.getElementById('exp-filter-sch').value;
+            const statusFilter = document.getElementById('exp-filter-status').value;
+            const fyFilter = document.getElementById('exp-filter-fy').value;
+
+            const filtered = db.expenses.filter(exp => {
+                const sch = getScholarById(exp.scholarId);
+                const schName = sch ? sch.name.toLowerCase() : '';
+                const fy = String(calcFiscalYear(exp.paymentDate));
+                const matchSearch = !search ||
+                    exp.id.toLowerCase().includes(search) ||
+                    schName.includes(search) ||
+                    (exp.subItem || '').toLowerCase().includes(search) ||
+                    (exp.detail || '').toLowerCase().includes(search) ||
+                    (exp.sapNo || '').toLowerCase().includes(search);
+                const matchSch = schFilter === 'ALL' || exp.scholarId === schFilter;
+                const matchStatus = statusFilter === 'ALL' || exp.status === statusFilter;
+                const matchFy = fyFilter === 'ALL' || fy === fyFilter;
+                return matchSearch && matchSch && matchStatus && matchFy;
+            });
+
+            let totalFilteredSum = 0;
+            const tbody = document.getElementById('expenses-tbody');
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="10" class="py-8 text-center text-slate-400">ไม่พบรายการค่าใช้จ่าย</td></tr>`;
+            } else {
+                tbody.innerHTML = filtered.map(exp => {
+                    const sch = getScholarById(exp.scholarId);
+                    const effGY = resolveEffectiveGrantYear(exp);
+                    const fy = calcFiscalYear(exp.paymentDate);
+                    const q = calcFiscalQuarter(exp.paymentDate);
+                    const cat = getCategoryForSubItem(exp.subItem);
+                    const audit = auditExpense(exp);
+                    totalFilteredSum += parseFloat(exp.thbAmount) || 0;
+
+                    let statusBadge = 'bg-slate-100 text-slate-700';
+                    if (exp.status === 'จ่ายแล้ว') statusBadge = 'bg-emerald-100 text-emerald-800';
+                    else if (exp.status === 'อนุมัติแล้ว-รอจ่าย') statusBadge = 'bg-amber-100 text-amber-800';
+                    else if (exp.status === 'ยกเลิก') statusBadge = 'bg-rose-100 text-rose-700';
+
+                    return `
+                        <tr class="hover:bg-slate-50 transition text-xs">
+                            <td class="py-3 px-3 font-mono font-bold text-navy-800 whitespace-nowrap">${exp.id}</td>
+                            <td class="py-3 px-3 font-semibold text-slate-800 whitespace-nowrap">${sch ? sch.name : exp.scholarId}</td>
+                            <td class="py-3 px-3 text-center font-semibold">${exp.round}</td>
+                            <td class="py-3 px-3 whitespace-nowrap">${formatThaiDate(exp.paymentDate)}</td>
+                            <td class="py-3 px-3 text-center whitespace-nowrap">
+                                <span class="bg-sky-50 text-sky-800 px-2 py-0.5 rounded font-semibold">ปี ${effGY}</span>
+                                <span class="text-slate-500 ml-1">${fy || '-'} (Q${q || '-'})</span>
+                            </td>
+                            <td class="py-3 px-3">
+                                <div class="font-semibold text-slate-800">${exp.subItem}</div>
+                                <div class="text-[11px] text-slate-500">${cat}${exp.detail ? ' • ' + exp.detail : ''}</div>
+                            </td>
+                            <td class="py-3 px-3 text-right tabular-nums font-bold text-navy-900">${formatMoney(exp.thbAmount)}</td>
+                            <td class="py-3 px-3 text-center whitespace-nowrap"><span class="px-2 py-0.5 rounded-full text-[11px] font-semibold ${statusBadge}">${exp.status}</span></td>
+                            <td class="py-3 px-3 text-center whitespace-nowrap">
+                                <span class="px-2 py-0.5 rounded-full text-[11px] font-semibold ${audit.ok ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'}">${audit.text}</span>
+                            </td>
+                            <td class="py-3 px-3 text-center whitespace-nowrap">
+                                <button onclick="editExpense('${exp.id}')" class="p-1.5 text-slate-500 hover:text-navy-800" title="แก้ไข"><i data-lucide="pencil" class="w-3.5 h-3.5"></i></button>
+                                <button onclick="deleteExpense('${exp.id}')" class="p-1.5 text-rose-400 hover:text-rose-600" title="ลบ"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+            }
+
+            document.getElementById('exp-count-label').textContent = filtered.length;
+            document.getElementById('exp-filtered-sum').textContent = formatMoney(totalFilteredSum);
+            lucide.createIcons();
+        }
+
+        // ==========================================
+        // 13. CONFIG VIEW & APPS SCRIPT CODE
+        // ==========================================
+        const GAS_CODE_TEMPLATE = `// ==========================================================
+// Google Apps Script Web App (Two-Way Sync API)
+// วางโค้ดนี้ใน ส่วนขยาย (Extensions) > Apps Script ของ Google Sheets
+// ==========================================================
+const API_TOKEN = 'SCHOLAR2026';
+
+const SHEET_NAMES = {
+  register: '02_Register',
+  plans: '03_Annual Capital Limit',
+  expenses: '04_Master_Data'
+};
+
+function jsonResponse(obj) {
+  return ContentService
+    .createTextOutput(JSON.stringify(obj))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+function toIsoDate(val) {
+  if (!val) return '';
+  if (val instanceof Date && !isNaN(val)) {
+    return Utilities.formatDate(val, Session.getScriptTimeZone(), 'yyyy-MM-dd');
+  }
+  const s = String(val).trim();
+  const m = s.match(/^(\\d{1,2})\\/(\\d{1,2})\\/(\\d{4})$/);
+  if (m) {
+    let yr = parseInt(m[3], 10);
+    if (yr > 2400) yr -= 543;
+    return yr + '-' + ('0' + m[2]).slice(-2) + '-' + ('0' + m[1]).slice(-2);
+  }
+  return s;
+}
+
+function fromIsoDate(iso) {
+  if (!iso) return '';
+  const p = String(iso).split('-');
+  if (p.length === 3) return new Date(Number(p[0]), Number(p[1]) - 1, Number(p[2]));
+  return iso;
+}
+
+function doGet(e) {
+  try {
+    const token = (e.parameter && e.parameter.token) || '';
+    if (API_TOKEN && token !== API_TOKEN) {
+      return jsonResponse({ ok: false, error: 'Invalid API Token' });
+    }
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    return jsonResponse({
+      ok: true,
+      data: {
+        scholars: readScholars(ss),
+        plans: readPlans(ss),
+        expenses: readExpenses(ss)
+      }
+    });
+  } catch (err) {
+    return jsonResponse({ ok: false, error: err.message });
+  }
+}
+
+function doPost(e) {
+  const lock = LockService.getScriptLock();
+  lock.waitLock(20000);
+  try {
+    const body = JSON.parse(e.postData.contents || '{}');
+    if (API_TOKEN && body.token !== API_TOKEN) {
+      return jsonResponse({ ok: false, error: 'Invalid API Token' });
+    }
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const action = body.action;
+    const p = body.payload;
+
+    if (action === 'upsertScholar') upsertScholar(ss, p);
+    else if (action === 'deleteScholar') deleteByKey(ss.getSheetByName(SHEET_NAMES.register), 1, p.id);
+    else if (action === 'upsertPlan') upsertPlan(ss, p);
+    else if (action === 'deletePlan') deleteByKey(ss.getSheetByName(SHEET_NAMES.plans), 1, p.id);
+    else if (action === 'upsertExpense') upsertExpense(ss, p);
+    else if (action === 'deleteExpense') deleteByKey(ss.getSheetByName(SHEET_NAMES.expenses), 1, p.id);
+    else if (action === 'pushAll') {
+      (p.scholars || []).forEach(x => upsertScholar(ss, x));
+      (p.plans || []).forEach(x => upsertPlan(ss, x));
+      (p.expenses || []).forEach(x => upsertExpense(ss, x));
+    }
+
+    return jsonResponse({ ok: true });
+  } catch (err) {
+    return jsonResponse({ ok: false, error: err.message });
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+function readScholars(ss) {
+  const sh = ss.getSheetByName(SHEET_NAMES.register);
+  if (!sh || sh.getLastRow() < 2) return [];
+  const rows = sh.getRange(2, 1, sh.getLastRow() - 1, 16).getValues();
+  return rows.filter(r => r[0]).map(r => ({
+    id: String(r[0]).trim(),
+    name: String(r[1] || '').trim(),
+    type: String(r[2] || '').trim(),
+    institution: String(r[3] || '').trim(),
+    country: String(r[4] || '').trim(),
+    startDate: toIsoDate(r[5]),
+    endDate: toIsoDate(r[6]),
+    grantYears: Number(r[8]) || 1,
+    annualCap: Number(r[9]) || 0,
+    status: String(r[13] || 'อยู่ระหว่างดำเนินการ').trim(),
+    approvalDoc: String(r[14] || '').trim(),
+    note: String(r[15] || '').trim()
+  }));
+}
+
+function readPlans(ss) {
+  const sh = ss.getSheetByName(SHEET_NAMES.plans);
+  if (!sh || sh.getLastRow() < 2) return [];
+  const rows = sh.getRange(2, 1, sh.getLastRow() - 1, 19).getValues();
+  return rows.filter(r => r[0]).map(r => ({
+    id: String(r[0]).trim(),
+    scholarId: String(r[1] || '').trim(),
+    grantYear: Number(r[4]) || 1,
+    startDate: toIsoDate(r[5]),
+    endDate: toIsoDate(r[6]),
+    fiscalYear: Number(r[8]) || 2568,
+    maxCap: Number(r[9]) || 0,
+    principleCap: r[10] === '' ? null : Number(r[10]),
+    principleDate: toIsoDate(r[11]),
+    note: String(r[18] || '').trim()
+  }));
+}
+
+function readExpenses(ss) {
+  const sh = ss.getSheetByName(SHEET_NAMES.expenses);
+  if (!sh || sh.getLastRow() < 2) return [];
+  const rows = sh.getRange(2, 1, sh.getLastRow() - 1, 26).getValues();
+  return rows.filter(r => r[0]).map(r => ({
+    id: String(r[0]).trim(),
+    scholarId: String(r[1] || '').trim(),
+    round: Number(r[3]) || 1,
+    sapNo: String(r[4] || '').trim(),
+    paymentDate: toIsoDate(r[5]),
+    manualGrantYear: r[7] === '' ? '' : String(r[7]),
+    subItem: String(r[12] || '').trim(),
+    detail: String(r[14] || '').trim(),
+    periodStart: toIsoDate(r[15]),
+    periodEnd: toIsoDate(r[16]),
+    currency: String(r[17] || 'THB').trim(),
+    foreignAmount: r[18] === '' ? null : Number(r[18]),
+    exchangeRate: r[19] === '' ? null : Number(r[19]),
+    thbAmount: Number(r[20]) || 0,
+    status: String(r[21] || 'จ่ายแล้ว').trim(),
+    paymentMethod: String(r[22] || '').trim(),
+    dataSource: String(r[23] || '').trim(),
+    note: String(r[24] || '').trim()
+  }));
+}
+
+function findRowByKey(sh, key) {
+  const last = sh.getLastRow();
+  if (last < 2) return -1;
+  const vals = sh.getRange(2, 1, last - 1, 1).getValues();
+  for (let i = 0; i < vals.length; i++) {
+    if (String(vals[i][0]).trim() === String(key).trim()) return i + 2;
+  }
+  return -1;
+}
+
+function deleteByKey(sh, col, key) {
+  if (!sh) return;
+  const row = findRowByKey(sh, key);
+  if (row > 1) sh.deleteRow(row);
+}
+
+function copyFormulasIfNew(sh, rowIdx, totalCols) {
+  if (rowIdx <= 2) return;
+  const prevFormulas = sh.getRange(rowIdx - 1, 1, 1, totalCols).getFormulas()[0];
+  for (let c = 0; c < totalCols; c++) {
+    if (prevFormulas[c]) {
+      sh.getRange(rowIdx - 1, c + 1).copyTo(sh.getRange(rowIdx, c + 1));
+    }
+  }
+}
+
+function upsertScholar(ss, s) {
+  const sh = ss.getSheetByName(SHEET_NAMES.register);
+  let row = findRowByKey(sh, s.id);
+  const isNew = row === -1;
+  if (isNew) {
+    row = sh.getLastRow() + 1;
+    copyFormulasIfNew(sh, row, 16);
+  }
+  sh.getRange(row, 1, 1, 7).setValues([[s.id, s.name, s.type, s.institution, s.country, fromIsoDate(s.startDate), fromIsoDate(s.endDate)]]);
+  sh.getRange(row, 9, 1, 2).setValues([[s.grantYears, s.annualCap]]);
+  sh.getRange(row, 14, 1, 3).setValues([[s.status, s.approvalDoc || '', s.note || '']]);
+}
+
+function upsertPlan(ss, p) {
+  const sh = ss.getSheetByName(SHEET_NAMES.plans);
+  let row = findRowByKey(sh, p.id);
+  const isNew = row === -1;
+  if (isNew) {
+    row = sh.getLastRow() + 1;
+    copyFormulasIfNew(sh, row, 19);
+  }
+  sh.getRange(row, 1, 1, 2).setValues([[p.id, p.scholarId]]);
+  sh.getRange(row, 5, 1, 3).setValues([[p.grantYear, fromIsoDate(p.startDate), fromIsoDate(p.endDate)]]);
+  sh.getRange(row, 9, 1, 4).setValues([[p.fiscalYear, p.maxCap, p.principleCap === null ? '' : p.principleCap, fromIsoDate(p.principleDate)]]);
+  sh.getRange(row, 19).setValue(p.note || '');
+}
+
+function upsertExpense(ss, x) {
+  const sh = ss.getSheetByName(SHEET_NAMES.expenses);
+  let row = findRowByKey(sh, x.id);
+  const isNew = row === -1;
+  if (isNew) {
+    row = sh.getLastRow() + 1;
+    copyFormulasIfNew(sh, row, 26);
+  }
+  sh.getRange(row, 1, 1, 2).setValues([[x.id, x.scholarId]]);
+  sh.getRange(row, 4, 1, 3).setValues([[x.round, x.sapNo || '', fromIsoDate(x.paymentDate)]]);
+  sh.getRange(row, 8).setValue(x.manualGrantYear || '');
+  sh.getRange(row, 13).setValue(x.subItem || '');
+  sh.getRange(row, 15, 1, 11).setValues([[
+    x.detail || '',
+    fromIsoDate(x.periodStart),
+    fromIsoDate(x.periodEnd),
+    x.currency || 'THB',
+    x.foreignAmount === null ? '' : x.foreignAmount,
+    x.exchangeRate === null ? '' : x.exchangeRate,
+    x.thbAmount || 0,
+    x.status || 'จ่ายแล้ว',
+    x.paymentMethod || '',
+    x.dataSource || '',
+    x.note || ''
+  ]]);
+}`;
+
+        function renderConfig() {
+            document.getElementById('cfg-gas-url').value = syncConfig.url || '';
+            document.getElementById('cfg-gas-token').value = syncConfig.token || 'SCHOLAR2026';
+            document.getElementById('cfg-poll-interval').value = String(syncConfig.pollInterval !== undefined ? syncConfig.pollInterval : 15000);
+            document.getElementById('gas-code-block').textContent = GAS_CODE_TEMPLATE;
+            document.getElementById('cfg-acad-month').value = String(db.config.academicStartMonth || 8);
+
+            // Mapping list
+            const mapList = document.getElementById('cfg-mapping-list');
+            mapList.innerHTML = Object.entries(db.config.subItemMap).map(([sub, cat]) => `
+                <div class="flex items-center justify-between px-3 py-2 text-xs hover:bg-slate-50">
+                    <div>
+                        <span class="font-semibold text-slate-800">${sub}</span>
+                        <span class="text-slate-400 mx-1">→</span>
+                        <span class="text-sky-700">${cat}</span>
+                    </div>
+                    <button onclick="removeSubItemMapping('${sub.replace(/'/g, "\\'")}')" class="text-rose-400 hover:text-rose-600 p-1"><i data-lucide="x" class="w-3.5 h-3.5"></i></button>
+                </div>
+            `).join('');
+
+            // Currencies
+            document.getElementById('cfg-currencies-list').innerHTML = db.config.currencies.map(c => `
+                <span class="inline-flex items-center gap-1.5 bg-slate-100 text-slate-700 px-2.5 py-1 rounded-lg text-xs font-semibold">
+                    ${c}
+                    ${c !== 'THB' ? `<button onclick="removeConfigListItem('currencies', '${c}')" class="text-slate-400 hover:text-rose-600">&times;</button>` : ''}
+                </span>
+            `).join('');
+
+            // Methods
+            document.getElementById('cfg-methods-list').innerHTML = db.config.paymentMethods.map(m => `
+                <span class="inline-flex items-center gap-1.5 bg-slate-100 text-slate-700 px-2.5 py-1 rounded-lg text-xs font-medium">
+                    ${m}
+                    <button onclick="removeConfigListItem('paymentMethods', '${m.replace(/'/g, "\\'")}')" class="text-slate-400 hover:text-rose-600">&times;</button>
+                </span>
+            `).join('');
+
+            lucide.createIcons();
+        }
+
+        function copyAppsScriptCode() {
+            const ta = document.createElement('textarea');
+            ta.value = GAS_CODE_TEMPLATE;
+            ta.style.position = 'fixed';
+            ta.style.opacity = '0';
+            document.body.appendChild(ta);
+            ta.select();
+            try {
+                document.execCommand('copy');
+                showToast('คัดลอกโค้ด Code.gs เรียบร้อยแล้ว');
+            } catch (e) {
+                showToast('คัดลอกไม่สำเร็จ กรุณาคลุมดำแล้วกด Ctrl+C', 'error');
+            }
+            document.body.removeChild(ta);
+        }
+
+        function updateAcademicStartMonth() {
+            db.config.academicStartMonth = parseInt(document.getElementById('cfg-acad-month').value) || 8;
+            saveDB();
+            showToast('อัปเดตเดือนเริ่มต้นปีการศึกษาแล้ว');
+        }
+
+        function addSubItemMapping(e) {
+            e.preventDefault();
+            const sub = document.getElementById('cfg-new-subitem').value.trim();
+            const cat = document.getElementById('cfg-new-subitem-cat').value;
+            if (!sub) return;
+            db.config.subItemMap[sub] = cat;
+            saveDB();
+            document.getElementById('cfg-new-subitem').value = '';
+            populateDropdowns();
+            renderConfig();
+            showToast('เพิ่มรายการย่อยเรียบร้อยแล้ว');
+        }
+
+        function removeSubItemMapping(sub) {
+            delete db.config.subItemMap[sub];
+            saveDB();
+            populateDropdowns();
+            renderConfig();
+        }
+
+        function addConfigListItem(e, key, inputId) {
+            e.preventDefault();
+            let val = document.getElementById(inputId).value.trim();
+            if (!val) return;
+            if (key === 'currencies') val = val.toUpperCase();
+            if (!db.config[key].includes(val)) {
+                db.config[key].push(val);
+                saveDB();
+                populateDropdowns();
+                renderConfig();
+                showToast('เพิ่มรายการเรียบร้อยแล้ว');
+            }
+            document.getElementById(inputId).value = '';
+        }
+
+        function removeConfigListItem(key, val) {
+            db.config[key] = db.config[key].filter(x => x !== val);
+            saveDB();
+            populateDropdowns();
+            renderConfig();
+        }
+
+        function confirmResetData() {
+            showConfirmModal(
+                'รีเซ็ตข้อมูลในเครื่อง',
+                'ข้อมูลในเบราว์เซอร์ทั้งหมดจะถูกล้างและกลับไปเป็นข้อมูลตัวอย่างเริ่มต้น ต้องการดำเนินการต่อหรือไม่?',
+                () => {
+                    db = cloneDefaultData();
+                    saveDB();
+                    populateDropdowns();
+                    renderActiveView();
+                    showToast('รีเซ็ตข้อมูลเป็นค่าเริ่มต้นเรียบร้อยแล้ว');
+                }
+            );
+        }
+
+        // ==========================================
+        // 14. EXPORT / IMPORT JSON & MASTER CSV
+        // ==========================================
+        function downloadTextFile(content, filename, mimeType) {
+            const blob = new Blob([content], { type: mimeType });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function exportJSON() {
+            const dateTag = new Date().toISOString().split('T')[0];
+            downloadTextFile(JSON.stringify(db, null, 2), `scholarship_backup_${dateTag}.json`, 'application/json');
+            showToast('สำรองข้อมูล JSON เรียบร้อยแล้ว');
+        }
+
+        function importJSON(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const parsed = JSON.parse(e.target.result);
+                    if (!parsed.scholars || !parsed.plans || !parsed.expenses) {
+                        throw new Error('โครงสร้างไฟล์ JSON ไม่ถูกต้อง');
+                    }
+                    db = {
+                        config: Object.assign({}, cloneDefaultData().config, parsed.config || {}),
+                        scholars: parsed.scholars,
+                        plans: parsed.plans,
+                        expenses: parsed.expenses
+                    };
+                    saveDB();
+                    populateDropdowns();
+                    renderActiveView();
+                    showToast('นำเข้าข้อมูล JSON เรียบร้อยแล้ว');
+                } catch (err) {
+                    showToast('นำเข้าไฟล์ไม่สำเร็จ: ' + err.message, 'error');
+                }
+                event.target.value = '';
+            };
+            reader.readAsText(file);
+        }
+
+        function exportCSV() {
+            const headers = [
+                'TXN_ID', 'รหัสผู้รับทุน', 'ชื่อ-สกุล', 'ครั้งที่เบิก', 'เลขที่ SAP',
+                'วันที่จ่าย (ค.ศ.)', 'วันที่จ่าย (พ.ศ.)', 'ปีทุนที่ใช้จริง', 'ปีงบประมาณจ่ายจริง', 'ไตรมาส',
+                'รายการย่อย', 'หมวดหมู่หลัก', 'รายละเอียด', 'สกุลเงิน', 'จำนวนเงิน (บาท)', 'สถานะ', 'วิธีการจ่าย', 'หมายเหตุ'
+            ];
+            const rows = db.expenses.map(exp => {
+                const sch = getScholarById(exp.scholarId);
+                return [
+                    exp.id, exp.scholarId, sch ? sch.name : '', exp.round, exp.sapNo || '',
+                    exp.paymentDate, formatThaiDate(exp.paymentDate), resolveEffectiveGrantYear(exp),
+                    calcFiscalYear(exp.paymentDate), calcFiscalQuarter(exp.paymentDate),
+                    exp.subItem, getCategoryForSubItem(exp.subItem), exp.detail || '',
+                    exp.currency || 'THB', (parseFloat(exp.thbAmount) || 0).toFixed(2),
+                    exp.status, exp.paymentMethod || '', exp.note || ''
+                ].map(v => `"${String(v).replace(/"/g, '""')}"`).join(',');
+            });
+            const csv = '\uFEFF' + [headers.join(','), ...rows].join('\n');
+            downloadTextFile(csv, `04_Master_Data_${new Date().toISOString().split('T')[0]}.csv`, 'text/csv;charset=utf-8;');
+            showToast('ส่งออกไฟล์ Master Data (CSV) เรียบร้อยแล้ว');
+        }
+
+        // ==========================================
+        // 15. INITIALIZATION
+        // ==========================================
+        window.addEventListener('DOMContentLoaded', () => {
+            loadDB();
+            populateDropdowns();
+            resetExpenseForm();
+            renderDashboard();
+            lucide.createIcons();
+
+            if (syncConfig.url) {
+                syncFromGoogleSheets(false);
+                startAutoPoll();
+            } else {
+                updateSyncStatusUI('offline');
+            }
+
+            document.addEventListener('visibilitychange', () => {
+                if (!document.hidden && syncConfig.url) {
+                    syncFromGoogleSheets(false);
+                }
+            });
+        });
+    </script>
+</body>
+</html>
