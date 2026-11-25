@@ -726,6 +726,9 @@ const COLUMNS = {
   'สถานะ': 'status', 'หมายเหตุ': 'note'
 };
 const JOB_KEYS = Object.values(COLUMNS);
+/* คอลัมน์เสริมที่หน้านี้อ่านเพิ่ม แต่ make_docs.py ไม่ใช้ จึงไม่ใส่ใน COLUMNS (คำเตือน "หัวคอลัมน์ที่ make_docs.py ไม่รู้จัก" ยังตรงตามจริง)
+   erp_receipt_no = "เลขที่ ERP" (คอลัมน์ AP ของชีต "ข้อมูลงาน") ใช้ตัดสินสถานะ "✓สำเร็จ" ในตารางรายงาน ซึ่งต่างจาก 'อ้างถึง ERP เลขที่' (erp_no, คอลัมน์ U) ที่เป็นเลขอ้างถึงในรายงานขอซื้อขอจ้าง */
+const EXTRA_COLUMNS = { 'เลขที่ ERP': 'erp_receipt_no' };
 const KEY_LABEL = Object.fromEntries(Object.entries(COLUMNS).map(([h, k]) => [k, h]));
 const DATE_KEYS = ['letter_date', 'price_date', 'report_date', 'order_date', 'result_date', 'announce_date',
   'po_date', 'due_date', 'eval_date_02', 'eval_date_09'];
@@ -1649,7 +1652,7 @@ const FMT_TEXT_KEYS = ['doc_no', 'quote_no', 'repair_req_no', 'phone', 'erp_no',
 /* ช่องที่ make_docs.py ตัด ".0" ท้ายตัวเลขให้ (num_str) ช่องอื่นพิมพ์ตามค่าดิบ */
 const PY_NUMSTR_KEYS = ['qty', 'phone', 'repair_req_no', 'delivery_days', 'egp_project_no', 'contract_ctrl_no'];
 
-function blankJob() { const j = {}; JOB_KEYS.forEach((k) => { j[k] = ''; }); return j; }
+function blankJob() { const j = {}; JOB_KEYS.forEach((k) => { j[k] = ''; }); Object.values(EXTRA_COLUMNS).forEach((k) => { j[k] = ''; }); return j; }
 function cleanCell(v) { if (v === null || v === undefined) return ''; if (typeof v === 'number') return String(v).replace(/\.0$/, ''); return String(v); }
 function sheetIdFrom(link) {
   const t = s_(link);
@@ -1723,6 +1726,7 @@ function parseWorkbook(wb) {
         if (shown !== py) fmt[k] = { raw, shown, py };
       } else j[k] = cellVal(k, raw);
     });
+    header.forEach((h, ci) => { const k = EXTRA_COLUMNS[h]; if (k) j[k] = s_(cellVal(k, r[ci])); });
     if (Object.keys(fmt).length) j.fmt = fmt;
     j.source = 'sheet'; j.rowNo = i + 2;
     jobs.push(j);
@@ -2856,7 +2860,7 @@ function renderDash() {
         '<td>' + (m ? '<div class="splitbar" style="height:10px"><span class="acc" style="width:' + (m.snapshot.accumulatedCents / m.input.costCents * 100) + '%"></span><span class="bk" style="width:' + (m.snapshot.bookValueCents / m.input.costCents * 100) + '%"></span></div><div class="num" style="font-size:12px;margin-top:3px">' + money(m.snapshot.bookValueCents) + '</div>' : '<span style="color:var(--muted);font-size:12.5px">ยังไม่คำนวณ</span>') + '</td>' +
         '<td class="r">' + money(a.res.ctx.amount_cents) + '</td><td class="r">' + (r ? pctText(r.vsBook) : '–') + '</td><td class="r">' + (r ? pctText(r.vsCost) : '–') + '</td><td class="r">' + (r ? pctText(r.cumVsCost) : '–') + '</td>' +
         '<td>' + (closed ? pill('ok', '✓', 'สำเร็จ') : cur ? '<span style="font-size:12px;color:var(--muted)">ด่าน ' + cur.no + '</span> ' + stGate(cur) : pill('ok', '✓', 'ครบ 4 ด่าน')) + '</td>' +
-        '<td style="min-width:220px;font-size:12.5px">' + (closed ? 'ปิดงานแล้ว · ' + esc(closed) + (s_(a.job.note) ? '<div style="color:var(--muted);margin-top:2px">หมายเหตุ: ' + esc(s_(a.job.note)) + '</div>' : '') : (a.next.text === ALL_GATES_TEXT && !blank(a.job.erp_no) ? '✓สำเร็จ' : esc(a.next.text))) + '</td></tr>';
+        '<td style="min-width:220px;font-size:12.5px">' + (closed ? 'ปิดงานแล้ว · ' + esc(closed) + (s_(a.job.note) ? '<div style="color:var(--muted);margin-top:2px">หมายเหตุ: ' + esc(s_(a.job.note)) + '</div>' : '') : (a.next.text === ALL_GATES_TEXT && !blank(a.job.erp_receipt_no) ? '✓สำเร็จ' : esc(a.next.text))) + '</td></tr>';
     }).join('') || '<tr><td colspan="9" class="empty">ไม่มีงานในปีงบประมาณนี้</td></tr>') + '</tbody></table></div></div>' +
     '<div class="cols"><div class="box"><h3>งานในแต่ละด่าน</h3><p class="sub">ถึงด่านแล้ว / ผ่านด่าน · ผ่านครบ 4 ด่าน ' + passedAll + ' งาน' + (nClosed ? ' · ปิดงานแล้ว ' + nClosed + ' งาน (ไม่เข้าด่าน)' : '') + '</p><div class="funnel" style="margin-top:14px">' +
     funnel.map((f) => '<div class="fn"><span>ด่าน ' + f.g.no + ' → ' + esc(f.g.to) + '</span><div class="bar2" role="img" aria-label="ผ่าน ' + f.passed + ' จาก ' + nOpen + ' งาน"><span style="width:' + (nOpen ? f.passed / nOpen * 100 : 0) + '%"></span></div><span class="n">' + f.passed + '/' + f.reached + '</span></div>').join('') + '</div></div>' +
