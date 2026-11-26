@@ -489,11 +489,33 @@ details.grp > summary .chev { margin-left: auto; transition: transform .2s ease;
 details.grp[open] > summary .chev { transform: rotate(180deg); }
 details.grp .body { padding: 4px 18px 18px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
 @media (max-width: 700px) { details.grp .body { grid-template-columns: 1fr; } }
-.sticky-side { position: sticky; top: 140px; }
-@media (max-width: 1060px) { .sticky-side { position: static; } }
-pre.cmd { margin: 0; padding: 12px 14px; border-radius: 12px; background: #2b211b; color: #ffe8d8; font-family: var(--font-num); font-size: 12.5px; overflow-x: auto; white-space: pre; }
 .source { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
 .srcline { font-size: 13px; color: var(--muted); }
+/* ระบบที่ 3 ใช้เต็มความกว้างจอ ช่องกรอกเรียงตามพื้นที่ */
+.ws.wide .wrap { max-width: none; }
+@media (min-width: 701px) { .ws.wide details.grp .body { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); } }
+@media (min-width: 960px) {
+  .ws.wide details.grp[data-grp="core"] .body { grid-template-columns: repeat(12, minmax(0, 1fr)); }
+  .ws.wide details.grp[data-grp="core"] .f-seq, .ws.wide details.grp[data-grp="core"] .f-kind { grid-column: span 2; }
+  .ws.wide details.grp[data-grp="core"] .f-project_name { grid-column: span 8; }
+  .ws.wide details.grp[data-grp="core"] .f-qty, .ws.wide details.grp[data-grp="core"] .f-unit { grid-column: span 3; }
+  .ws.wide details.grp[data-grp="core"] .f-amount { grid-column: span 6; }
+}
+/* แถบบันทึกลง Google Sheet ติดขอบล่างของหน้า */
+.savebar { position: sticky; bottom: calc(10px + env(safe-area-inset-bottom, 0px)); z-index: 25; margin-top: 18px; display: flex; flex-direction: column; gap: 10px;
+  max-height: 62vh; overflow: auto; background: #fff; border: 1px solid var(--soft); border-radius: var(--r-card); box-shadow: 0 10px 30px rgb(44 35 29 / 18%); padding: 12px 16px; }
+.savebar > * { flex: none; }
+.sb-top { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 16px; }
+.sb-state { flex: 1 1 240px; min-width: 0; display: flex; flex-direction: column; font-size: 13px; color: var(--muted); }
+.sb-state b { font-size: 14.5px; color: var(--ink); }
+.sb-fmt { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
+.keyform { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 10px 14px; }
+.keyform .field { flex: 1 1 240px; }
+.keyform.stacked { flex-direction: column; align-items: stretch; }
+.keyform.stacked .field { flex: none; }
+.remember { display: flex; gap: 8px; align-items: center; font-size: 13px; color: var(--ink-2); min-height: 40px; }
+@media (max-width: 600px) { .savebar { padding: 10px; gap: 8px; } .sb-top .row .btn { flex: 1 1 auto; justify-content: center; }
+  .sb-top .row .btn.sb-del { flex: 0 0 auto; } .sb-del .lbl { display: none; } }
 .srcline b { color: var(--ink); }
 .msg { padding: 10px 14px; border-radius: 14px; font-size: 13.5px; line-height: 1.5; }
 .msg.bad { background: var(--soft); color: var(--o8); }
@@ -639,7 +661,7 @@ html.gated, html.gated body { overflow: hidden; }
     <nav class="home-bar" aria-label="งานและเมนู">
       <label class="vh" for="homeJob">งานที่เลือก</label>
       <select class="select" id="homeJob" style="min-height:36px;border-radius:999px;max-width:min(320px,70vw);font-size:13.5px"></select>
-      <a class="btn sm primary" id="homeSignIn" href="#docs" data-act="toSource" style="display:none">ลงชื่อเข้าใช้ด้วย Google</a>
+      <a class="btn sm primary" id="homeSignIn" href="#docs" data-act="toSource" style="display:none">เข้าสู่ระบบและดึงข้อมูล</a>
       <a class="btn sm soft" href="#dash">แดชบอร์ดผู้บริหาร</a>
       <a class="btn sm ghost" href="#settings">ตั้งค่า</a>
     </nav>
@@ -680,6 +702,8 @@ html.gated, html.gated body { overflow: hidden; }
     <section class="view" id="v-dash" hidden></section>
     <!-- ตั้งค่า -->
     <section class="view" id="v-settings" hidden></section>
+    <!-- แถบบันทึกลง Google Sheet -->
+    <div class="savebar" id="savebar" hidden></div>
   </div>
 </div>
 
@@ -1386,7 +1410,7 @@ function evaluateGates(job, res, statuses, asset, jobs, conf, people) {
     if (!hits.length) return null;
     return chk('เลขที่ในชีตเป็นข้อความ ตรงกับที่ make_docs.py จะพิมพ์', false, 'warn',
       hits.map((k) => KEY_LABEL[k] + ': ชีตแสดง ' + job.fmt[k].shown + ' แต่เก็บเป็นตัวเลข ' + job.fmt[k].raw + ' ถ้ารัน make_docs.py จากลิงก์ชีต เอกสารจะพิมพ์ “' + job.fmt[k].py + '”').join(' · ') +
-      ' — แก้ในชีต: เลือกเซลล์ → รูปแบบ → ตัวเลข → ข้อความธรรมดา แล้วพิมพ์เลขที่ใหม่ หรือใช้ไฟล์ที่ดาวน์โหลดจากระบบนี้ (ส่งเป็นข้อความให้แล้ว)', F(hits[0]));
+      ' — แก้ในชีต: เลือกเซลล์ → รูปแบบ → ตัวเลข → ข้อความธรรมดา แล้วพิมพ์เลขที่ใหม่ หรือกดปุ่ม “บันทึกเลขที่เป็นข้อความ” ที่แถบบันทึกด้านล่าง', F(hits[0]));
   };
   const pushIf = (arr, c) => { if (c) arr.push(c); };
   /* สระหรือวรรณยุกต์ซ้อน เช่น เปลี่ี่ยน */
@@ -1907,20 +1931,440 @@ function autoFilledCount(job, a) {
 }
 
 /* =====================================================================
+   เชื่อมชีตผ่าน Apps Script (ดึงและบันทึก) — ใช้คู่กับไฟล์สคริปต์ AssetGoAPI.gs
+   ลิงก์ /exec อย่างเดียวเปิดข้อมูลไม่ได้ ต้องมีรหัสเข้าใช้ รหัสไม่ฝังในไฟล์นี้และไม่รวมในไฟล์สำรอง
+   งานจากชีตเก็บ job.sync ไว้เทียบว่าแก้ช่องไหน และมีคนแก้ในชีตชนกันหรือไม่
+     seq, name = ตัวระบุแถวตามชีต · orig = ค่าตามชีตตอนดึง · base = ค่าดิบในเซลล์ (null = ยังไม่ได้ดึงผ่าน Apps Script)
+     hasX, xsig, xbase = ข้อมูลแถวเดียวกันในแท็บค่าเสื่อมและจุดตรวจ
+   ===================================================================== */
+const GAS_URL = 'https://script.google.com/macros/s/AKfycby_T52ivk-AAlipx9riJL1UhNDXFgcV6lCUTbTnu5j7GHgRz4fe9EgMXiDwxB2lvg8Jiw/exec';
+const KEY_STORE = 'assetgo-api-key';
+const JOB_VIEWS = ['egp', 'dep', 'docs'];
+const MONEY_KEYS = ['amount', 'central_price', 'offer_price', 'agreed_price'];
+const NUMBER_KEYS = ['qty', 'delivery_days'];
+function readKey() { try { return sessionStorage.getItem(KEY_STORE) || localStorage.getItem(KEY_STORE) || ''; } catch (e) { return ''; } }
+/* ok = ดึงด้วยรหัสสำเร็จแล้วในรอบนี้ · busy = '', 'pull', 'save' · ask = '', 'del', 'revert' */
+const api = { key: readKey(), ok: false, busy: '', msg: null, conflict: null, ask: '', keyDraft: '', remember: false, data: null };
+function storeKey(key, remember) {
+  api.key = key;
+  try {
+    sessionStorage.setItem(KEY_STORE, key);
+    if (remember) localStorage.setItem(KEY_STORE, key); else localStorage.removeItem(KEY_STORE);
+  } catch (e) { /* โหมดส่วนตัว: ใช้รหัสได้เท่าที่หน้านี้เปิดอยู่ */ }
+}
+function clearKey() {
+  api.key = ''; api.ok = false;
+  try { sessionStorage.removeItem(KEY_STORE); localStorage.removeItem(KEY_STORE); } catch (e) { /* ไม่มีที่เก็บ */ }
+}
+
+const headerFor = (k, header) => header.find((h) => (COLUMNS[h] || EXTRA_COLUMNS[h]) === k) || '';
+/* รูปแบบกลางสำหรับเทียบว่าค่าเปลี่ยนจริงหรือไม่ เช่น 29500 กับ 29,500.00 ถือว่าเท่ากัน */
+function normVal(k, v) {
+  const t = s_(v).replace(/\r\n?/g, '\n');
+  if (t === '') return '';
+  if (DATE_KEYS.includes(k)) { const d = parseThaiDate(t); return d ? isoDay(d) : t; }
+  if (MONEY_KEYS.includes(k)) { const c = parseMoneyToCents(typeof v === 'number' ? v : t); return c === null ? t : 'c' + c; }
+  if (NUMBER_KEYS.includes(k)) { const n = Number(t.replace(/,/g, '')); return isFinite(n) ? 'n' + n : t; }
+  return t;
+}
+function dirtyKeys(j) {
+  const y = j && j.sync;
+  if (!y || !y.orig) return [];
+  const force = y.force || [];
+  return JOB_KEYS.filter((k) => force.includes(k) || normVal(k, j[k]) !== normVal(k, y.orig[k]));
+}
+function hasAssetData(j) {
+  const a = { ...ASSET_DEFAULT, ...(j.asset || {}) };
+  return ['code', 'cost', 'start', 'docRef'].some((k) => !blank(a[k])) || (parseMoneyToCents(a.prior) || 0) > 0 ||
+    parseMoneyToCents(a.salvage) !== parseMoneyToCents(ASSET_DEFAULT.salvage) ||
+    ['life', 'basis', 'eol', 'grouping', 'status', 'budget'].some((k) => s_(a[k]) !== ASSET_DEFAULT[k]) ||
+    Object.values(j.checks || {}).some(Boolean);
+}
+function extraSig(j) {
+  const a = { ...ASSET_DEFAULT, ...(j.asset || {}) };
+  const val = (k) => {
+    if (k === 'cost' || k === 'salvage' || k === 'prior') { const c = parseMoneyToCents(a[k]); return c === null ? s_(a[k]) : c; }
+    if (k === 'start' || k === 'asOf') { const d = parseThaiDate(a[k]); return d ? isoDay(d) : s_(a[k]); }
+    return s_(a[k]);
+  };
+  return JSON.stringify([Object.keys(ASSET_DEFAULT).map(val), Object.keys(j.checks || {}).filter((k) => j.checks[k]).sort()]);
+}
+function renamed(j) {
+  const o = j.sync && j.sync.orig;
+  return !!o && ['seq', 'project_name'].some((k) => normVal(k, j[k]) !== normVal(k, o[k]));
+}
+function extraDirty(j) {
+  const y = j && j.sync;
+  if (!y) return false;
+  return y.hasX ? extraSig(j) !== y.xsig || renamed(j) : hasAssetData(j);
+}
+const isPending = (j) => !!j && (j.source === 'local' || dirtyKeys(j).length > 0 || extraDirty(j));
+/* แยกช่องที่แก้: ชีตมีคอลัมน์รองรับ (บันทึกได้) กับชีตไม่มีคอลัมน์ (เก็บเฉพาะในหน้านี้) */
+function splitDirty(j) {
+  const header = sheetHeader(), can = [], only = [];
+  dirtyKeys(j).forEach((k) => (headerFor(k, header) ? can : only).push(k));
+  return { can, only };
+}
+const needsSave = (j) => !!j && (j.source === 'local' || splitDirty(j).can.length > 0 || extraDirty(j));
+function snapshotOrig(j) { const o = {}; JOB_KEYS.forEach((k) => { o[k] = j[k]; }); return o; }
+/* งานที่เก็บไว้จากรุ่นก่อนยังไม่มี sync
+   ถ้าเคยแก้ในหน้านี้ (มี updatedAt) ไม่รู้ค่าเดิม จึงถือค่าที่ต่างจากชีตเป็นการแก้ที่ยังไม่บันทึก ให้ผู้ใช้เลือกก่อนเขียนทับ
+   ถ้าไม่เคยแก้ จำค่าตอนนี้ไว้เป็นค่าตามชีต */
+function ensureSync(j) {
+  if (j.source !== 'sheet' || j.sync) return;
+  j.sync = { seq: j.seq, name: j.project_name, orig: j.updatedAt ? blankJob() : snapshotOrig(j), base: null, hasX: false, xsig: '', fmt: j.fmt ? { ...j.fmt } : null };
+}
+
+/* ค่าดิบในเซลล์แบบเดียวกับที่สคริปต์ใช้เทียบการแก้ชนกัน */
+const canonRaw = (v) => (v === null || v === undefined ? '' : String(v));
+function attachRaw(p, data) {
+  const tab = (name) => (data.sheets && data.sheets[name]) || [];
+  const rows = tab('ข้อมูลงาน'), head = (rows[0] || []).map(norm);
+  const xrows = tab(EXTRA_SHEET), xhead = (xrows[0] || []).map(norm);
+  const xcell = (r, h) => (xhead.indexOf(h) < 0 ? '' : canonRaw(r[xhead.indexOf(h)]));
+  const xmap = new Map();
+  xrows.slice(1).forEach((r) => {
+    if (blank(xcell(r, 'ชื่อโครงการ/งาน'))) return;
+    xmap.set(norm(numStr(xcell(r, 'ลำดับไฟล์'))) + '|' + norm(xcell(r, 'ชื่อโครงการ/งาน')), EXTRA_HEADER.map((h) => xcell(r, h)));
+  });
+  p.jobs.forEach((j) => {
+    const r = rows[j.rowNo - 1] || [], base = {};
+    head.forEach((h, i) => { if (h && !(h in base)) base[h] = canonRaw(r[i]); });
+    j.raw = { base, xbase: xmap.get(jobKey(j)) || null };
+  });
+}
+
+/* รวมแถวจากชีตกับงานเดิมในหน้านี้: ช่องที่แก้แล้วยังไม่บันทึกคงไว้ ช่องอื่นใช้ค่าจากชีต */
+function mergeJob(j, prev, ex, header) {
+  const raw = j.raw || null; delete j.raw;
+  j.id = prev ? prev.id : uid();
+  j.asset = ex ? ex.asset : (prev && prev.asset && !prev.discard) ? prev.asset : defaultAsset(j);
+  j.checks = ex ? { ...ex.checks } : (prev && !prev.discard) ? { ...(prev.checks || {}) } : {};
+  j.sync = { seq: j.seq, name: j.project_name, orig: snapshotOrig(j), base: raw ? raw.base : null, hasX: !!ex, fmt: j.fmt ? { ...j.fmt } : null };
+  if (raw) j.sync.xbase = raw.xbase;
+  j.sync.xsig = ex ? extraSig(j) : '';
+  if (!prev || prev.discard) return j;
+  /* งานที่กรอกในหน้านี้แล้วพบแถวเดียวกันในชีต: ถือค่าที่กรอกเป็นการแก้ที่ยังไม่บันทึก */
+  if (prev.source === 'local') prev.sync = { orig: blankJob(), base: {}, hasX: false, xsig: '' };
+  const old = prev.sync;
+  if (!old) return j;
+  const force = [];
+  dirtyKeys(prev).forEach((k) => {
+    const forced = (old.force || []).includes(k);
+    const sheetNow = j[k];
+    if (!forced && normVal(k, sheetNow) === normVal(k, prev[k])) return;
+    const h = headerFor(k, header);
+    const unchanged = normVal(k, sheetNow) === normVal(k, old.orig[k]);
+    j[k] = prev[k];
+    j.sync.orig[k] = old.orig[k];
+    if (forced) force.push(k); else if (j.fmt) delete j.fmt[k];
+    /* คงค่าดิบเดิมไว้ ถ้าชีตเปลี่ยนไปแล้ว สคริปต์จะแจ้งว่าแก้ชนกันตอนบันทึก */
+    if (j.sync.base && h) {
+      if (old.base && old.base[h] !== undefined) j.sync.base[h] = old.base[h];
+      else if (!unchanged) j.sync.base[h] = '\u0000';
+    }
+  });
+  if (force.length) j.sync.force = force;
+  if (extraDirty(prev)) {
+    const sheetSig = ex ? extraSig({ asset: ex.asset, checks: ex.checks }) : '';
+    if (!ex || sheetSig !== extraSig(prev)) {
+      const unchanged = ex ? old.hasX && sheetSig === old.xsig : !old.hasX;
+      j.asset = prev.asset; j.checks = { ...(prev.checks || {}) };
+      j.sync.hasX = !!ex || !!old.hasX;
+      j.sync.xsig = old.hasX ? old.xsig : '';
+      if (raw) {
+        if (old.xbase !== undefined) j.sync.xbase = old.xbase;
+        else if (!unchanged) j.sync.xbase = null;
+      }
+    }
+  }
+  return j;
+}
+
+/* รายการที่จะส่งให้สคริปต์: เฉพาะช่องที่แก้ (งานใหม่ส่งทุกช่องที่กรอก) */
+function savePlan(j) {
+  const isNew = j.source === 'local', y = j.sync, header = sheetHeader();
+  const out = { isNew, errors: [], missing: [], changes: [], sent: {}, extra: null, xsig: '' };
+  if (blank(j.seq) || blank(j.project_name)) out.errors.push('ต้องกรอกลำดับไฟล์และชื่อโครงการ/งาน');
+  const keys = isNew ? JOB_KEYS.filter((k) => !blank(j[k])) : dirtyKeys(j);
+  keys.forEach((k) => {
+    const h = headerFor(k, header), label = KEY_LABEL[k];
+    if (!h) { out.missing.push(label); return; }
+    const t = s_(j[k]);
+    let type = 'text', value = t;
+    if (t !== '') {
+      if (DATE_KEYS.includes(k)) {
+        const d = parseThaiDate(j[k]);
+        if (!d) { out.errors.push(label + ': วันที่ “' + t + '” ไม่ถูกต้อง ใช้ วว/ดด/ปปปป เป็น พ.ศ.'); return; }
+        type = 'date'; value = isoDay(d);
+      } else if (MONEY_KEYS.includes(k)) {
+        const c = parseMoneyToCents(j[k]);
+        if (c === null) { out.errors.push(label + ': “' + t + '” ไม่ใช่จำนวนเงิน'); return; }
+        type = 'money'; value = c / 100;
+      } else if (NUMBER_KEYS.includes(k)) {
+        const n = Number(t.replace(/,/g, ''));
+        if (isFinite(n)) { type = 'number'; value = n; }
+      }
+    }
+    const c = { col: h, type, value };
+    if (!isNew) {
+      c.base = y.base && y.base[h] !== undefined ? y.base[h] : '\u0000';
+      if ((y.force || []).includes(k)) c.force = true;
+    }
+    out.changes.push(c); out.sent[k] = j[k];
+  });
+  if (isNew ? hasAssetData(j) : extraDirty(j)) {
+    out.extra = { header: EXTRA_HEADER, row: extraRow(analyze(j)), oldKey: isNew ? null : [s_(y.seq), s_(y.name)], base: isNew || !y.xbase ? null : y.xbase };
+    out.xsig = extraSig(j);
+  }
+  return out;
+}
+/* บันทึกสำเร็จ: ค่าที่ส่งไปกลายเป็นค่าตามชีต (สิ่งที่พิมพ์เพิ่มระหว่างรอยังนับว่ายังไม่บันทึก) */
+function markSaved(j, plan, rowNo) {
+  if (plan.isNew) { j.source = 'sheet'; j.sync = { orig: blankJob(), base: {}, hasX: false, xsig: '' }; }
+  const y = j.sync, header = sheetHeader();
+  j.rowNo = rowNo; delete j.orphan;
+  Object.entries(plan.sent).forEach(([k, v]) => { y.orig[k] = v; if (y.base) delete y.base[headerFor(k, header)]; });
+  y.force = (y.force || []).filter((k) => !(k in plan.sent));
+  y.seq = y.orig.seq; y.name = y.orig.project_name;
+  if (plan.extra) { y.hasX = true; y.xsig = plan.xsig; delete y.xbase; }
+}
+
+async function gasCall(action, payload) {
+  const ctrl = new AbortController(), timer = setTimeout(() => ctrl.abort(), 90000);
+  let text;
+  try {
+    /* ส่งเป็นข้อความธรรมดา (ค่าตั้งต้นของ fetch) เพื่อให้ Apps Script รับได้โดยไม่ต้องตรวจ CORS ล่วงหน้า */
+    const res = await fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action, key: api.key, ...(payload || {}) }), redirect: 'follow', credentials: 'omit', signal: ctrl.signal });
+    text = await res.text();
+  } catch (e) { throw { code: 'api_network' }; } finally { clearTimeout(timer); }
+  let o;
+  try { o = JSON.parse(text); } catch (e) { throw { code: /Script function not found|ไม่พบฟังก์ชันของสคริปต์/.test(text) ? 'api_noscript' : 'api_badresponse' }; }
+  if (!o || !o.ok) throw { ...(o || {}), code: 'api_' + ((o && o.error) || 'badresponse') };
+  if (!o.data || !o.data.sheets) throw { code: 'api_badresponse' };
+  return o;
+}
+const API_MSG = {
+  api_network: 'ติดต่อ Apps Script ไม่ได้ ตรวจอินเทอร์เน็ต และตรวจว่าทำให้ใช้งานได้ (Deploy) แล้ว โดยตั้ง “ผู้มีสิทธิ์เข้าถึง” เป็น “ทุกคน” ถ้าเกิดตอนบันทึก ให้กด “ดึงข้อมูลล่าสุด” เพื่อตรวจว่าเขียนลงชีตแล้วหรือยัง',
+  api_noscript: 'ลิงก์ Apps Script ยังไม่มีส่วนรับข้อมูล วางไฟล์ AssetGoAPI.gs แล้ว Deploy เป็นเวอร์ชันใหม่',
+  api_badresponse: 'Apps Script ตอบกลับในรูปแบบที่อ่านไม่ได้ ตรวจว่า Deploy ไฟล์ AssetGoAPI.gs เป็นเวอร์ชันใหม่แล้ว',
+  api_nosetup: 'สคริปต์ยังไม่มีรหัสเข้าใช้ เรียกใช้ฟังก์ชัน apiCreateKey ในตัวแก้ไขสคริปต์ก่อน',
+  api_badkey: 'รหัสเข้าใช้ไม่ถูกต้อง',
+  api_busy: 'มีการบันทึกอื่นกำลังทำงานอยู่ รอสักครู่แล้วลองใหม่',
+  api_conflict: 'มีช่องที่ถูกแก้ในชีตหลังจากหน้านี้ดึงข้อมูล ยังไม่ได้เขียนอะไรลงชีต เลือกว่าจะใช้ค่าใด',
+  api_moved: 'ไม่พบแถวเดิมของงานนี้ในชีต (อาจถูกลบ ย้าย หรือเปลี่ยนชื่อ) ยังไม่ได้เขียนอะไร ดึงข้อมูลล่าสุดมาให้แล้ว ตรวจแล้วกดบันทึกอีกครั้ง',
+  api_ambiguous: 'ชีตมีหลายแถวที่ลำดับไฟล์และชื่อโครงการตรงกัน แก้ให้ไม่ซ้ำในชีตก่อน ยังไม่ได้เขียนอะไร',
+  api_exists: 'ชีตมีแถวที่ลำดับไฟล์และชื่อตรงกับงานนี้อยู่แล้ว ยังไม่ได้เพิ่มแถวซ้ำ ตรวจข้อมูลแล้วกดบันทึกอีกครั้งถ้ายังมีช่องค้าง',
+  api_needid: 'งานใหม่ต้องมีลำดับไฟล์และชื่อโครงการ/งาน'
+};
+function apiErrText(e) {
+  if (e.code === 'api_seq_taken') return 'ลำดับไฟล์นี้มีงานอื่นใช้แล้ว (แถว ' + e.rowNo + ') ยังไม่ได้เขียนอะไร เลขถัดไปคือ ' + e.nextSeq;
+  if (e.code === 'api_seq_used') return 'ลำดับไฟล์ที่แก้ไปซ้ำกับแถว ' + e.rowNo + ' ในชีต ยังไม่ได้เขียนอะไร';
+  if (API_MSG[e.code]) return API_MSG[e.code];
+  return 'Apps Script แจ้งข้อผิดพลาด: ' + (e.message || String(e.code || e).replace(/^api_/, ''));
+}
+
+/* วาดหน้าใหม่โดยคงตำแหน่งเลื่อนและช่องที่กำลังพิมพ์ */
+function keepScreen(fn) {
+  const ws = $('#ws'), top = ws.scrollTop, a = document.activeElement, id = a && a.id;
+  const pos = a && typeof a.selectionStart === 'number' ? [a.selectionStart, a.selectionEnd] : null;
+  fn();
+  if (!ws.hidden) ws.scrollTop = top;
+  const n = id && document.getElementById(id);
+  if (n && n !== document.activeElement) { n.focus({ preventScroll: true }); if (pos) { try { n.setSelectionRange(pos[0], pos[1]); } catch (e) { /* ช่องชนิดนี้เลือกข้อความไม่ได้ */ } } }
+}
+function apiRefresh() { renderGate(); renderHomeSignIn(); renderSourceBox(); renderSaveBar(); }
+function importData(data) {
+  api.data = data;
+  keepScreen(() => importWorkbook(gasToWorkbook(data), { kind: 'gas', at: Date.now(), title: data.title }, data));
+  apiRefresh();
+}
+function apiFail(e) {
+  const text = esc(apiErrText(e));
+  if (e.code === 'api_badkey' || e.code === 'api_nosetup') clearKey();
+  syncMsg = { kind: 'bad', html: text };
+  api.msg = { id: S.selectedId, kind: 'bad', html: text };
+  apiRefresh();
+}
+function askKey() {
+  api.msg = { id: S.selectedId, kind: 'warn', html: 'ใส่รหัสเข้าใช้ก่อน จึงจะบันทึกลง Google Sheet ได้' };
+  apiRefresh();
+  const n = $('#gKey') || $('#sbKey') || $('#srcKey'); if (n) n.focus();
+}
+function connectKey() {
+  const key = s_(api.keyDraft);
+  if (key) { storeKey(key, api.remember); api.keyDraft = ''; }
+  if (!api.key) return askKey();
+  gasPull(false);
+}
+async function gasPull(silent) {
+  if (api.busy || IN_CLAUDE) return false;
+  if (!api.key) { askKey(); return false; }
+  api.busy = 'pull'; if (!silent) { syncMsg = null; api.msg = null; api.conflict = null; } gate.noAccess = false; apiRefresh();
+  try {
+    const r = await gasCall('pull');
+    api.busy = ''; api.ok = true;
+    importData(r.data);
+    if (!silent) toast('ดึงข้อมูลล่าสุดแล้ว');
+    return true;
+  } catch (e) {
+    api.busy = '';
+    apiFail(e);
+    return false;
+  }
+}
+async function gasSave() {
+  if (api.busy || IN_CLAUDE) return;
+  const id = (curJob() || {}).id; if (!id) return;
+  const byId = () => S.jobs.find((x) => x.id === id);
+  if (!api.key) return askKey();
+  api.ask = ''; api.conflict = null;
+  /* ยังไม่ได้ดึงผ่านสคริปต์ในรอบนี้ (หรือข้อมูลมาจากไฟล์/การลงชื่อเข้าใช้ Google): ดึงก่อน เพื่อมีค่าเดิมไว้ตรวจการแก้ชนกัน */
+  let j = byId();
+  if (!api.ok || (j.source === 'sheet' && !(j.sync && j.sync.base))) {
+    if (!(await gasPull(true))) return;
+    j = byId(); if (!j) return;
+  }
+  if (j.orphan) { api.msg = { id, kind: 'warn', html: 'ไม่พบแถวของงานนี้ในชีต กด “บันทึกเป็นแถวใหม่” ถ้าต้องการเพิ่มกลับเข้าไป' }; renderSaveBar(); return; }
+  const plan = savePlan(j);
+  if (plan.errors.length) { api.msg = { id, kind: 'bad', html: '<b>ยังบันทึกไม่ได้</b><br>' + plan.errors.map(esc).join('<br>') }; renderSaveBar(); return; }
+  if (!plan.changes.length && !plan.extra) {
+    api.msg = { id, kind: 'info', html: plan.missing.length ? 'ชีตไม่มีคอลัมน์สำหรับ ' + esc(plan.missing.join(', ')) + ' จึงบันทึกไม่ได้' : 'ไม่มีการแก้ไขที่ต้องบันทึก ข้อมูลตรงกับชีตที่ดึงล่าสุด' };
+    renderSaveBar(); return;
+  }
+  api.busy = 'save'; api.msg = null; apiRefresh();
+  try {
+    const r = await gasCall('save', { job: { isNew: plan.isNew, rowNo: j.rowNo || 0, id: plan.isNew ? null : { seq: j.sync.seq, name: j.sync.name }, changes: plan.changes }, extra: plan.extra });
+    api.busy = ''; api.ok = true;
+    j = byId(); if (j) markSaved(j, plan, r.rowNo);
+    importData(r.data);
+    const missing = plan.missing.concat(r.missing || []);
+    const notes = ['<b>บันทึกลง Google Sheet แล้ว</b> · ' + (r.created ? 'เพิ่มแถวใหม่ที่แถว ' : 'แถว ') + esc(r.rowNo) + ' · เขียน ' + (r.written || []).length + ' ช่อง' + (r.extraSaved ? ' และข้อมูลในแท็บ “' + esc(EXTRA_SHEET) + '”' : '')];
+    if ((r.overridden || []).length) notes.push('เขียนทับสูตรในช่อง: ' + esc(r.overridden.join(', ')) + ' (สูตรประจำคอลัมน์คืนได้โดยลบค่าแล้วบันทึกอีกครั้ง สูตรเฉพาะแถวให้กู้จากประวัติเวอร์ชันของชีต)');
+    if ((r.restored || []).length) notes.push('คืนสูตรของชีตให้ช่อง: ' + esc(r.restored.join(', ')));
+    if (missing.length) notes.push('ไม่ได้บันทึก เพราะชีตไม่มีคอลัมน์: ' + esc(missing.join(', ')));
+    api.msg = { id, kind: missing.length || (r.overridden || []).length ? 'warn' : 'ok', html: notes.join('<br>') };
+    renderSaveBar(); toast('บันทึกลง Google Sheet แล้ว');
+  } catch (e) {
+    api.busy = '';
+    if (!e.data) return apiFail(e);
+    importData(e.data);
+    if (e.code === 'api_conflict') api.conflict = { id, list: e.conflicts || [] };
+    api.msg = { id, kind: e.code === 'api_conflict' ? 'warn' : 'bad', html: esc(apiErrText(e)), nextSeq: e.code === 'api_seq_taken' ? e.nextSeq : null };
+    renderSaveBar();
+  }
+}
+function resolveConflict(mine) {
+  const c = api.conflict; if (!c) return;
+  const j = S.jobs.find((x) => x.id === c.id);
+  api.conflict = null; api.msg = null;
+  if (!j || !j.sync) return renderSaveBar();
+  S.selectedId = j.id;
+  if (mine) {
+    c.list.forEach((x) => { if (x.extra) j.sync.xbase = x.nowRow; else if (j.sync.base) j.sync.base[x.col] = x.now; });
+    save(); gasSave(); return;
+  }
+  const p = parseWorkbook(gasToWorkbook(api.data));
+  const latest = p.jobs.find((x) => x.rowNo === j.rowNo);
+  if (latest) c.list.forEach((x) => {
+    if (x.extra) {
+      const ex = p.extra.get(jobKey(latest));
+      j.asset = ex ? ex.asset : defaultAsset(latest); j.checks = ex ? { ...ex.checks } : {};
+      j.sync.hasX = !!ex; j.sync.xsig = ex ? extraSig(j) : ''; j.sync.xbase = x.nowRow;
+      return;
+    }
+    const k = COLUMNS[x.col] || EXTRA_COLUMNS[x.col]; if (!k) return;
+    j[k] = latest[k]; j.sync.orig[k] = latest[k]; if (j.sync.base) j.sync.base[x.col] = x.now;
+    j.sync.force = (j.sync.force || []).filter((f) => f !== k);
+  });
+  save(); keepScreen(rerender);
+  api.msg = { id: j.id, kind: 'info', html: 'ใช้ค่าจากชีตในช่องที่ชนกันแล้ว' + (isPending(j) ? ' ยังมีช่องอื่นรอบันทึก กด “บันทึกลง Google Sheet” อีกครั้ง' : '') };
+  renderSaveBar();
+}
+async function revertJob() {
+  const j = curJob(); if (!j) return;
+  api.ask = ''; api.conflict = null; j.discard = true;
+  if (await gasPull(true)) { api.msg = { id: S.selectedId, kind: 'info', html: 'ยกเลิกการแก้ไขแล้ว แสดงค่าตามชีตล่าสุด' }; renderSaveBar(); }
+  else delete j.discard;
+}
+
+/* ---------- แถบบันทึก (ระบบ 1–3) ---------- */
+function keyFormHTML(where) {
+  const gateForm = where === 'g', id = where + 'Key';
+  return '<form class="keyform' + (gateForm ? ' stacked' : '') + '" data-keyform novalidate>' +
+    '<div class="field"><label for="' + id + '">รหัสเข้าใช้</label><input class="input" id="' + id + '" data-key' + (gateForm ? ' data-fid="login"' : '') + ' type="password" autocomplete="current-password" spellcheck="false" value="' + esc(api.keyDraft) + '"></div>' +
+    '<label class="remember"><input type="checkbox" data-remember' + (gateForm ? ' data-fid="remember"' : '') + (api.remember ? ' checked' : '') + '><span>จำรหัสไว้ในเครื่องนี้ (ไม่ควรเลือกถ้าเป็นเครื่องที่ใช้ร่วมกัน)</span></label>' +
+    '<button class="btn primary' + (gateForm ? ' cta' : '') + '" type="submit"' + (gateForm ? ' data-fid="submitKey"' : '') + (api.busy ? ' disabled' : '') + '>' + ICON('sync') +
+    (api.busy ? 'กำลังเชื่อมต่อ…' : gateForm ? 'เข้าสู่ระบบ' : 'เชื่อมต่อและดึงข้อมูล') + '</button></form>';
+}
+/* วาดใหม่เฉพาะเมื่อเนื้อหาเปลี่ยน ปุ่มจะได้ไม่ถูกสร้างใหม่ระหว่างที่ผู้ใช้กำลังกด */
+function paintBar(el, html) { if (el.shownHTML !== html) { el.innerHTML = html; el.shownHTML = html; } }
+function renderSaveBar() {
+  const el = $('#savebar'); if (!el) return;
+  const j = curJob();
+  if (!j || !JOB_VIEWS.includes(currentView)) { el.hidden = true; paintBar(el, ''); return; }
+  el.hidden = false;
+  const local = j.source === 'local', row = 'แถว ' + (j.rowNo || '–');
+  const split = local ? { can: [], only: [] } : splitDirty(j), keys = split.can, xd = !local && extraDirty(j), n = keys.length + (xd ? 1 : 0);
+  const delBtn = '<button class="btn sm ghost sb-del" type="button" data-act="delAsk" aria-label="ลบงานนี้ออกจากหน้านี้" title="ลบงานนี้ออกจากหน้านี้ (แถวในชีตไม่ถูกลบ)">' + ICON('trash') + '<span class="lbl">ลบงานนี้ออกจากหน้านี้</span></button>';
+  const delBox = api.ask === 'del' ? '<div class="confirm"><span>ลบงาน “' + esc(jobLabel(j)) + '” ออกจากหน้านี้? แถวในชีตไม่ถูกลบ' + (isPending(j) ? ' แต่ข้อมูลที่ยังไม่บันทึกจะหาย' : '') + '</span><button class="btn sm primary" type="button" data-act="delYes">ลบงาน</button><button class="btn sm" type="button" data-act="delNo">ยกเลิก</button></div>' : '';
+  const top = (state, sub, buttons) => '<div class="sb-top"><div class="sb-state" role="status"><b>' + esc(state) + '</b><span>' + esc(sub) + '</span></div><div class="row">' + buttons + '</div></div>';
+  if (IN_CLAUDE) {
+    paintBar(el, top('มุมมองใน claude.ai บันทึกลงชีตไม่ได้', 'เปิดหน้านี้จาก GitHub Pages หรือเปิดไฟล์ในเบราว์เซอร์ เพื่อบันทึกลง Google Sheet', delBtn) + delBox);
+    return;
+  }
+  let state, sub;
+  if (local) { state = 'งานใหม่ ยังไม่อยู่ในชีต'; sub = 'กดบันทึกเพื่อเพิ่มเป็นแถวใหม่ในชีต “ข้อมูลงาน”'; }
+  else if (j.orphan) { state = 'ไม่พบแถวของงานนี้ในชีตแล้ว'; sub = 'อาจถูกลบหรือเปลี่ยนชื่อในชีต สิ่งที่แก้ไว้ยังอยู่ในหน้านี้'; }
+  else if (n) {
+    const labels = keys.map((k) => KEY_LABEL[k]).concat(xd ? ['ค่าเสื่อม/จุดตรวจ'] : []);
+    state = row + ' · ยังไม่บันทึก ' + n + ' รายการ'; sub = labels.slice(0, 5).join(', ') + (labels.length > 5 ? ' และอีก ' + (labels.length - 5) : '');
+  } else if (!api.ok || !j.sync || !j.sync.base) { state = row + ' ในชีต'; sub = 'ยังไม่ได้ดึงข้อมูลรอบนี้ด้วยรหัสเข้าใช้'; }
+  else { const at = new Date(S.source.at || Date.now()); state = row + ' · ตรงกับชีต'; sub = 'ดึงเมื่อ ' + String(at.getHours()).padStart(2, '0') + ':' + String(at.getMinutes()).padStart(2, '0') + ' น.'; }
+  const others = S.jobs.filter((x) => x.id !== j.id && needsSave(x)).length;
+  if (others) sub += ' · งานอื่นรอบันทึกอีก ' + others + ' งาน';
+  if (split.only.length) sub += ' · เก็บเฉพาะในเครื่องนี้ เพราะชีตไม่มีคอลัมน์: ' + split.only.map((k) => KEY_LABEL[k]).join(', ');
+  const off = api.busy ? ' disabled' : '';
+  const buttons = (j.orphan
+    ? '<button class="btn primary" type="button" data-act="apiAsNew"' + off + '>บันทึกเป็นแถวใหม่</button>'
+    : '<button class="btn primary" type="button" data-act="apiSave" title="Ctrl+S"' + off + '>' + ICON('check') + (api.busy === 'save' ? 'กำลังบันทึก…' : 'บันทึกลง Google Sheet') + '</button>') +
+    '<button class="btn" type="button" data-act="apiPull"' + off + '>' + ICON('sync') + (api.busy === 'pull' ? 'กำลังดึง…' : 'ดึงข้อมูลล่าสุด') + '</button>' +
+    (!local && (n || split.only.length || j.orphan) && api.key ? '<button class="btn sm ghost" type="button" data-act="apiRevertAsk"' + off + '>ยกเลิกการแก้ไข</button>' : '') + delBtn;
+  const revertBox = api.ask === 'revert' ? '<div class="confirm"><span>ทิ้งสิ่งที่แก้ในงานนี้ แล้วใช้ค่าจากชีต?</span><button class="btn sm primary" type="button" data-act="apiRevert">ใช้ค่าจากชีต</button><button class="btn sm" type="button" data-act="delNo">ไม่ใช่ตอนนี้</button></div>' : '';
+  const fmt = !local && !j.orphan && j.sync && j.sync.fmt ? Object.keys(j.sync.fmt) : [];
+  const fmtBox = fmt.length ? '<div class="msg warn sb-fmt"><span>อย่าเพิ่งรัน run.bat จากลิงก์ชีตสำหรับงานนี้ ชีตเก็บ ' + fmt.map((k) => esc(KEY_LABEL[k])).join(', ') + ' เป็นตัวเลข เอกสารจะพิมพ์ ' +
+    fmt.map((k) => '“' + esc(j.sync.fmt[k].py) + '” แทน “' + esc(j.sync.fmt[k].shown) + '”').join(', ') + '</span><button class="btn sm" type="button" data-act="apiForceText"' + off + '>บันทึกเลขที่เป็นข้อความ</button></div>' : '';
+  const m = api.msg && api.msg.id === j.id ? api.msg : null;
+  const msgBox = m ? '<div class="msg ' + m.kind + '" role="status">' + m.html + (m.nextSeq ? ' <button class="btn sm" type="button" data-act="apiNextSeq" data-seq="' + esc(m.nextSeq) + '">ใช้ลำดับ ' + esc(m.nextSeq) + ' แล้วบันทึก</button>' : '') + '</div>' : '';
+  const c = api.conflict && api.conflict.id === j.id ? api.conflict : null;
+  const conflictBox = c ? '<div class="tbl-wrap"><table class="t"><thead><tr><th>ช่อง</th><th>ในชีตตอนนี้</th><th>ในหน้านี้</th></tr></thead><tbody>' +
+    c.list.map((x) => {
+      const k = COLUMNS[x.col] || EXTRA_COLUMNS[x.col];
+      return '<tr><td>' + esc(x.col) + '</td><td>' + esc(x.shown || '(เว้นว่าง)') + '</td><td>' + esc(x.extra ? 'ข้อมูลครุภัณฑ์/จุดตรวจที่แก้ในหน้านี้' : s_(j[k]) || '(เว้นว่าง)') + '</td></tr>';
+    }).join('') + '</tbody></table></div><div class="row"><button class="btn sm primary" type="button" data-act="apiMine"' + off + '>บันทึกทับด้วยค่าในหน้านี้</button><button class="btn sm" type="button" data-act="apiTheirs"' + off + '>ใช้ค่าจากชีต</button></div>' : '';
+  paintBar(el, top(state, sub, buttons) + (api.key ? '' : keyFormHTML('sb')) + delBox + revertBox + msgBox + conflictBox + fmtBox);
+}
+
+/* =====================================================================
    อ่านไฟล์ Excel / Google Sheets
    ===================================================================== */
 function applyImport(p, source) {
-  const prevByKey = new Map(S.jobs.map((j) => [jobKey(j), j]));
-  const jobs = p.jobs.map((j) => {
-    const k = jobKey(j), prev = prevByKey.get(k), ex = p.extra.get(k);
-    j.id = prev ? prev.id : uid();
-    j.asset = ex ? ex.asset : (prev && prev.asset) ? prev.asset : defaultAsset(j);
-    j.checks = ex ? { ...(prev ? prev.checks : {}), ...ex.checks } : (prev ? prev.checks || {} : {});
-    return j;
+  const prevJobs = S.jobs.slice(), used = new Set(), match = p.jobs.map(() => null);
+  const idKey = (o) => (o.sync && o.source === 'sheet' ? norm(numStr(o.sync.seq)) + '|' + norm(o.sync.name) : jobKey(o));
+  const claim = (test) => p.jobs.forEach((j, i) => {
+    if (match[i]) return;
+    const o = prevJobs.find((x) => !used.has(x) && test(j, x));
+    if (o) { match[i] = o; used.add(o); }
   });
-  const sheetKeys = new Set(jobs.map(jobKey));
-  const localOnly = S.jobs.filter((j) => j.source === 'local' && !sheetKeys.has(jobKey(j)));
-  S.jobs = jobs.concat(localOnly);
+  claim((j, o) => idKey(o) === jobKey(j) && o.rowNo === j.rowNo);
+  claim((j, o) => idKey(o) === jobKey(j));
+  /* ชื่อโครงการถูกแก้ในชีต: ยังเป็นแถวเดิมและลำดับไฟล์เดิม */
+  claim((j, o) => o.source === 'sheet' && !!o.sync && o.rowNo === j.rowNo && !blank(j.seq) && norm(numStr(o.sync.seq)) === norm(numStr(j.seq)));
+  const jobs = p.jobs.map((j, i) => mergeJob(j, match[i], p.extra.get(jobKey(j)), p.header));
+  /* งานที่ยังไม่อยู่ในชีต และงานที่แก้ค้างไว้แต่หาแถวในชีตไม่พบ ต้องไม่หายไป */
+  const kept = prevJobs.filter((o) => !used.has(o) && (o.source === 'local' || (!o.discard && isPending(o))));
+  kept.forEach((o) => { if (o.source !== 'local') o.orphan = true; });
+  S.jobs = jobs.concat(kept);
   if (p.people && p.people.length) S.people = p.people;
   if (p.vendors) S.vendors = p.vendors;
   if (p.conf) S.conf = { ...S.conf, ...p.conf };
@@ -2094,41 +2538,9 @@ async function fetchSheetViaGoogle() {
 }
 
 /* =====================================================================
-   ส่งออก: แถวสำหรับวางในชีต / ไฟล์ Excel ที่ make_docs.py อ่านได้
+   หัวคอลัมน์ชีต · แถวค่าเสื่อมที่บันทึกลงชีต · บันทึกไฟล์รายงาน
    ===================================================================== */
 function sheetHeader() { return S.header && S.header.length ? S.header : HEADER48; }
-function jobRowValues(job, header) {
-  return header.map((h) => {
-    const k = COLUMNS[h];
-    if (!k) return '';
-    const v = job[k];
-    if (blank(v)) return '';
-    if (k === 'amount' || k === 'central_price' || k === 'offer_price' || k === 'agreed_price') {
-      const c = parseMoneyToCents(v); return c === null ? v : c / 100;
-    }
-    return v;
-  });
-}
-/* ช่องที่ชีตคำนวณเอง: เมื่อคัดลอกแถวไปวาง ส่งเป็นสูตรที่อ้างแถวของตัวเอง (INDEX(คอลัมน์,ROW())) วางแถวไหนก็ได้ */
-const colA1 = (i) => { let s = ''; for (let n = i + 1; n > 0; n = Math.floor((n - 1) / 26)) s = String.fromCharCode(65 + ((n - 1) % 26)) + s; return s; };
-function sheetFormula(k, header) {
-  const cell = (key) => { const h = Object.keys(COLUMNS).find((x) => COLUMNS[x] === key); const i = header.indexOf(h); if (i < 0) return null; const c = colA1(i); return 'INDEX(' + c + ':' + c + ',ROW())'; };
-  const rep = cell('report_date'), res = cell('result_no'), ann = cell('announce_date'), po = cell('po_date'), days = cell('delivery_days'), amt = cell('amount'), offer = cell('offer_price');
-  switch (k) {
-    case 'order_date': case 'result_date': return rep && '=IF(' + rep + '="","",' + rep + ')';
-    case 'announce_date': return rep && res && '=IF(OR(' + rep + '="",' + res + '=""),"",' + rep + ')';
-    case 'po_date': return ann && "=IF(" + ann + "=\"\",\"\",WORKDAY(" + ann + ",1,'" + HOLIDAY_SHEET + "'!A2:A))";
-    case 'due_date': return po && days && '=IF(OR(' + po + '="",' + days + '=""),"",' + po + '+' + days + ')';
-    case 'offer_price': return amt && '=IF(' + amt + '="","",' + amt + ')';
-    case 'agreed_price': return offer && '=IF(' + offer + '="","",' + offer + ')';
-  }
-  return null;
-}
-const tsvCell = (v) => String(v === null || v === undefined ? '' : v).replace(/[\t\r\n]+/g, ' ');
-function jobTSV(job) {
-  const header = sheetHeader();
-  return jobRowValues(job, header).map((v, i) => (blank(v) && COLUMNS[header[i]] ? sheetFormula(COLUMNS[header[i]], header) || '' : v)).map(tsvCell).join('\t');
-}
 function extraRow(a) {
   const j = a.job, as = { ...ASSET_DEFAULT, ...(j.asset || {}) }, m = a.asset && a.asset.model;
   const r = a.ratios;
@@ -2139,27 +2551,6 @@ function extraRow(a) {
     m ? m.snapshot.accumulatedCents / 100 : '', m ? m.snapshot.bookValueCents / 100 : '',
     r ? pct(r.vsBook) : '', r ? pct(r.vsCost) : '', r ? pct(r.cumVsCost) : '',
     Object.keys(j.checks || {}).filter((k) => j.checks[k]).join(',')];
-}
-function exportableJobs() { return S.jobs; }
-function buildWorkbook() {
-  const wb = XLSX.utils.book_new();
-  const header = sheetHeader();
-  const jobs = exportableJobs();
-  const add = (name, rows, widths) => { const ws = XLSX.utils.aoa_to_sheet(rows); if (widths) ws['!cols'] = widths.map((w) => ({ wch: w })); XLSX.utils.book_append_sheet(wb, ws, name); };
-  add('ข้อมูลงาน', [header].concat(jobs.map((j) => jobRowValues(j, header))), header.map(() => 18));
-  const L = S.lists || {};
-  const lcols = [['ประเภท', L.kind || []], ['หน่วยนับ', L.unit || []], ['หน่วยงาน (งาน)', L.owner_unit || []], ['ประเภทเงิน', L.fund_type || []], ['ภาษีมูลค่าเพิ่ม', L.vat_mode || []]];
-  const maxLen = Math.max(...lcols.map(([, v]) => v.length));
-  const drows = [lcols.map(([h]) => h)];
-  for (let i = 0; i < maxLen; i++) drows.push(lcols.map(([, v]) => v[i] || null));
-  add('data', drows, [10, 12, 40, 18, 14]);
-  add('บุคลากร', [['ชื่อ-สกุล', 'ตำแหน่ง']].concat(S.people.map(([n, p]) => [n, p])), [44, 44]);
-  add('ผู้ขาย', [['ชื่อผู้ขาย/ผู้รับจ้าง', 'ลักษณะกิจการ (ตามที่ e-GP แสดง)', 'ที่อยู่', 'โทรศัพท์', 'เลขประจำตัวผู้เสียภาษี']]
-    .concat(S.vendors.map((v) => [v.name, v.activity, v.address, v.phone, v.tax_id])), [44, 28, 44, 18, 18]);
-  add('ตั้งค่า', [['รายการ', 'ค่า']].concat(Object.entries(CONF_KEYS).map(([h, k]) => [h, S.conf[k] || ''])), [34, 60]);
-  add(HOLIDAY_SHEET, [['วันที่', 'ชื่อวันหยุด']].concat(engineConf().holidays.map(([d, n]) => { const [y, m, dd] = d.split('-').map(Number); return [new Date(y, m - 1, dd), n]; })), [14, 40]);
-  add(EXTRA_SHEET, [EXTRA_HEADER].concat(jobs.map((j) => extraRow(analyze(j)))), EXTRA_HEADER.map(() => 16));
-  return XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
 }
 function browserDownload(filename, blob) {
   const url = URL.createObjectURL(blob);
@@ -2264,8 +2655,8 @@ function renderSrcNote() {
   const k = S.source && S.source.kind;
   if (k !== 'none') { el.innerHTML = ''; return; }
   el.innerHTML = '<div class="example-note"><span><b>ยังไม่ได้ดึงข้อมูลจากชีต “' + esc(REAL_SHEET.title) + '”</b> ' +
-    (IN_CLAUDE ? 'กดดึงข้อมูลเพื่ออ่านผ่านการเชื่อม Google Drive ของบัญชีคุณ' : 'ชีตนี้จำกัดสิทธิ์ ลงชื่อเข้าใช้ด้วยบัญชี Google ที่ได้รับสิทธิ์ดูชีตเพื่อดึงข้อมูล') + '</span>' +
-    '<a class="btn sm" href="#docs" data-act="toSource">' + ICON('sync') + (IN_CLAUDE ? 'ดึงข้อมูลจากชีต' : 'ลงชื่อเข้าใช้และดึงข้อมูล') + '</a></div>';
+    (IN_CLAUDE ? 'กดดึงข้อมูลเพื่ออ่านผ่านการเชื่อม Google Drive ของบัญชีคุณ' : 'ชีตนี้จำกัดสิทธิ์ ใส่รหัสเข้าใช้เพื่อดึงและบันทึกข้อมูล') + '</span>' +
+    '<a class="btn sm" href="#docs" data-act="toSource">' + ICON('sync') + 'ดึงข้อมูลจากชีต</a></div>';
 }
 const sheetJobCount = () => S.jobs.filter((x) => x.source === 'sheet').length;
 const sheetLinkHTML = () => '<div class="field"><label>ชีตที่ระบบใช้ (ลิงก์นี้เท่านั้น)</label><div class="sheetlink">' + ICON('file') +
@@ -2399,7 +2790,7 @@ function sourceText() {
   if (s.kind === 'none') return 'ยังไม่ได้ดึงข้อมูลจากชีต';
   if (s.kind === 'snapshot') return 'สำเนารุ่นเดิมที่เก็บในเครื่องนี้ อ่านจากชีตเมื่อ ' + when + ' · ลงชื่อเข้าใช้เพื่อดึงรอบใหม่';
   const how = s.kind === 'drive' ? 'ดึงจาก Google Sheets' : s.kind === 'google' ? 'ดึงจาก Google Sheets'
-    : s.kind === 'gas' ? 'สำเนารุ่นเดิม (ดึงผ่าน Apps Script)' : 'เปิดจากไฟล์';
+    : s.kind === 'gas' ? 'ดึงจาก Google Sheets' : 'เปิดจากไฟล์';
   return how + (s.title ? ' “' + s.title + '”' : '') + (when ? ' เมื่อ ' + when : '');
 }
 const MACRO = [
@@ -2688,7 +3079,7 @@ function fieldHTML(key, j) {
     ctl = '<input class="input' + (m.num ? ' num' : '') + '" id="' + id + '" data-f="' + key + '"' + (list ? ' list="' + list + '" autocomplete="off"' : '') +
       (m.num ? ' inputmode="numeric"' : '') + ' placeholder="' + esc(JOB_DEFAULTS[key] || m.ph || '') + '" value="' + esc(s_(v)) + '">';
   }
-  return '<div class="field' + (m.span ? ' span-all' : '') + '"><label for="' + id + '">' + esc(label) +
+  return '<div class="field f-' + key + (m.span ? ' span-all' : '') + '"><label for="' + id + '">' + esc(label) +
     (m.trig ? ' <span class="chip orange" style="margin-left:4px">กรอก = ออกฉบับ 0' + m.trig + '</span>' : '') + '</label>' + ctl +
     '<span class="hint" id="h_' + key + '">' + esc(JOB_DEFAULTS[key] ? 'ไม่ต้องกรอกในชีต เว้นว่าง = ' + JOB_DEFAULTS[key] : (m.hint || '')) + '</span></div>';
 }
@@ -2713,17 +3104,16 @@ function dynHints(a) {
 }
 function renderDocs() {
   const j = curJob();
-  const header = sheetHeader();
   $('#v-docs').innerHTML =
     '<div class="sec-head"><div><span class="eyebrow">ระบบที่ 3 · Google Sheets + Python</span><h2>เอกสารจาก Google Sheets</h2>' +
     '<p>1 แถวในชีต “ข้อมูลงาน” = 1 งาน หน้านี้ตรวจแถวด้วยกติกาเดียวกับ make_docs.py ก่อนรัน จึงรู้ล่วงหน้าว่าฉบับไหนพร้อม ฉบับไหนยังขาดช่องใด แล้วตรวจอีก 4 ด่านตรงจุดที่เอกสารออกจากงานพัสดุไปหน่วยอื่น</p></div></div>' +
     '<div class="box tint" id="sourceBox"></div>' +
     '<div class="box"><div class="row"><div><h3>เอกสาร 6 ฉบับของงานนี้</h3><p class="sub">ผลเดียวกับที่ make_docs.py จะพิมพ์บนหน้าจอเมื่อรัน · ฉบับที่ยังไม่กรอกเลขที่จะ “ข้าม” ไม่ถือว่าผิด</p></div></div><div class="docgrid" id="docsStatus" style="margin-top:14px"></div></div>' +
     '<div class="box" id="gatesBox"><div class="row"><div><h3>จุดตรวจ 4 ด่าน</h3><p class="sub">ตรวจอัตโนมัติจากแถวข้อมูล แล้วติ๊กยืนยันสิ่งที่ต้องดูด้วยตา ก่อนส่งเอกสารข้ามหน่วย · ✓ ผ่าน · × ต้องแก้ · ! ควรตรวจ · ◦ ยังไม่ถึงขั้น · i ข้อมูลประกอบ</p></div></div><div class="gates" id="gatesBoard" style="margin-top:14px"></div></div>' +
-    '<div class="cols side"><div class="stack" id="rowForm">' +
+    '<div class="stack" id="rowForm">' +
     GROUPS.map((g) => '<details class="grp" data-grp="' + g.id + '"' + (openGroups.has(g.id) ? ' open' : '') + '><summary><span class="t">' + esc(g.title) + '</span><span class="s" id="gs_' + g.id + '">' + esc(g.sub || '') + '</span>' +
       ICON('chev').replace('class="ic"', 'class="ic chev"') + '</summary><div class="body">' + g.keys.map((k) => fieldHTML(k, j)).join('') + '</div></details>').join('') +
-    '</div><div class="stack sticky-side"><div class="box stack" id="exportBox"></div></div></div>' +
+    '</div>' +
     '<datalist id="dlPeople">' + S.people.map(([n]) => '<option value="' + esc(n) + '">').join('') + '</datalist>' +
     '<datalist id="dlVendors">' + S.vendors.map((v) => '<option value="' + esc(v.name) + '">').join('') + '</datalist>' +
     ['unit', 'owner_unit'].map((l) => '<datalist id="dl_' + l + '">' + (S.lists[l] || []).map((o) => '<option value="' + esc(o) + '">').join('') + '</datalist>').join('');
@@ -2746,21 +3136,27 @@ function renderSourceBoxWeb(el) {
   const cid = googleClientId(), on = googleSignedIn();
   const exp = on ? new Date(G.exp) : null;
   const expText = exp ? String(exp.getHours()).padStart(2, '0') + ':' + String(exp.getMinutes()).padStart(2, '0') + ' น.' : '';
+  const busy = syncBusy || !!api.busy, off = busy ? ' disabled' : '';
+  const gd = el.querySelector('details[data-gbox]'), gOpen = !!(gd && gd.open);
   el.innerHTML = '<div class="row" style="align-items:flex-start"><div style="flex:1 1 320px;min-width:0"><h3>ข้อมูลกลางจาก Google Sheets</h3>' +
-    '<p class="sub">ชีตนี้จำกัดสิทธิ์ ลงชื่อเข้าใช้ด้วยบัญชี Google ที่ได้รับสิทธิ์ดูชีต ระบบอ่านด้วยสิทธิ์ของบัญชีนั้น (อ่านอย่างเดียว ไม่แก้ชีต) ได้ทั้งชีตข้อมูลงาน บุคลากร ผู้ขาย ตั้งค่า · ไฟล์หน้านี้ไม่มีรหัสหรือข้อมูลของชีตฝังอยู่</p>' +
+    '<p class="sub">ดึงและบันทึกผ่าน Apps Script ของชีต แก้ข้อมูลในหน้านี้แล้วกด “บันทึกลง Google Sheet” ที่แถบด้านล่าง</p>' +
     '<p class="srcline" style="margin-top:8px">ข้อมูลตอนนี้: <b>' + esc(sourceText()) + '</b> · ' + sheetJobCount() + ' งานในชีต · หัวคอลัมน์ ' + sheetHeader().length + ' ช่อง</p>' +
-    '<p class="srcline" id="gStatus">' + (on ? 'ลงชื่อเข้าใช้แล้ว: <b>' + esc(G.email || 'บัญชี Google') + '</b> · ใช้ได้ถึงราว ' + esc(expText) : 'ยังไม่ได้ลงชื่อเข้าใช้ (ต้องลงชื่อเข้าใช้ใหม่ทุกครั้งที่เปิดหน้า)') + '</p></div>' +
+    '<p class="srcline" id="gStatus">' + (api.key ? (api.ok ? 'เชื่อมต่อด้วยรหัสเข้าใช้แล้ว' : 'มีรหัสเข้าใช้แล้ว กด “ดึงข้อมูลล่าสุด” เพื่อเชื่อมต่อ') : on ? 'ลงชื่อเข้าใช้ด้วย Google แล้ว (ดูอย่างเดียว) ใส่รหัสเข้าใช้เพื่อบันทึก' : 'ยังไม่ได้ใส่รหัสเข้าใช้') + '</p></div>' +
     '<div class="stack" style="flex:1 1 360px;gap:10px">' + sheetLinkHTML() +
+    (!api.key && !curJob() ? keyFormHTML('src') : '') +
+    '<div class="row"><button class="btn primary" type="button" data-act="sync"' + off + '>' + ICON('sync') + (busy ? 'กำลังดึงข้อมูล…' : 'ดึงข้อมูลล่าสุด') + '</button>' +
+    '<button class="btn" type="button" data-act="openXlsx">' + ICON('file') + 'เปิดไฟล์ .xlsx</button>' +
+    (api.key || on ? '<button class="btn" type="button" data-act="gSignOut">ออกจากระบบ</button>' : '') + '</div></div></div>' +
+    (syncMsg ? '<div class="msg ' + syncMsg.kind + '" style="margin-top:12px">' + syncMsg.html + '</div>' : '') +
+    '<details class="grp" data-gbox style="box-shadow:none;margin-top:12px"' + (gOpen ? ' open' : '') + '><summary><span class="t" style="font-size:14px">ลงชื่อเข้าใช้ด้วย Google (ดูอย่างเดียว)</span>' + ICON('chev').replace('class="ic"', 'class="ic chev"') + '</summary>' +
+    '<div class="body" style="grid-template-columns:1fr">' +
+    (on ? '<p class="srcline">ลงชื่อเข้าใช้แล้ว: <b>' + esc(G.email || 'บัญชี Google') + '</b> · ใช้ได้ถึงราว ' + esc(expText) + '</p>' : '') +
     (GOOGLE_CLIENT_ID ? '' : '<div class="field"><label for="googleClientId">Google OAuth Client ID</label>' +
       '<input class="input" id="googleClientId" value="' + esc(S.googleClientId || '') + '" placeholder="123456789-abc….apps.googleusercontent.com" autocomplete="off" spellcheck="false">' +
-      '<span class="hint">ตั้งค่าครั้งเดียว (ดูวิธีด้านล่าง) ไม่ใช่ความลับ เก็บในเบราว์เซอร์เครื่องนี้</span></div>') +
-    '<div class="row"><button class="btn primary" type="button" data-act="sync"' + (syncBusy ? ' disabled' : '') + '>' + ICON('sync') +
-    (syncBusy ? 'กำลังดึงข้อมูล…' : on ? 'ดึงข้อมูลล่าสุด' : 'ลงชื่อเข้าใช้ด้วย Google และดึงข้อมูล') + '</button>' +
-    (on ? '<button class="btn" type="button" data-act="gSwitch"' + (syncBusy ? ' disabled' : '') + '>เปลี่ยนบัญชี</button><button class="btn" type="button" data-act="gSignOut">ออกจากระบบ</button>' : '') +
-    '<button class="btn" type="button" data-act="openXlsx">' + ICON('file') + 'เปิดไฟล์ .xlsx</button></div></div></div>' +
-    (syncMsg ? '<div class="msg ' + syncMsg.kind + '" style="margin-top:12px">' + syncMsg.html + '</div>' : '') +
-    '<details class="grp" style="box-shadow:none;margin-top:12px"' + (cid ? '' : ' open') + '><summary><span class="t" style="font-size:14px">วิธีตั้งค่าการลงชื่อเข้าใช้ Google (ครั้งเดียว)</span>' + ICON('chev').replace('class="ic"', 'class="ic chev"') + '</summary>' +
-    '<div class="body" style="grid-template-columns:1fr">' + googleSetupHTML() + '</div></details>';
+      '<span class="hint">ตั้งค่าครั้งเดียว ไม่ใช่ความลับ เก็บในเบราว์เซอร์เครื่องนี้</span></div>') +
+    '<div class="row"><button class="btn" type="button" data-act="gLogin"' + off + '>' + (on ? 'ดึงด้วยบัญชี Google' : 'ลงชื่อเข้าใช้ด้วย Google และดึงข้อมูล') + '</button>' +
+    (on ? '<button class="btn" type="button" data-act="gSwitch"' + off + '>เปลี่ยนบัญชี</button>' : '') + '</div>' +
+    (cid && on ? '' : googleSetupHTML()) + '</div></details>';
 }
 function docCard(s) {
   return '<div class="doc' + (s.n > 6 ? ' small' : '') + '"><div class="top"><span class="code">' + esc(s.code) + '</span>' + stDoc(s) + '</div>' +
@@ -2797,29 +3193,7 @@ function refreshDocs() {
   $('#gatesBoard').innerHTML = a.gates.map(gateCard).join('');
   GROUPS.forEach((g) => { const e = $('#gs_' + g.id); if (e && g.doc) { const s = a.statuses[g.doc - 1]; e.innerHTML = stDoc(s); } });
   dynHints(a);
-  renderExport(a);
 }
-let delAsk = false;
-function renderExport(a) {
-  const j = a.job, header = sheetHeader();
-  $('#exportBox').innerHTML = '<h3>ส่งต่อให้ Google Sheets และ Python</h3>' +
-    (j.source === 'local' ? '<div class="msg info">งานนี้กรอกในหน้านี้ ยังไม่อยู่ในชีต คัดลอกแถวไปวางในชีตเพื่อเก็บเป็นทะเบียนกลาง</div>' : '<div class="msg ok">งานนี้อยู่แถว ' + esc(j.rowNo || '') + ' ของชีต แก้ในหน้านี้แล้วต้องแก้ในชีตด้วย หรือคัดลอกแถวไปวางทับ</div>') +
-    '<button class="btn primary" type="button" data-act="copyRow">' + ICON('copy') + 'คัดลอกแถวไปวางในชีต “ข้อมูลงาน”</button>' +
-    '<span class="hint">วางที่คอลัมน์ A ของแถวว่างถัดไป เรียงตามหัวคอลัมน์ ' + header.length + ' ช่องของชีตที่ดึงล่าสุด วันที่ส่งเป็นข้อความ เช่น 1 กันยายน 2569 ที่ make_docs.py อ่านได้</span>' +
-    '<button class="btn" type="button" data-act="exportXlsx">' + ICON('down') + 'ดาวน์โหลดไฟล์สำหรับ make_docs.py</button>' +
-    '<pre class="cmd">cd ชุดออกเอกสารจัดจ้าง-v6\npy make_docs.py "ข้อมูลงาน-ระบบรวม.xlsx"</pre>' +
-    '<span class="hint">ไฟล์มีครบ 4 ชีตที่สคริปต์ต้องใช้ (ข้อมูลงาน บุคลากร ผู้ขาย ตั้งค่า) และส่งเลขที่เป็นข้อความตามที่ชีตแสดง</span>' +
-    (j.fmt && Object.keys(j.fmt).length ? '<div class="msg warn">อย่าเพิ่งรัน run.bat จากลิงก์ชีตสำหรับงานนี้ ชีตเก็บ ' + Object.keys(j.fmt).map((k) => esc(KEY_LABEL[k])).join(' ') +
-      ' เป็นตัวเลข เอกสารจะพิมพ์ ' + Object.values(j.fmt).map((f) => '“' + esc(f.py) + '”').join(' ') + ' ใช้ไฟล์จากปุ่มด้านบน หรือแก้ชีตตามคำแนะนำในจุดตรวจก่อน</div>'
-      : '<span class="hint">ถ้าข้อมูลอยู่ในชีตแล้ว ดับเบิลคลิก run.bat ตามเดิมได้</span>') +
-    '<details class="grp" style="box-shadow:none"><summary><span class="t" style="font-size:14px">เก็บข้อมูลครุภัณฑ์และจุดตรวจในชีต</span>' + ICON('chev').replace('class="ic"', 'class="ic chev"') + '</summary>' +
-    '<div class="body" style="grid-template-columns:1fr"><span class="hint">สร้างชีตใหม่ชื่อ “' + EXTRA_SHEET + '” ในไฟล์เดิม make_docs.py ไม่อ่านชีตนี้ จึงไม่ต้องแก้สคริปต์ ครั้งต่อไปที่ดึงข้อมูล ระบบจะอ่านค่าเสื่อมและจุดตรวจคืนมาให้</span>' +
-    '<div class="row"><button class="btn sm" type="button" data-act="copyExtraHeader">คัดลอกหัวตาราง</button><button class="btn sm" type="button" data-act="copyExtra">คัดลอกแถวของงานนี้</button></div></div></details>' +
-    '<div style="border-top:1px dashed var(--line);padding-top:12px">' + (delAsk
-      ? '<div class="confirm"><span>ลบงาน “' + esc(jobLabel(j)) + '” ออกจากหน้านี้? (แถวในชีตไม่ถูกลบ)</span><button class="btn sm primary" type="button" data-act="delYes">ลบงาน</button><button class="btn sm" type="button" data-act="delNo">ยกเลิก</button></div>'
-      : '<button class="btn sm ghost" type="button" data-act="delAsk">' + ICON('trash') + 'ลบงานนี้ออกจากหน้านี้</button>') + '</div>';
-}
-
 /* =====================================================================
    แดชบอร์ดผู้บริหาร
    ===================================================================== */
@@ -2900,10 +3274,10 @@ function renderSettings() {
     '<div class="tbl-wrap"><table class="t"><thead><tr><th>ผู้ขาย/ผู้รับจ้าง</th><th>เลขผู้เสียภาษี</th><th>ครบ</th></tr></thead><tbody>' +
     S.vendors.map((v) => '<tr><td>' + esc(v.name) + '</td><td class="num">' + esc(v.tax_id || '–') + '</td><td>' + (v.address && v.phone && v.tax_id ? pill('ok', '✓', 'ครบ') : pill('bad', '!', 'ขาดข้อมูล')) + '</td></tr>').join('') +
     '</tbody></table></div><span class="hint">รายชื่อบุคลากรและผู้ขายแก้ในชีต แล้วกด “ดึงข้อมูลล่าสุด” ในระบบที่ 3 เพื่อไม่ให้มีสองต้นฉบับ</span></div>' +
-    '<div class="box stack"><h3>สำเนาในเบราว์เซอร์เครื่องนี้</h3><p class="sub">หน้านี้จำงานที่กรอก ค่าเสื่อม และจุดตรวจไว้ในเครื่องนี้เท่านั้น ต้นฉบับถาวรคือ Google Sheets</p>' +
+    '<div class="box stack"><h3>สำเนาในเบราว์เซอร์เครื่องนี้</h3><p class="sub">การแก้ไขที่ยังไม่ได้บันทึกอยู่ในเครื่องนี้เท่านั้น กด “บันทึกลง Google Sheet” เพื่อเก็บในต้นฉบับถาวร (ไฟล์สำรองไม่รวมรหัสเข้าใช้)</p>' +
     '<div class="row"><button class="btn" type="button" data-act="backup">' + ICON('down') + 'สำรองเป็นไฟล์ .json</button><button class="btn" type="button" data-act="restore">' + ICON('file') + 'กู้คืนจากไฟล์</button>' +
     '<button class="btn" type="button" data-act="selfTest2">' + ICON('flask') + 'ตรวจสอบระบบ</button></div>' +
-    (resetAsk ? '<div class="confirm"><span>ล้างข้อมูลในเครื่องนี้ทั้งหมด รวมสำเนาข้อมูลที่ดึงจากชีต? (ต้องดึงข้อมูลจากชีตใหม่ และงานที่กรอกในหน้านี้ซึ่งยังไม่อยู่ในชีตจะหาย)</span><button class="btn sm primary" type="button" data-act="resetYes">ล้างข้อมูล</button><button class="btn sm" type="button" data-act="resetNo">ยกเลิก</button></div>'
+    (resetAsk ? '<div class="confirm"><span>ล้างข้อมูลในเครื่องนี้ทั้งหมด รวมสำเนาข้อมูลที่ดึงจากชีต? (ต้องดึงข้อมูลจากชีตใหม่ งานใหม่และการแก้ไขที่ยังไม่ได้บันทึกลงชีตจะหาย)</span><button class="btn sm primary" type="button" data-act="resetYes">ล้างข้อมูล</button><button class="btn sm" type="button" data-act="resetNo">ยกเลิก</button></div>'
       : '<button class="btn sm ghost" type="button" data-act="resetAsk">' + ICON('trash') + 'ล้างข้อมูลในเครื่องนี้</button>') +
     '<div id="selfTestOut2"></div></div></div></div>';
 }
@@ -2918,7 +3292,7 @@ function renderSelfTests(target) {
 /* =====================================================================
    หน้าแรก: การ์ด 3 ใบ (ข้อมูลจริงของงานที่เลือก)
    ===================================================================== */
-function renderHomeSignIn() { const b = $('#homeSignIn'); if (b) b.style.display = IN_CLAUDE || googleSignedIn() ? 'none' : ''; }
+function renderHomeSignIn() { const b = $('#homeSignIn'); if (b) b.style.display = IN_CLAUDE || api.ok || googleSignedIn() ? 'none' : ''; }
 function renderHome() {
   renderJobPickers(); renderHomeSignIn();
   const j = curJob();
@@ -3094,11 +3468,11 @@ function route() {
   if (VIEWS.includes(h)) openView(h); else showHome();
 }
 function showHome() {
-  $('#ws').hidden = true; currentView = null; delAsk = false;
+  $('#ws').hidden = true; currentView = null; api.ask = '';
   document.documentElement.classList.add('on-home');
   renderHome();
 }
-function renderStrip() { const j = curJob(); renderJobStrip(j ? analyze(j) : null); }
+function renderStrip() { const j = curJob(); renderJobStrip(j ? analyze(j) : null); renderSaveBar(); }
 function renderView(v) {
   if (!curJob() && v !== 'settings' && v !== 'dash') {
     /* ยังไม่มีงาน (ยังไม่ได้ดึงจากชีต): หน้าเอกสารต้องมีกล่องแหล่งข้อมูลเสมอ ไม่งั้นไม่มีปุ่มลงชื่อเข้าใช้และไม่เห็นข้อความผิดพลาด */
@@ -3122,14 +3496,15 @@ function openView(v) {
   const perJob = v === 'egp' || v === 'dep' || v === 'docs';
   $('#jobstrip').hidden = !perJob;
   if (perJob) renderStrip();
-  renderSrcNote(); renderView(v);
+  ws.classList.toggle('wide', v === 'docs');
+  renderSrcNote(); renderView(v); renderSaveBar();
   if (pendingScroll) { const id = pendingScroll; pendingScroll = null; requestAnimationFrame(() => { const el = $('#' + id); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }); }
   else ws.scrollTop = 0;
 }
 function rerender() { if ($('#ws').hidden) renderHome(); else openView(currentView); }
 function selectJob(id) {
   if (!S.jobs.some((j) => j.id === id)) return;
-  S.selectedId = id; delAsk = false; save();
+  S.selectedId = id; api.ask = ''; save();
   if ($('#ws').hidden) renderHome();
   else { const st = $('#ws').scrollTop; openView(currentView); $('#ws').scrollTop = Math.min(st, 220); }
 }
@@ -3226,9 +3601,10 @@ function depReport() {
 /* =====================================================================
    ดึงข้อมูล / เปิดไฟล์
    ===================================================================== */
-function importWorkbook(wb, source) {
+function importWorkbook(wb, source, data) {
   if (typeof XLSX === 'undefined') throw new Error('โหลดตัวอ่าน Excel ไม่สำเร็จ ตรวจอินเทอร์เน็ตแล้วเปิดหน้าใหม่');
   const p = parseWorkbook(wb);
+  if (data) attachRaw(p, data);
   applyImport(p, source);
   const notes = ['ได้ ' + p.jobs.length + ' งาน · บุคลากร ' + (p.people ? p.people.length : 0) + ' คน · ผู้ขาย ' + (p.vendors ? p.vendors.length : 0) + ' ราย' + (p.extra.size ? ' · อ่านชีต “' + EXTRA_SHEET + '” ' + p.extra.size + ' แถว' : '')];
   let bad = false;
@@ -3271,7 +3647,11 @@ function errText(e) {
 }
 async function doSync(silent, pick) {
   if (syncBusy) return;
-  if (!IN_CLAUDE) return doSyncWeb(silent, pick);
+  if (!IN_CLAUDE) {
+    if (api.key) return gasPull(silent);
+    if (!googleSignedIn() && !googleClientId()) return askKey();
+    return doSyncWeb(silent, pick);
+  }
   const id = REAL_SHEET.id; /* ใช้ชีตจริงลิงก์เดียวเท่านั้น */
   syncBusy = true; if (!silent) syncMsg = null; renderSourceBox();
   try {
@@ -3319,7 +3699,7 @@ function readJsonFile(file) {
     try {
       const o = JSON.parse(fr.result);
       if (!o || o.version !== 1 || !Array.isArray(o.jobs)) throw new Error('ไม่ใช่ไฟล์สำรองของระบบนี้');
-      S = o; touchRefs(); save(); rerender(); toast('กู้คืนข้อมูลแล้ว ' + o.jobs.length + ' งาน');
+      S = o; S.jobs.forEach(ensureSync); touchRefs(); save(); rerender(); toast('กู้คืนข้อมูลแล้ว ' + o.jobs.length + ' งาน');
     } catch (e) { toast('กู้คืนไม่ได้: ' + e.message); }
   };
   fr.readAsText(file);
@@ -3344,12 +3724,14 @@ function onJobField(t) {
   } else j[k] = v;
   if (j.fmt && j.fmt[k]) { delete j.fmt[k]; if (!Object.keys(j.fmt).length) delete j.fmt; } /* แก้เลขที่ในหน้านี้แล้ว ค่าเป็นข้อความ */
   j.updatedAt = Date.now(); save();
+  if (api.msg && api.msg.id === j.id && !api.conflict) api.msg = null;
   refreshDocs(); renderStrip();
   if (k === 'seq' || k === 'project_name') renderJobPickers();
 }
 function onAssetField(t) {
   const j = curJob(); if (!j) return;
   j.asset = { ...ASSET_DEFAULT, ...(j.asset || {}), [t.dataset.a]: t.value };
+  if (api.msg && api.msg.id === j.id && !api.conflict) api.msg = null;
   save(); renderDepOut(); renderStrip();
 }
 document.addEventListener('input', (e) => {
@@ -3363,11 +3745,13 @@ document.addEventListener('input', (e) => {
   if (['regUnit', 'regName', 'regQty', 'regAmt'].includes(t.id)) { renderReg(); return; }
   if (t.id === 'staffSearch') { renderStaff(t.value); return; }
   if (t.dataset.gf) { gate.form[t.dataset.gf] = t.value; return; }
+  if (t.dataset.key !== undefined) { api.keyDraft = t.value; return; }
   if (t.id === 'googleClientId' || t.id === 'gClientId') { S.googleClientId = t.value.trim(); save(); return; }
 });
 document.addEventListener('change', (e) => {
   const t = e.target;
   if (t.id === 'jobSelect' || t.id === 'homeJob') return selectJob(t.value);
+  if (t.dataset.remember !== undefined) { api.remember = t.checked; return; }
   if (t.dataset.check) {
     const j = curJob(); j.checks = j.checks || {};
     if (t.checked) j.checks[t.dataset.check] = true; else delete j.checks[t.dataset.check];
@@ -3427,8 +3811,17 @@ document.addEventListener('click', (e) => {
     case 'toSource': pendingScroll = 'sourceBox'; if (currentView === 'docs') { e.preventDefault(); pendingScroll = null; $('#sourceBox').scrollIntoView({ behavior: 'smooth' }); }
       doSync(); break;
     case 'sync': doSync(false); break;
-    case 'gSwitch': doSync(false, true); break;
-    case 'gLogin': doSync(false); break;
+    case 'gSwitch': doSyncWeb(false, true); break;
+    case 'gLogin': doSyncWeb(false); break;
+    case 'apiSave': gasSave(); break;
+    case 'apiPull': gasPull(false); break;
+    case 'apiMine': resolveConflict(true); break;
+    case 'apiTheirs': resolveConflict(false); break;
+    case 'apiRevertAsk': api.ask = 'revert'; renderSaveBar(); break;
+    case 'apiRevert': revertJob(); break;
+    case 'apiAsNew': j.source = 'local'; delete j.sync; delete j.orphan; delete j.rowNo; save(); renderStrip(); gasSave(); break;
+    case 'apiForceText': j.sync.force = Object.keys(j.sync.fmt || {}); save(); gasSave(); break;
+    case 'apiNextSeq': j.seq = t.dataset.seq; api.msg = null; save(); keepScreen(rerender); gasSave(); break;
     case 'gTab':
       gate.tab = t.dataset.to === 'signup' ? 'signup' : 'login'; gate.step = 'form'; gate.errs = {};
       if (gate.tab === 'signup' && !s_(gate.form.email) && G.email) gate.form.email = G.email;
@@ -3439,24 +3832,19 @@ document.addEventListener('click', (e) => {
     case 'gWipeNo': gate.wipeAsk = false; renderGate(); break;
     case 'gWipeYes': {
       const cid = S.googleClientId; S = seedState(); if (cid) S.googleClientId = cid;
+      clearKey(); api.data = null; api.msg = null; api.conflict = null;
       touchRefs(); save(); gate.wipeAsk = false; syncMsg = { kind: 'ok', html: 'ล้างข้อมูลที่ค้างในเครื่องนี้แล้ว' };
       renderGate(); rerender(); break;
     }
     case 'gSignOut':
-      googleSignOut(); gate.tab = 'login'; gate.noAccess = false;
+      googleSignOut(); clearKey(); api.data = null; api.msg = null; api.conflict = null; gate.tab = 'login'; gate.noAccess = false;
       syncMsg = { kind: 'info', html: 'ออกจากระบบแล้ว' };
-      renderSourceBox(); renderGate(); toast('ออกจากระบบแล้ว'); break;
+      apiRefresh(); toast('ออกจากระบบแล้ว'); break;
     case 'openXlsx': $('#xlsxFile').click(); break;
-    case 'copyRow':
-      copyText(jobTSV(j), null, j.source === 'sheet' ? 'คัดลอกแล้ว วางทับแถว ' + (j.rowNo || '') + ' ในชีต ข้อมูลงาน' : 'คัดลอกแล้ว วางที่คอลัมน์ A แถวว่างถัดไปในชีต ข้อมูลงาน');
-      break;
-    case 'copyExtraHeader': copyText(EXTRA_HEADER.join('\t')); break;
-    case 'copyExtra': copyText(extraRow(analyze(j)).map(tsvCell).join('\t')); break;
-    case 'exportXlsx': if (typeof XLSX === 'undefined') { toast('โหลดตัวอ่าน Excel ไม่สำเร็จ ตรวจอินเทอร์เน็ตแล้วเปิดหน้าใหม่'); break; } saveFile('ข้อมูลงาน-ระบบรวม.xlsx', buildWorkbook(), 'บันทึกไฟล์แล้ว วางไว้ในโฟลเดอร์ชุดออกเอกสาร แล้วรันคำสั่ง'); break;
-    case 'delAsk': delAsk = true; renderExport(analyze(j)); break;
-    case 'delNo': delAsk = false; renderExport(analyze(j)); break;
+    case 'delAsk': api.ask = 'del'; renderSaveBar(); break;
+    case 'delNo': api.ask = ''; renderSaveBar(); break;
     case 'delYes': {
-      delAsk = false;
+      api.ask = ''; api.conflict = null;
       S.jobs = S.jobs.filter((x) => x.id !== j.id);
       if (!S.jobs.length) { save(); newJob(); return; }
       S.selectedId = S.jobs[0].id; save(); openView(currentView); toast('ลบงานออกจากหน้านี้แล้ว');
@@ -3487,17 +3875,24 @@ $('#hcCopy').addEventListener('click', (e) => {
   if (c === null) { toast('งานนี้ยังไม่มีจำนวนเงิน'); return; }
   copyText(toThaiDigits(formatMoney(c)) + ' บาท (' + bahtText(c) + ')');
 });
+/* กดปุ่มในแถบบันทึกโดยไม่ย้ายโฟกัสออกจากช่องที่พิมพ์ มิฉะนั้นการจัดรูปตัวเลขจะวาดหน้าใหม่แล้วคลิกแรกหาย */
+document.addEventListener('mousedown', (e) => { if (e.target.closest && e.target.closest('#savebar button')) e.preventDefault(); });
+/* Ctrl+S / ⌘S = บันทึกลง Google Sheet */
+document.addEventListener('keydown', (e) => {
+  if (!(e.ctrlKey || e.metaKey) || e.altKey || e.code !== 'KeyS' || IN_CLAUDE || gateOn() || $('#ws').hidden || !JOB_VIEWS.includes(currentView)) return;
+  e.preventDefault(); if (curJob()) gasSave();
+});
 window.addEventListener('hashchange', route);
 window.addEventListener('resize', () => { if (currentView === 'dep') { const a = analyze(curJob()); if (a.asset.model) drawDepChart(a.asset.model); } });
 
 /* =====================================================================
-   หน้าเข้าสู่ระบบ / สมัครใช้งาน — คลุมทั้งหน้าจนกว่าจะเข้าสู่ระบบด้วย Google และดึงชีตสำเร็จ
-   เป็นด่านหน้าเพื่อความสะดวก ตัวกันข้อมูลจริงคือสิทธิ์แชร์ของชีตที่ Google ตรวจให้
+   หน้าเข้าสู่ระบบ / สมัครใช้งาน — คลุมทั้งหน้าจนกว่าจะดึงชีตสำเร็จ ด้วยรหัสเข้าใช้ (อ่านและบันทึก) หรือบัญชี Google (อ่าน)
+   เป็นด่านหน้าเพื่อความสะดวก ตัวกันข้อมูลจริงคือรหัสที่ Apps Script ตรวจ และสิทธิ์แชร์ของชีตที่ Google ตรวจ
    สมัครใช้งาน = ร่างอีเมลถึงผู้ดูแล (ไม่มีเซิร์ฟเวอร์ ผู้สมัครกดส่งเองจาก Gmail หรือโปรแกรมอีเมล)
    ===================================================================== */
 const ADMIN = { name: 'นางสาวบุษกร ล้วนลอย', unit: 'งานยุทธศาสตร์และงบประมาณ', mail: ['forworkcicm', 'gmail.com'].join('@') }; /* อีเมลที่รับคำขอสมัคร */
 const gate = { tab: 'login', noAccess: false, step: 'form', wipeAsk: false, shown: false, errs: {}, form: { name: '', org: '', email: '', contact: '', reason: '' } };
-const gateOn = () => !IN_CLAUDE && !G.ok;
+const gateOn = () => !IN_CLAUDE && !G.ok && !api.ok;
 const hasLocalCopy = () => S.jobs.length + S.people.length + S.vendors.length > 0;
 function signupMessage() {
   const f = gate.form, L = (k, v) => k + ': ' + (s_(v) || '–');
@@ -3506,7 +3901,7 @@ function signupMessage() {
     subject: '[AssetGo] ขอสมัครใช้งาน — ' + s_(f.name),
     body: ['เรียน ผู้ดูแลระบบ AssetGo', '', 'ขอสมัครใช้งานระบบ AssetGo เพื่อดูข้อมูลจากชีต “' + REAL_SHEET.title + '”', '',
       L('ชื่อ-นามสกุล', f.name), L('หน่วยงาน/ตำแหน่ง', f.org), L('อีเมล Google ที่ใช้เปิดชีต', f.email), L('ช่องทางติดต่อกลับ', f.contact), L('ใช้ทำอะไร', f.reason), '',
-      'กรุณาแชร์ชีต (สิทธิ์ผู้ดู) ให้อีเมลข้างต้น และติดต่อกลับตามช่องทางที่ให้ไว้ ขอบคุณครับ/ค่ะ'].join('\n')
+      'กรุณาแจ้งรหัสเข้าใช้ หรือแชร์ชีต (สิทธิ์ผู้ดู) ให้อีเมลข้างต้น และติดต่อกลับตามช่องทางที่ให้ไว้ ขอบคุณครับ/ค่ะ'].join('\n')
   };
 }
 const mailtoHref = (m) => 'mailto:' + m.to + '?subject=' + encodeURIComponent(m.subject) + '&body=' + encodeURIComponent(m.body.replace(/\n/g, '\r\n'));
@@ -3523,21 +3918,25 @@ function gateField(k, label, o) {
 function gateLoginHTML() {
   const cid = googleClientId(), m = syncMsg;
   const wipe = hasLocalCopy() ? '<div class="adm">เครื่องนี้ยังมีสำเนาข้อมูลที่ดึงไว้ (ซ่อนอยู่หลังหน้านี้) ถ้าเป็นเครื่องที่ใช้ร่วมกัน ควรล้างก่อนส่งต่อ ' +
-    (gate.wipeAsk ? '<b>งานที่กรอกในเครื่องนี้และยังไม่อยู่ในชีตจะหายด้วย</b><span class="row" style="margin-top:6px"><button class="btn sm primary" type="button" data-act="gWipeYes" data-fid="wipeYes">ล้างเลย</button><button class="btn sm" type="button" data-act="gWipeNo" data-fid="wipeNo">ยกเลิก</button></span>'
+    (gate.wipeAsk ? '<b>งานและการแก้ไขที่ยังไม่ได้บันทึกลงชีตจะหายด้วย</b><span class="row" style="margin-top:6px"><button class="btn sm primary" type="button" data-act="gWipeYes" data-fid="wipeYes">ล้างเลย</button><button class="btn sm" type="button" data-act="gWipeNo" data-fid="wipeNo">ยกเลิก</button></span>'
       : '<button class="btn sm ghost" type="button" data-act="gWipeAsk" data-fid="wipe">' + ICON('trash') + 'ล้างข้อมูลที่ค้างในเครื่องนี้</button>') + '</div>' : '';
-  return '<p class="sub" style="font-size:14px">ข้อมูลงานพัสดุอยู่ในชีต “' + esc(REAL_SHEET.title) + '” ที่จำกัดสิทธิ์ เข้าสู่ระบบด้วยบัญชี Google ที่ผู้ดูแลแชร์ชีตให้แล้ว ระบบอ่านอย่างเดียว ไม่แก้ชีต</p>' +
-    '<button class="btn primary cta" type="button" data-act="gLogin" data-fid="login"' + (syncBusy ? ' disabled' : '') + '>' + ICON('sync') + (syncBusy ? 'กำลังเข้าสู่ระบบ…' : 'เข้าสู่ระบบด้วย Google') + '</button>' +
+  const gd = document.querySelector('#lgate details[data-ggate]');
+  const gOpen = gd ? gd.open : !!(gate.noAccess || cid);
+  return '<p class="sub" style="font-size:14px">ข้อมูลงานพัสดุอยู่ในชีต “' + esc(REAL_SHEET.title) + '” ที่จำกัดสิทธิ์ ใส่รหัสเข้าใช้ที่ผู้ดูแลให้ เพื่อดึงและบันทึกข้อมูล</p>' +
+    keyFormHTML('g') +
+    (api.key && !api.busy ? '<button class="btn" type="button" data-act="apiPull" data-fid="retry">ลองเชื่อมต่อด้วยรหัสที่จำไว้อีกครั้ง</button>' : '') +
     (m ? '<div class="msg ' + m.kind + '" role="status">' + m.html + '</div>' : '') +
-    (gate.noAccess ? '<div class="msg warn" id="gNoAccess"><b>บัญชี ' + esc(G.email || 'นี้') + ' ยังไม่ได้รับสิทธิ์ดูชีต</b><br>สมัครใช้งานเพื่อขอสิทธิ์ ผู้ดูแลจะติดต่อกลับและแชร์ชีตให้ หรือขอสิทธิ์ที่หน้าชีตของ Google โดยตรง' +
+    '<details class="grp" data-ggate style="box-shadow:none"' + (gOpen || gate.noAccess ? ' open' : '') + '><summary><span class="t" style="font-size:14px">เข้าด้วยบัญชี Google (ดูอย่างเดียว)</span>' + ICON('chev').replace('class="ic"', 'class="ic chev"') + '</summary>' +
+    '<div class="body" style="grid-template-columns:1fr">' +
+    '<button class="btn" type="button" data-act="gLogin" data-fid="google"' + (syncBusy ? ' disabled' : '') + '>' + ICON('sync') + (syncBusy ? 'กำลังเข้าสู่ระบบ…' : 'เข้าสู่ระบบด้วย Google') + '</button>' +
+    (gate.noAccess ? '<div class="msg warn" id="gNoAccess"><b>บัญชี ' + esc(G.email || 'นี้') + ' ยังไม่ได้รับสิทธิ์ดูชีต</b><br>สมัครใช้งานเพื่อขอสิทธิ์ ผู้ดูแลจะติดต่อกลับและแชร์ชีตให้ หรือขอสิทธิ์ที่หน้าชีตโดยตรง' +
       '<span class="row" style="margin-top:8px"><button class="btn sm primary" type="button" data-act="gTab" data-to="signup" data-fid="toSignup">สมัครใช้งาน</button>' +
       '<a class="btn sm" href="' + esc(REAL_SHEET.link) + '" target="_blank" rel="noopener">ขอสิทธิ์ที่หน้าชีต</a>' +
       '<button class="btn sm" type="button" data-act="gSwitch" data-fid="other">ใช้บัญชีอื่น</button></span></div>' : '') +
-    '<p class="sub">ยังไม่มีสิทธิ์? <button class="btn sm ghost" type="button" data-act="gTab" data-to="signup" data-fid="toSignup2">สมัครใช้งาน</button></p>' + wipe +
-    '<details class="grp" style="box-shadow:none"' + (cid ? '' : ' open') + '><summary><span class="t" style="font-size:14px">สำหรับผู้ดูแล: ตั้งค่าครั้งแรก</span>' + ICON('chev').replace('class="ic"', 'class="ic chev"') + '</summary>' +
-    '<div class="body" style="grid-template-columns:1fr">' +
-    (GOOGLE_CLIENT_ID ? '' : '<div class="field"><label for="gClientId">Google OAuth Client ID</label><input class="input" id="gClientId" value="' + esc(S.googleClientId || '') + '" placeholder="123456789-abc….apps.googleusercontent.com" autocomplete="off" spellcheck="false">' +
+    (GOOGLE_CLIENT_ID ? '' : '<div class="field"><label for="gClientId">Google OAuth Client ID (สำหรับผู้ดูแล)</label><input class="input" id="gClientId" value="' + esc(S.googleClientId || '') + '" placeholder="123456789-abc….apps.googleusercontent.com" autocomplete="off" spellcheck="false">' +
       '<span class="hint">ตั้งค่าครั้งเดียว ไม่ใช่ความลับ เก็บในเบราว์เซอร์เครื่องนี้</span></div>') +
-    googleSetupHTML() + '</div></details>';
+    (cid ? '' : googleSetupHTML()) + '</div></details>' +
+    '<p class="sub">ยังไม่มีสิทธิ์? <button class="btn sm ghost" type="button" data-act="gTab" data-to="signup" data-fid="toSignup2">สมัครใช้งาน</button></p>' + wipe;
 }
 function gateSignupHTML() {
   if (gate.step === 'send') {
@@ -3593,10 +3992,15 @@ function gateSubmit() {
   gate.step = 'send'; renderGate();
   const n = $('#lgate [data-fid="gmail"]'); if (n) n.focus();
 }
-document.addEventListener('submit', (e) => { if (e.target && e.target.id === 'gSignupForm') { e.preventDefault(); gateSubmit(); } });
+document.addEventListener('submit', (e) => {
+  if (!e.target) return;
+  if (e.target.id === 'gSignupForm') { e.preventDefault(); gateSubmit(); }
+  else if (e.target.matches('[data-keyform]')) { e.preventDefault(); connectKey(); }
+});
 
 /* ---------- เริ่มทำงาน ---------- */
 (function boot() {
+  S.jobs.forEach(ensureSync);
   touchRefs();
   renderGate();
   route();
@@ -3606,8 +4010,8 @@ document.addEventListener('submit', (e) => { if (e.target && e.target.id === 'gS
   } else revealImmediately();
   /* ถ้าเคยดึงจาก Google Sheets และหน้านี้ได้รับอนุญาตแล้ว ดึงรอบใหม่ให้เองครั้งเดียว */
   (async () => {
-    /* หน้าเว็บทั่วไป: ไม่ดึงเอง เบราว์เซอร์ไม่ให้เปิดหน้าต่างลงชื่อเข้าใช้ Google โดยไม่มีการคลิก ผู้ใช้กดปุ่มลงชื่อเข้าใช้เอง */
-    if (!IN_CLAUDE) return;
+    /* หน้าเว็บทั่วไป: ถ้ามีรหัสเข้าใช้อยู่แล้ว ดึงข้อมูลจากชีตให้เอง (การลงชื่อเข้าใช้ Google ต้องกดปุ่มเอง) */
+    if (!IN_CLAUDE) { if (api.key) gasPull(true); return; }
     if (!S.source || (S.source.kind !== 'drive' && S.source.kind !== 'none' && S.source.kind !== 'snapshot')) return;
     const perm = await capability('permissions');
     if (!perm) return;
